@@ -363,6 +363,7 @@ window.addEventListener('resize', resize);
 // ==================== 游戏状态 ====================
 const G = {
   state: 'menu', // menu | playing
+  paused: false, // 打开设置等面板时暂停游戏
   running: true,
   soundOn: true,
   day: true,
@@ -2065,7 +2066,7 @@ window.addEventListener('keydown', function(e){
   }
   if(key==='Escape'){
     if(document.getElementById('dialogBox').style.display==='flex') closeDialog();
-    else if(document.getElementById('settingsPanel').style.display==='flex') document.getElementById('settingsPanel').style.display='none';
+    else if(document.getElementById('settingsPanel').style.display==='flex'){ document.getElementById('settingsPanel').style.display='none'; G.paused = false; }
     else if(document.getElementById('rulesPanel').style.display==='flex') document.getElementById('rulesPanel').style.display='none';
     else if(document.getElementById('saveSelectPanel').style.display==='flex') document.getElementById('saveSelectPanel').style.display='none';
     return;
@@ -2237,7 +2238,7 @@ document.getElementById('restartBtn').addEventListener('touchstart', function(e)
 
 // ==================== 游戏主循环 ====================
 function gameLoop(){
-  if(G.state === 'playing'){
+  if(G.state === 'playing' && !G.paused){
     update();
   }
   render();
@@ -2323,6 +2324,7 @@ function startGame(){
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
   G.weapons = ['fist']; G.atkCooldown = 0; G.shake = 0;
   G._shopOpened = false;
+  G.paused = false; // 确保新游戏不暂停
   G.nightGraceTimer = 0;
   inputState.left=false; inputState.right=false; inputState.up=false; inputState.down=false;
   G.player = createPlayer();
@@ -2370,11 +2372,13 @@ document.getElementById('menuSettingsBtn').addEventListener('click', ()=>{
 document.getElementById('settingsBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click');
   document.getElementById('settingsPanel').style.display = 'flex';
+  G.paused = true; // 打开设置时暂停游戏
 });
 // 关闭设置
 document.getElementById('closeSettingsBtn').addEventListener('click', ()=>{
   playSound('click');
   document.getElementById('settingsPanel').style.display = 'none';
+  G.paused = false; // 关闭设置时恢复游戏
 });
 // 声音开关
 document.getElementById('soundToggle').addEventListener('change', e=>{
