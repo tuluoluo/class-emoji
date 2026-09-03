@@ -728,11 +728,13 @@ function createFinalBoss(){
 }
 
 function createNPCs(){
+  const rX = rand(300,WORLD_W-300), rY = rand(300,WORLD_H-300);
   G.npcs.robot = {
-    x:rand(300,WORLD_W-300), y:rand(300,WORLD_H-300), w:44, h:44,
+    x:rX, y:rY, w:44, h:44,
     hp:10, maxHp:10, face:'😊', speed:0.8,
     lifeTimer:3600, giveCd:0, moveDir:{x:rand(-1,1),y:rand(-1,1)}, changeDirTimer:0,
     hurtFlash:0, isRobot:true,
+    spawnX:rX, spawnY:rY, dead:false, respawnTimer:0,
   };
   G.npcs.merchant = {
     x:WORLD_W*0.5, y:WORLD_H*0.35, w:44, h:44, hp:9999, face:'🤬',
@@ -750,6 +752,7 @@ function createNPCs(){
     hp:15, maxHp:15, face:'😝', speed:2.2,
     chasing:false, kickCd:0, moveDir:{x:rand(-1,1),y:rand(-1,1)}, changeDirTimer:0,
     hurtFlash:0, knockback:{x:0,y:0}, fleeTimer:0,
+    spawnX:tx, spawnY:ty, dead:false, respawnTimer:0,
   };
 }
 
@@ -845,7 +848,7 @@ function hitAllMobs(hitBox, dmg){
     }
   });
   // 也能打😝，带击退
-  if(G.npcs.trouble && rectOverlap(hitBox,G.npcs.trouble)){
+  if(G.npcs.trouble && !G.npcs.trouble.dead && rectOverlap(hitBox,G.npcs.trouble)){
     G.npcs.trouble.hp -= dmg; G.npcs.trouble.hurtFlash = 8;
     if(!G.npcs.trouble.voiceCd || G.npcs.trouble.voiceCd<=0){ playVoice('hurt','male'); G.npcs.trouble.voiceCd = 15; }
     const dx = G.npcs.trouble.x - G.player.x;
@@ -856,7 +859,7 @@ function hitAllMobs(hitBox, dmg){
     G.npcs.trouble.fleeTimer = 90;
   }
   // 也能打😊机器人（除🤬外所有生物可攻击）
-  if(G.npcs.robot && rectOverlap(hitBox,G.npcs.robot)){
+  if(G.npcs.robot && !G.npcs.robot.dead && rectOverlap(hitBox,G.npcs.robot)){
     G.npcs.robot.hp -= dmg;
     G.npcs.robot.hurtFlash = 8;
     if(!G.npcs.robot.voiceCd || G.npcs.robot.voiceCd<=0){ playVoice('hurt','female'); G.npcs.robot.voiceCd = 15; }
@@ -927,8 +930,15 @@ function update(){
     G.day = !G.day;
     if(!G.day){
       G.nightGraceTimer = 2700; // 夜晚前45秒刷怪量大幅降低
+      G.mobs = []; // 夜晚开始时清空残留怪物，确保数量正确
+      // 夜晚初始生成4只怪物，避免前几秒没怪
+      const types = ['ghost','alien','monster'];
+      for(let i=0;i<4;i++){
+        G.mobs.push(createMob(types[Math.floor(Math.random()*3)]));
+      }
       showToast('🌙 夜晚降临，怪物出没！(前30秒怪物较少)');
     } else {
+      G.mobs = []; // 白天清空所有怪物
       showToast('☀ 白天来临，安全了！');
     }
     updateUI();
@@ -937,9 +947,9 @@ function update(){
 
   // 刷怪（仅夜晚）
   if(!G.day){
-    let spawnRate = G.cheat.mobSea ? 0.06 : 0.006; // 正常夜晚刷怪率减半
-    if(G.nightGraceTimer > 0) spawnRate *= 0.2; // 夜晚前45秒刷怪量降为20%
-    const maxMobs = G.cheat.mobSea ? 70 : (G.nightGraceTimer > 0 ? 6 : 16); // 正常最多16只，宽限期6只
+    let spawnRate = G.cheat.mobSea ? 0.06 : 0.01; // 提高正常刷怪率，确保持续有怪
+    if(G.nightGraceTimer > 0) spawnRate *= 0.3; // 夜晚前45秒刷怪量降为30%
+    const maxMobs = G.cheat.mobSea ? 70 : (G.nightGraceTimer > 0 ? 8 : 20); // 正常最多20只，宽限期8只
     if(Math.random() < spawnRate && G.mobs.length < maxMobs){
       const types = ['ghost','alien','monster'];
       G.mobs.push(createMob(types[Math.floor(Math.random()*3)]));
@@ -1094,7 +1104,7 @@ function updateMobs(){
         m.atkCd = m.maxAtkCd;
         damagePlayer(m.dmg);
         // 怪物也能攻击😝（除🤬外所有生物可攻击）
-        if(G.npcs.trouble && rectOverlap(m, G.npcs.trouble)){
+        if(G.npcs.trouble && !G.npcs.trouble.dead && rectOverlap(m, G.npcs.trouble)){
           G.npcs.trouble.hp -= m.dmg;
           G.npcs.trouble.hurtFlash = 8;
           if(!G.npcs.trouble.voiceCd || G.npcs.trouble.voiceCd<=0){ playVoice('hurt','male'); G.npcs.trouble.voiceCd = 15; }
@@ -1111,7 +1121,7 @@ function updateMobs(){
     m.y = clamp(m.y, -50, WORLD_H+50);
 
     // 也攻击机器人NPC
-    if(G.npcs.robot && rectOverlap(m, G.npcs.robot) && m.atkCd<=0){
+    if(G.npcs.robot && !G.npcs.robot.dead && rectOverlap(m, G.npcs.robot) && m.atkCd<=0){
       G.npcs.robot.hp -= m.dmg;
       G.npcs.robot.hurtFlash = 8;
       if(!G.npcs.robot.voiceCd || G.npcs.robot.voiceCd<=0){ playVoice('hurt','female'); G.npcs.robot.voiceCd = 15; }
@@ -1184,6 +1194,20 @@ function updateNPCs(){
   // 😊 机器人
   const r = G.npcs.robot;
   if(r){
+    // 死亡复活计时
+    if(r.dead){
+      r.respawnTimer--;
+      if(r.respawnTimer <= 0){
+        r.dead = false;
+        r.hp = r.maxHp;
+        r.x = r.spawnX;
+        r.y = r.spawnY;
+        r.lifeTimer = 3600;
+        r.hurtFlash = 0;
+        showToast('😊 机器人复活了！');
+      }
+      return;
+    }
     if(r.hurtFlash>0) r.hurtFlash--;
     if(r.giveCd>0) r.giveCd--;
     if(r.voiceCd>0) r.voiceCd--;
@@ -1209,12 +1233,13 @@ function updateNPCs(){
     if(r.lifeTimer<=0){
       explode(r.x+r.w/2, r.y+r.h/2, 100, 8);
       makeCorpse(r);
-      G.npcs.robot = null;
+      r.dead = true;
+      r.respawnTimer = 1800; // 30秒后复活
       document.getElementById('askBtn').style.display = 'none';
       document.getElementById('talkBtn').style.display = 'none';
       closeDialog();
       playVoice('death', 'female'); // 😊 女声死亡"饿啊～"
-      showToast('💥 机器人爆炸了！');
+      showToast('💥 机器人爆炸了！30秒后复活');
       G.shake = 15;
       return;
     }
@@ -1222,13 +1247,14 @@ function updateNPCs(){
     // 被打死（怪物或玩家）
     if(r && r.hp<=0){
       makeCorpse(r);
-      G.npcs.robot = null;
+      r.dead = true;
+      r.respawnTimer = 1800; // 30秒后复活
       document.getElementById('askBtn').style.display = 'none';
       document.getElementById('talkBtn').style.display = 'none';
       closeDialog();
       playSound('kill');
       playVoice('death', 'female'); // 😊 女声死亡"饿啊～"
-      showToast('😊 倒下了...');
+      showToast('😊 倒下了...30秒后复活');
       return;
     }
 
@@ -1279,6 +1305,21 @@ function updateNPCs(){
   // 😝 捣蛋鬼
   const tr = G.npcs.trouble;
   if(tr){
+    // 死亡复活计时
+    if(tr.dead){
+      tr.respawnTimer--;
+      if(tr.respawnTimer <= 0){
+        tr.dead = false;
+        tr.hp = tr.maxHp;
+        tr.x = tr.spawnX;
+        tr.y = tr.spawnY;
+        tr.chasing = false;
+        tr.fleeTimer = 0;
+        tr.hurtFlash = 0;
+        showToast('😝 捣蛋鬼复活了！');
+      }
+      return;
+    }
     if(tr.hurtFlash>0) tr.hurtFlash--;
     if(tr.kickCd>0) tr.kickCd--;
     if(tr.fleeTimer>0) tr.fleeTimer--;
@@ -1345,9 +1386,10 @@ function updateNPCs(){
 
     if(tr.hp<=0){
       makeCorpse(tr);
-      G.npcs.trouble = null;
+      tr.dead = true;
+      tr.respawnTimer = 1800; // 30秒后复活
       playVoice('death', 'male'); // 😝 男声死亡"饿啊～"
-      showToast('😝 被解决了，不会再踹你了');
+      showToast('😝 被解决了！30秒后复活');
     }
   }
 }
@@ -1400,7 +1442,7 @@ function updateProjectiles(){
         }
       });
       // 远程也能打😝，带击退
-      if(G.npcs.trouble && rectOverlap(box,G.npcs.trouble)){
+      if(G.npcs.trouble && !G.npcs.trouble.dead && rectOverlap(box,G.npcs.trouble)){
         G.npcs.trouble.hp -= pr.dmg;
         G.npcs.trouble.hurtFlash = 8;
         if(!G.npcs.trouble.voiceCd || G.npcs.trouble.voiceCd<=0){ playVoice('hurt','male'); G.npcs.trouble.voiceCd = 15; }
@@ -1413,7 +1455,7 @@ function updateProjectiles(){
         hit = true;
       }
       // 远程也能打😊
-      if(G.npcs.robot && rectOverlap(box,G.npcs.robot)){
+      if(G.npcs.robot && !G.npcs.robot.dead && rectOverlap(box,G.npcs.robot)){
         G.npcs.robot.hp -= pr.dmg;
         G.npcs.robot.hurtFlash = 8;
         if(!G.npcs.robot.voiceCd || G.npcs.robot.voiceCd<=0){ playVoice('hurt','female'); G.npcs.robot.voiceCd = 15; }
@@ -1428,13 +1470,13 @@ function updateProjectiles(){
         G.projectiles.splice(i,1);
       }
       // 也打机器人
-      if(G.npcs.robot && rectOverlap(box,G.npcs.robot)){
+      if(G.npcs.robot && !G.npcs.robot.dead && rectOverlap(box,G.npcs.robot)){
         G.npcs.robot.hp -= pr.dmg;
         G.npcs.robot.hurtFlash = 6;
         if(!G.npcs.robot.voiceCd || G.npcs.robot.voiceCd<=0){ playVoice('hurt','female'); G.npcs.robot.voiceCd = 15; }
       }
       // 声波也能打😝
-      if(G.npcs.trouble && rectOverlap(box,G.npcs.trouble)){
+      if(G.npcs.trouble && !G.npcs.trouble.dead && rectOverlap(box,G.npcs.trouble)){
         G.npcs.trouble.hp -= pr.dmg;
         G.npcs.trouble.hurtFlash = 6;
         if(!G.npcs.trouble.voiceCd || G.npcs.trouble.voiceCd<=0){ playVoice('hurt','male'); G.npcs.trouble.voiceCd = 15; }
@@ -1467,7 +1509,7 @@ function explode(x, y, radius, dmg){
     damagePlayer(dmg);
   }
   // 爆炸也能炸😝
-  if(G.npcs.trouble && dist({x,y},{x:G.npcs.trouble.x+G.npcs.trouble.w/2,y:G.npcs.trouble.y+G.npcs.trouble.h/2}) < radius){
+  if(G.npcs.trouble && !G.npcs.trouble.dead && dist({x,y},{x:G.npcs.trouble.x+G.npcs.trouble.w/2,y:G.npcs.trouble.y+G.npcs.trouble.h/2}) < radius){
     G.npcs.trouble.hp -= dmg;
     G.npcs.trouble.hurtFlash = 10;
     if(!G.npcs.trouble.voiceCd || G.npcs.trouble.voiceCd<=0){ playVoice('hurt','male'); G.npcs.trouble.voiceCd = 15; }
@@ -1475,7 +1517,7 @@ function explode(x, y, radius, dmg){
     G.npcs.trouble.fleeTimer = 120;
   }
   // 爆炸也能炸😊
-  if(G.npcs.robot && dist({x,y},{x:G.npcs.robot.x+G.npcs.robot.w/2,y:G.npcs.robot.y+G.npcs.robot.h/2}) < radius){
+  if(G.npcs.robot && !G.npcs.robot.dead && dist({x,y},{x:G.npcs.robot.x+G.npcs.robot.w/2,y:G.npcs.robot.y+G.npcs.robot.h/2}) < radius){
     G.npcs.robot.hp -= dmg;
     G.npcs.robot.hurtFlash = 10;
     if(!G.npcs.robot.voiceCd || G.npcs.robot.voiceCd<=0){ playVoice('hurt','female'); G.npcs.robot.voiceCd = 15; }
@@ -1519,9 +1561,9 @@ function render(){
   G.corpses.forEach(c=>drawCorpse(c));
 
   // NPC
-  if(G.npcs.robot) drawEntity(G.npcs.robot, false);
+  if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
   if(G.npcs.merchant) drawEntity(G.npcs.merchant, false);
-  if(G.npcs.trouble) drawEntity(G.npcs.trouble, false);
+  if(G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
 
   // 怪物
   G.mobs.forEach(m=>drawEntity(m, true));
