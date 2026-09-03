@@ -327,6 +327,10 @@ input:checked + .slider:before{transform:translateX(24px)}
       </div>
       <h3 style="margin-top:16px;border-top:3px solid #333;padding-top:10px">🆕 新版本更新</h3>
       <div class="rules-content">
+        <p><b>v1.7 新角色😎游离乐子人</b></p>
+        <p>• 新增NPC😎游离乐子人：在地图上随机乱逛，12血，可被攻击</p>
+        <p>• 靠近他150像素内会播放欢快的背景音乐（主旋律+低音伴奏+打击乐），远离自动停止</p>
+        <p>• 被打死后30秒在出生点复活，游戏结束或回主菜单时音乐自动停止</p>
         <p><b>v1.6 商店优化</b></p>
         <p>• 商店商品列表改为可上下滑动，底部按钮固定可见</p>
         <p>• 修复关闭商店按钮没反应的bug（关闭后2秒内不自动弹开）</p>
@@ -487,21 +491,48 @@ let wandererMusicTimer = null;
 let wandererMusicNote = 0;
 function startWandererMusic(){
   if(wandererMusicTimer) return;
-  const melody = [262, 330, 392, 330, 294, 349, 440, 349]; // C4 E4 G4 E4 D4 F4 A4 F4
+  // 主旋律（C大调，欢快的乐子人主题曲）
+  const melody = [523, 659, 784, 659, 587, 698, 880, 698, 523, 659, 784, 1047, 880, 784, 659, 523];
+  // 低音伴奏（每拍一个根音）
+  const bass = [131, 131, 196, 196, 175, 175, 147, 147, 131, 131, 196, 196, 175, 175, 147, 147];
   wandererMusicNote = 0;
   wandererMusicTimer = setInterval(()=>{
     if(!G.soundOn || !audioCtx) return;
     const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(melody[wandererMusicNote % melody.length], now);
-    gain.gain.setValueAtTime(0.08, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-    osc.start(now); osc.stop(now + 0.35);
+    const idx = wandererMusicNote % melody.length;
+    // 主旋律 - 三角波，明亮
+    const osc1 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    osc1.connect(gain1); gain1.connect(audioCtx.destination);
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(melody[idx], now);
+    gain1.gain.setValueAtTime(0.12, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+    osc1.start(now); osc1.stop(now + 0.32);
+    // 低音伴奏 - 正弦波，每两拍一个
+    if(wandererMusicNote % 2 === 0){
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.connect(gain2); gain2.connect(audioCtx.destination);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(bass[idx], now);
+      gain2.gain.setValueAtTime(0.10, now);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc2.start(now); osc2.stop(now + 0.6);
+    }
+    // 每4拍加一个高音叮
+    if(wandererMusicNote % 4 === 0){
+      const osc3 = audioCtx.createOscillator();
+      const gain3 = audioCtx.createGain();
+      osc3.connect(gain3); gain3.connect(audioCtx.destination);
+      osc3.type = 'square';
+      osc3.frequency.setValueAtTime(2093, now);
+      gain3.gain.setValueAtTime(0.04, now);
+      gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc3.start(now); osc3.stop(now + 0.08);
+    }
     wandererMusicNote++;
-  }, 350);
+  }, 280);
 }
 function stopWandererMusic(){
   if(wandererMusicTimer){
