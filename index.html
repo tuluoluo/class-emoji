@@ -35,6 +35,10 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;image
 #joystick{position:absolute;left:30px;bottom:30px;width:130px;height:130px;z-index:15;pointer-events:auto}
 #joyOuter{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid rgba(0,0,0,.4)}
 #joyInner{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:3px solid rgba(0,0,0,.5)}
+/* 瞄准轮盘 - 右下角偏左 */
+#aimJoystick{position:absolute;right:120px;bottom:30px;width:130px;height:130px;z-index:15;pointer-events:auto}
+#aimOuter{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,200,0,.2);border:4px solid rgba(255,150,0,.5)}
+#aimInner{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,200,0,.7);border:3px solid rgba(200,100,0,.8)}
 
 /* 右下角技能按钮 */
 #skillArea{position:absolute;right:25px;bottom:25px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:15}
@@ -171,6 +175,12 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div id="joyInner"></div>
   </div>
 
+  <!-- 瞄准轮盘（枪专用） -->
+  <div id="aimJoystick" style="display:none;">
+    <div id="aimOuter"></div>
+    <div id="aimInner"></div>
+  </div>
+
   <!-- 技能区 -->
   <div id="skillArea">
     <button id="weaponSwitch">切换武器</button>
@@ -202,6 +212,8 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="shopItem"><span>🔪 刀 (近战4伤)</span><button id="buyKnife">50金</button></div>
     <div class="shopItem"><span>🔫 枪 (远程5伤)</span><button id="buyGun">120金</button></div>
     <div class="shopItem"><span>💣 手雷×3 (范围)</span><button id="buyGrenade">40金</button></div>
+    <div class="shopItem"><span>🩹 绷带 (回5血+止血)</span><button id="buyBandage">30金</button></div>
+    <div class="shopItem"><span>💊 医疗包 (回满血+止血)</span><button id="buyMedkit">80金</button></div>
     <button id="merchantTalkBtn" style="width:100%;margin-bottom:8px;padding:8px;background:#9b59b6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">💬 聊聊</button>
     <button id="closeShop">关闭商店</button>
   </div>
@@ -516,6 +528,7 @@ function loadGame(slot){
     createNPCs();
     createWoods();
     updateUI();
+    updateAimJoystick();
     document.getElementById('mainMenu').style.display = 'none';
     document.getElementById('saveSelectPanel').style.display = 'none';
     document.getElementById('endPanel').style.display = 'none';
@@ -685,6 +698,8 @@ function createPlayer(){
     weapon:'fist', grenade:0, gold:0,
     invincible:0, stunTimer:0, stunRotate:false,
     attackAnim:0,
+    aimX:1, aimY:0, // 瞄准方向（枪用）
+    bleeding:false, bleedTimer:0, // 流血状态
   };
 }
 
@@ -826,7 +841,10 @@ function playerAttack(){
     const dmg = calcPlayerDmg(w==='chargeFire'?8:(w==='fire'?6:5));
     const face = w==='gun'?'•':(w==='chargeFire'?'🔥':'🔥');
     const spd = w==='gun'?9:6;
-    spawnProjectile(p.x+p.w/2, p.y+p.h/2, p.facing*spd, 0, {
+    // 枪用瞄准方向，火焰弹用角色面向
+    const dx = w==='gun' ? p.aimX*spd : p.facing*spd;
+    const dy = w==='gun' ? p.aimY*spd : 0;
+    spawnProjectile(p.x+p.w/2, p.y+p.h/2, dx, dy, {
       dmg, face, fromPlayer:true, speed:spd, life:120,
       w:w==='chargeFire'?24:16, h:w==='chargeFire'?24:16,
     });
@@ -996,6 +1014,22 @@ function update(){
   if(p.attackAnim>0) p.attackAnim--;
   if(G.atkCooldown>0) G.atkCooldown--;
   if(G.shake>0) G.shake--;
+
+  // 流血伤害：每5秒(300帧)掉1血
+  if(p.bleeding && !G.cheat.infHp){
+    p.bleedTimer++;
+    if(p.bleedTimer >= 300){
+      p.bleedTimer = 0;
+      p.hp -= 1;
+      spawnParticles(p.x+p.w/2, p.y+p.h/2, '#aa0000', 3);
+      playSound('hurt');
+      updateUI();
+      if(p.hp<=0){
+        makeCorpse(p);
+        gameOver(false);
+      }
+    }
+  }
 
   // 更新怪物
   updateMobs();
@@ -1534,6 +1568,12 @@ function damagePlayer(dmg){
   p.invincible = 40;
   G.shake = 6;
   spawnParticles(p.x+p.w/2, p.y+p.h/2, '#ff0000', 6);
+  // 30%概率进入流血状态
+  if(!p.bleeding && Math.random() < 0.3){
+    p.bleeding = true;
+    p.bleedTimer = 0;
+    showToast('🩸 你受伤流血了！每5秒掉1血，用绷带/医疗包止血');
+  }
   updateUI();
 }
 
@@ -1898,6 +1938,50 @@ joyEl.addEventListener('mousedown', handleJoyStart);
 document.addEventListener('mousemove', e=>{if(joy.active)handleJoyMove(e)});
 document.addEventListener('mouseup', handleJoyEnd);
 
+// 瞄准轮盘（枪专用）
+const aimJoy = {active:false, dx:0, dy:0, centerX:0, centerY:0};
+const aimJoyEl = document.getElementById('aimJoystick');
+const aimJoyInner = document.getElementById('aimInner');
+function handleAimStart(e){
+  e.preventDefault();
+  const touch = e.touches ? e.touches[0] : e;
+  if(!touch || isNaN(touch.clientX)) return;
+  const rect = aimJoyEl.getBoundingClientRect();
+  aimJoy.active = true;
+  aimJoy.centerX = rect.left + rect.width/2;
+  aimJoy.centerY = rect.top + rect.height/2;
+  handleAimMove(e);
+}
+function handleAimMove(e){
+  if(!aimJoy.active) return;
+  e.preventDefault();
+  const touch = e.touches ? e.touches[0] : e;
+  if(!touch || isNaN(touch.clientX) || isNaN(touch.clientY)) return;
+  let dx = touch.clientX - aimJoy.centerX;
+  let dy = touch.clientY - aimJoy.centerY;
+  if(isNaN(dx)||isNaN(dy)){ dx=0; dy=0; }
+  const maxR = 45;
+  const len = Math.hypot(dx,dy);
+  if(len > maxR && len>0){ dx = dx/len*maxR; dy = dy/len*maxR; }
+  // 更新瞄准方向，松手后保持
+  if(len > 5){
+    G.player.aimX = dx/maxR;
+    G.player.aimY = dy/maxR;
+  }
+  aimJoyInner.style.left = (45+dx)+'px';
+  aimJoyInner.style.top = (45+dy)+'px';
+}
+function handleAimEnd(e){
+  aimJoy.active = false;
+  aimJoyInner.style.left = '45px'; aimJoyInner.style.top = '45px';
+}
+aimJoyEl.addEventListener('touchstart', handleAimStart, {passive:false});
+aimJoyEl.addEventListener('touchmove', handleAimMove, {passive:false});
+aimJoyEl.addEventListener('touchend', handleAimEnd);
+aimJoyEl.addEventListener('mousedown', handleAimStart);
+document.addEventListener('mousemove', e=>{if(aimJoy.active)handleAimMove(e)});
+document.addEventListener('mouseup', handleAimEnd);
+
 // 键盘支持
 // 键盘控制（电脑端）
 function isGameInputBlocked(){
@@ -1974,7 +2058,16 @@ function switchWeapon(){
   idx = (idx+1) % list.length;
   G.player.weapon = list[idx];
   updateUI();
+  updateAimJoystick();
   showToast('切换武器: '+G.player.weapon);
+}
+function updateAimJoystick(){
+  const aim = document.getElementById('aimJoystick');
+  if(G.player && G.player.weapon === 'gun'){
+    aim.style.display = 'block';
+  } else {
+    aim.style.display = 'none';
+  }
 }
 document.getElementById('weaponSwitch').addEventListener('click', switchWeapon);
 
@@ -2022,8 +2115,9 @@ document.getElementById('buyGun').addEventListener('click', ()=>{
     if(!G.weapons.includes('gun')) G.weapons.push('gun');
     G.player.weapon='gun';
     playSound('pickup');
-    showToast('🔫 购买了枪！');
+    showToast('🔫 购买了枪！右下角出现瞄准轮盘');
     updateUI();
+    updateAimJoystick();
     saveGame();
   } else showToast('金币不足！');
 });
@@ -2033,6 +2127,28 @@ document.getElementById('buyGrenade').addEventListener('click', ()=>{
     G.player.grenade+=3;
     playSound('pickup');
     showToast('💣 购买了手雷×3！');
+    updateUI();
+    saveGame();
+  } else showToast('金币不足！');
+});
+document.getElementById('buyBandage').addEventListener('click', ()=>{
+  if(G.player.gold>=30){
+    G.player.gold-=30;
+    G.player.hp = Math.min(G.player.maxHp, G.player.hp+5);
+    G.player.bleeding = false; // 止血
+    playSound('pickup');
+    showToast('🩹 使用绷带！回复5血，止血了');
+    updateUI();
+    saveGame();
+  } else showToast('金币不足！');
+});
+document.getElementById('buyMedkit').addEventListener('click', ()=>{
+  if(G.player.gold>=80){
+    G.player.gold-=80;
+    G.player.hp = G.player.maxHp;
+    G.player.bleeding = false; // 止血
+    playSound('unlock');
+    showToast('💊 使用医疗包！满血恢复，止血了');
     updateUI();
     saveGame();
   } else showToast('金币不足！');
@@ -2151,6 +2267,7 @@ function startGame(){
   createNPCs();
   createWoods();
   updateUI();
+  updateAimJoystick();
   document.getElementById('mainMenu').style.display = 'none';
   document.getElementById('saveSelectPanel').style.display = 'none';
   document.getElementById('endPanel').style.display = 'none';
