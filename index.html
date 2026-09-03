@@ -1206,8 +1206,7 @@ function updateNPCs(){
         r.hurtFlash = 0;
         showToast('😊 机器人复活了！');
       }
-      return;
-    }
+    } else {
     if(r.hurtFlash>0) r.hurtFlash--;
     if(r.giveCd>0) r.giveCd--;
     if(r.voiceCd>0) r.voiceCd--;
@@ -1286,6 +1285,7 @@ function updateNPCs(){
         askBtn.style.display = 'none';
       }
     }
+    }
   }
 
   // 🤬 商人 - 靠近打开商店
@@ -1318,8 +1318,7 @@ function updateNPCs(){
         tr.hurtFlash = 0;
         showToast('😝 捣蛋鬼复活了！');
       }
-      return;
-    }
+    } else {
     if(tr.hurtFlash>0) tr.hurtFlash--;
     if(tr.kickCd>0) tr.kickCd--;
     if(tr.fleeTimer>0) tr.fleeTimer--;
@@ -1390,6 +1389,7 @@ function updateNPCs(){
       tr.respawnTimer = 1800; // 30秒后复活
       playVoice('death', 'male'); // 😝 男声死亡"饿啊～"
       showToast('😝 被解决了！30秒后复活');
+    }
     }
   }
 }
