@@ -482,6 +482,34 @@ function playVoice(type, gender){
   }catch(e){}
 }
 
+// 😎 游离乐子人背景音乐
+let wandererMusicTimer = null;
+let wandererMusicNote = 0;
+function startWandererMusic(){
+  if(wandererMusicTimer) return;
+  const melody = [262, 330, 392, 330, 294, 349, 440, 349]; // C4 E4 G4 E4 D4 F4 A4 F4
+  wandererMusicNote = 0;
+  wandererMusicTimer = setInterval(()=>{
+    if(!G.soundOn || !audioCtx) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(melody[wandererMusicNote % melody.length], now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.start(now); osc.stop(now + 0.35);
+    wandererMusicNote++;
+  }, 350);
+}
+function stopWandererMusic(){
+  if(wandererMusicTimer){
+    clearInterval(wandererMusicTimer);
+    wandererMusicTimer = null;
+  }
+}
+
 const PLAYER_SIZE = 44;
 const MOB_SIZE = 44;
 
@@ -830,6 +858,21 @@ function createNPCs(){
     hurtFlash:0, knockback:{x:0,y:0}, fleeTimer:0,
     spawnX:tx, spawnY:ty, dead:false, respawnTimer:0,
   };
+  // 😎 游离乐子人 - 出生在离玩家至少400像素的位置
+  let wx, wy, wtries=0;
+  do {
+    wx = rand(200, WORLD_W-200);
+    wy = rand(200, WORLD_H-200);
+    wtries++;
+  } while(G.player && Math.hypot(wx-G.player.x, wy-G.player.y) < 400 && wtries < 50);
+  G.npcs.wanderer = {
+    x:wx, y:wy, w:44, h:44,
+    hp:12, maxHp:12, face:'😎', speed:1.2,
+    moveDir:{x:rand(-1,1),y:rand(-1,1)}, changeDirTimer:rand(60,180),
+    hurtFlash:0, knockback:{x:0,y:0},
+    spawnX:wx, spawnY:wy, dead:false, respawnTimer:0,
+    musicPlaying:false, musicTimer:0,
+  };
 }
 
 function createWoods(){
@@ -942,6 +985,15 @@ function hitAllMobs(hitBox, dmg){
     G.npcs.robot.hp -= dmg;
     G.npcs.robot.hurtFlash = 8;
     if(!G.npcs.robot.voiceCd || G.npcs.robot.voiceCd<=0){ playVoice('hurt','female'); G.npcs.robot.voiceCd = 15; }
+  }
+  // 也能打😎游离乐子人，带击退
+  if(G.npcs.wanderer && !G.npcs.wanderer.dead && rectOverlap(hitBox,G.npcs.wanderer)){
+    G.npcs.wanderer.hp -= dmg;
+    G.npcs.wanderer.hurtFlash = 8;
+    const dir = p.facing;
+    G.npcs.wanderer.knockback.x += dir*6;
+    G.npcs.wanderer.knockback.y += rand(-2,2);
+    playSound('hurt');
   }
 }
 
@@ -1488,6 +1540,62 @@ function updateNPCs(){
     }
     }
   }
+
+  // 😎 游离乐子人
+  const wn = G.npcs.wanderer;
+  if(wn){
+    // 死亡复活计时
+    if(wn.dead){
+      wn.respawnTimer--;
+      if(wn.respawnTimer <= 0){
+        wn.dead = false;
+        wn.hp = wn.maxHp;
+        wn.x = wn.spawnX;
+        wn.y = wn.spawnY;
+        wn.hurtFlash = 0;
+        showToast('😎 游离乐子人又回来了！');
+      }
+    } else {
+      if(wn.hurtFlash>0) wn.hurtFlash--;
+      // 击退
+      if(Math.abs(wn.knockback.x)>0.1 || Math.abs(wn.knockback.y)>0.1){
+        wn.x += wn.knockback.x; wn.y += wn.knockback.y;
+        wn.knockback.x *= 0.85; wn.knockback.y *= 0.85;
+      }
+      // 随机乱逛
+      wn.changeDirTimer--;
+      if(wn.changeDirTimer<=0){
+        wn.moveDir = {x:rand(-1,1), y:rand(-1,1)};
+        wn.changeDirTimer = rand(90,240);
+      }
+      wn.x += wn.moveDir.x * wn.speed;
+      wn.y += wn.moveDir.y * wn.speed;
+      wn.x = clamp(wn.x, 20, WORLD_W-wn.w-20);
+      wn.y = clamp(wn.y, 20, WORLD_H-wn.h-20);
+
+      // 靠近玩家播放音乐
+      const dw = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:wn.x+wn.w/2,y:wn.y+wn.h/2});
+      if(dw < 150 && !wn.musicPlaying){
+        wn.musicPlaying = true;
+        startWandererMusic();
+        showToast('🎵 听到了游离乐子人的音乐');
+      } else if(dw >= 180 && wn.musicPlaying){
+        wn.musicPlaying = false;
+        stopWandererMusic();
+      }
+
+      // 被打死
+      if(wn.hp<=0){
+        makeCorpse(wn);
+        wn.dead = true;
+        wn.respawnTimer = 1800; // 30秒后复活
+        wn.musicPlaying = false;
+        stopWandererMusic();
+        playSound('kill');
+        showToast('😎 游离乐人倒下了...30秒后复活');
+      }
+    }
+  }
 }
 
 function updateProjectiles(){
@@ -1557,6 +1665,12 @@ function updateProjectiles(){
         if(!G.npcs.robot.voiceCd || G.npcs.robot.voiceCd<=0){ playVoice('hurt','female'); G.npcs.robot.voiceCd = 15; }
         hit = true;
       }
+      // 远程也能打😎
+      if(G.npcs.wanderer && !G.npcs.wanderer.dead && rectOverlap(box,G.npcs.wanderer)){
+        G.npcs.wanderer.hp -= pr.dmg;
+        G.npcs.wanderer.hurtFlash = 8;
+        hit = true;
+      }
       if(hit && !pr.isGrenade) G.projectiles.splice(i,1);
     } else {
       // 打玩家
@@ -1578,6 +1692,11 @@ function updateProjectiles(){
         if(!G.npcs.trouble.voiceCd || G.npcs.trouble.voiceCd<=0){ playVoice('hurt','male'); G.npcs.trouble.voiceCd = 15; }
         G.npcs.trouble.chasing = false;
         G.npcs.trouble.fleeTimer = 60;
+      }
+      // 声波也能打😎
+      if(G.npcs.wanderer && !G.npcs.wanderer.dead && rectOverlap(box,G.npcs.wanderer)){
+        G.npcs.wanderer.hp -= pr.dmg;
+        G.npcs.wanderer.hurtFlash = 6;
       }
     }
   }
@@ -1617,6 +1736,11 @@ function explode(x, y, radius, dmg){
     G.npcs.robot.hp -= dmg;
     G.npcs.robot.hurtFlash = 10;
     if(!G.npcs.robot.voiceCd || G.npcs.robot.voiceCd<=0){ playVoice('hurt','female'); G.npcs.robot.voiceCd = 15; }
+  }
+  // 爆炸也能炸😎
+  if(G.npcs.wanderer && !G.npcs.wanderer.dead && dist({x,y},{x:G.npcs.wanderer.x+G.npcs.wanderer.w/2,y:G.npcs.wanderer.y+G.npcs.wanderer.h/2}) < radius){
+    G.npcs.wanderer.hp -= dmg;
+    G.npcs.wanderer.hurtFlash = 10;
   }
 }
 
@@ -1666,6 +1790,7 @@ function render(){
   if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
   if(G.npcs.merchant) drawEntity(G.npcs.merchant, false);
   if(G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
+  if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
 
   // 怪物
   G.mobs.forEach(m=>drawEntity(m, true));
@@ -1941,6 +2066,7 @@ function updateUI(){
 // ==================== 游戏结束 ====================
 function gameOver(win){
   G.running = false;
+  stopWandererMusic(); // 停止游离乐子人音乐
   saveGame(); // 游戏结束时保存进度
   if(!win){ playVoice('death', 'male'); } // 😡 男声死亡"饿啊～"
   const panel = document.getElementById('endPanel');
@@ -2343,6 +2469,7 @@ function startGame(){
 
 function exitToMenu(){
   G.state = 'menu';
+  stopWandererMusic(); // 停止游离乐子人音乐
   document.getElementById('mainMenu').style.display = 'flex';
   document.getElementById('endPanel').style.display = 'none';
   document.getElementById('shopPanel').style.display = 'none';
