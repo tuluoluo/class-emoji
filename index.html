@@ -136,9 +136,21 @@ input:checked + .slider:before{transform:translateX(24px)}
 .btn-load{background:#27ae60;color:#fff}
 .btn-new{background:#3498db;color:#fff}
 .btn-delete{background:#e74c3c;color:#fff}
+/* 强制横屏提示遮罩 */
+#rotateOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a2e;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:99999;font-family:"Microsoft YaHei",sans-serif;text-align:center}
+#rotateOverlay .rotate-icon{font-size:80px;margin-bottom:20px;animation:rotatePhone 2s ease-in-out infinite}
+#rotateOverlay h2{font-size:24px;margin-bottom:10px}
+#rotateOverlay p{font-size:16px;color:#aaa;margin:5px 0}
+@keyframes rotatePhone{0%,100%{transform:rotate(0deg)}50%{transform:rotate(90deg)}}
 </style>
 </head>
 <body>
+<div id="rotateOverlay">
+  <div class="rotate-icon">📱</div>
+  <h2>请横屏游玩</h2>
+  <p>将手机横过来获得最佳体验</p>
+  <p>横屏后自动继续游戏</p>
+</div>
 <div id="wrap">
   <canvas id="cv"></canvas>
 
@@ -327,6 +339,10 @@ input:checked + .slider:before{transform:translateX(24px)}
       </div>
       <h3 style="margin-top:16px;border-top:3px solid #333;padding-top:10px">🆕 新版本更新</h3>
       <div class="rules-content">
+        <p><b>v1.8 强制横屏+音频修复</b></p>
+        <p>• 新增强制横屏：手机竖屏时弹出提示，必须横屏才能游玩，横屏后自动继续</p>
+        <p>• 修复游离乐子人音乐不响的问题：浏览器要求用户交互后才能播放音频，现在点击屏幕自动解锁</p>
+        <p>• 桌面端不受影响，正常运行</p>
         <p><b>v1.7 新角色😎游离乐子人</b></p>
         <p>• 新增NPC😎游离乐子人：在地图上随机乱逛，12血，可被攻击</p>
         <p>• 靠近他150像素内会播放欢快的背景音乐（主旋律+低音伴奏+打击乐），远离自动停止</p>
@@ -403,7 +419,55 @@ function initAudio(){
   if(!audioCtx){
     try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
   }
+  // 浏览器策略：用户交互后才能播放音频，尝试恢复
+  if(audioCtx && audioCtx.state === 'suspended'){
+    audioCtx.resume().catch(()=>{});
+  }
 }
+// 全局交互标记：用户首次点击/触摸后解锁音频
+let audioUnlocked = false;
+function unlockAudio(){
+  if(audioUnlocked) return;
+  audioUnlocked = true;
+  initAudio();
+  if(audioCtx && audioCtx.state === 'suspended'){
+    audioCtx.resume().catch(()=>{});
+  }
+}
+// ==================== 强制横屏 ====================
+let isPortrait = false;
+function checkOrientation(){
+  // 桌面端不检测
+  if(!('ontouchstart' in window) && window.innerWidth > 768){
+    isPortrait = false;
+    document.getElementById('rotateOverlay').style.display = 'none';
+    return;
+  }
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  isPortrait = h > w;
+  const overlay = document.getElementById('rotateOverlay');
+  if(isPortrait){
+    overlay.style.display = 'flex';
+  } else {
+    overlay.style.display = 'none';
+  }
+}
+function lockLandscape(){
+  // 尝试锁定横屏（需要用户交互后才能生效）
+  if(screen.orientation && screen.orientation.lock){
+    screen.orientation.lock('landscape').catch(()=>{});
+  }
+}
+// 监听屏幕方向变化
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('orientationchange', ()=>{ setTimeout(checkOrientation, 200); });
+// 页面加载时检测
+window.addEventListener('load', ()=>{ setTimeout(checkOrientation, 100); });
+// 用户首次交互时尝试锁定横屏并解锁音频
+document.addEventListener('touchstart', ()=>{ unlockAudio(); lockLandscape(); }, {once:false});
+document.addEventListener('click', ()=>{ unlockAudio(); lockLandscape(); }, {once:false});
+
 function playSound(type){
   if(!G.soundOn || !audioCtx) return;
   const now = audioCtx.currentTime;
@@ -2395,7 +2459,8 @@ document.getElementById('restartBtn').addEventListener('touchstart', function(e)
 
 // ==================== 游戏主循环 ====================
 function gameLoop(){
-  if(G.state === 'playing' && !G.paused){
+  // 竖屏时冻结游戏逻辑
+  if(G.state === 'playing' && !G.paused && !isPortrait){
     update();
   }
   render();
