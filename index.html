@@ -141,7 +141,28 @@ input:checked + .slider:before{transform:translateX(24px)}
 #rotateOverlay .rotate-icon{font-size:80px;margin-bottom:20px;animation:rotatePhone 2s ease-in-out infinite}
 #rotateOverlay h2{font-size:24px;margin-bottom:10px}
 #rotateOverlay p{font-size:16px;color:#aaa;margin:5px 0}
+#forceLandscapeBtn{margin-top:20px;padding:12px 30px;background:#e74c3c;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(231,76,60,.4)}
+#forceLandscapeBtn:active{transform:scale(.95)}
 @keyframes rotatePhone{0%,100%{transform:rotate(0deg)}50%{transform:rotate(90deg)}}
+/* 强制横屏模式：CSS旋转整个游戏容器 */
+.forced-landscape{
+  transform: rotate(90deg) !important;
+  transform-origin: center center !important;
+  width: 100vh !important;
+  height: 100vw !important;
+  max-width: 100vh !important;
+  max-height: 100vw !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  margin-left: -50vw !important;
+  margin-top: -50vh !important;
+  z-index: 10 !important;
+}
+.forced-landscape canvas{
+  width: 100% !important;
+  height: 100% !important;
+}
 </style>
 </head>
 <body>
@@ -150,6 +171,8 @@ input:checked + .slider:before{transform:translateX(24px)}
   <h2>请横屏游玩</h2>
   <p>将手机横过来获得最佳体验</p>
   <p>横屏后自动继续游戏</p>
+  <button id="forceLandscapeBtn">🔄 强制横屏模式</button>
+  <p style="font-size:12px;margin-top:10px;color:#888">手机锁不了横屏？点这个用旋转模式玩</p>
 </div>
 <div id="wrap">
   <canvas id="cv"></canvas>
@@ -341,6 +364,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <div class="rules-content">
         <p><b>v1.8 强制横屏+音频修复</b></p>
         <p>• 新增强制横屏：手机竖屏时弹出提示，必须横屏才能游玩，横屏后自动继续</p>
+        <p>• 新增「强制横屏模式」按钮：手机锁不了横屏时点这个，用CSS旋转整个游戏画面，竖着拿也能横屏玩</p>
         <p>• 修复游离乐子人音乐不响的问题：浏览器要求用户交互后才能播放音频，现在点击屏幕自动解锁</p>
         <p>• 桌面端不受影响，正常运行</p>
         <p><b>v1.7 新角色😎游离乐子人</b></p>
@@ -436,7 +460,14 @@ function unlockAudio(){
 }
 // ==================== 强制横屏 ====================
 let isPortrait = false;
+let forcedLandscape = false;
 function checkOrientation(){
+  // 已经开启强制横屏模式，不再检测
+  if(forcedLandscape){
+    isPortrait = false;
+    document.getElementById('rotateOverlay').style.display = 'none';
+    return;
+  }
   // 桌面端不检测
   if(!('ontouchstart' in window) && window.innerWidth > 768){
     isPortrait = false;
@@ -453,6 +484,22 @@ function checkOrientation(){
     overlay.style.display = 'none';
   }
 }
+// 强制横屏模式：用CSS旋转整个游戏画面
+function enableForcedLandscape(){
+  forcedLandscape = true;
+  isPortrait = false;
+  const wrap = document.getElementById('wrap');
+  wrap.classList.add('forced-landscape');
+  document.getElementById('rotateOverlay').style.display = 'none';
+  // 重新调整canvas尺寸
+  setTimeout(()=>{
+    const cv = document.getElementById('cv');
+    if(cv){
+      cv.width = window.innerHeight;
+      cv.height = window.innerWidth;
+    }
+  }, 100);
+}
 function lockLandscape(){
   // 尝试锁定横屏（需要用户交互后才能生效）
   if(screen.orientation && screen.orientation.lock){
@@ -467,6 +514,11 @@ window.addEventListener('load', ()=>{ setTimeout(checkOrientation, 100); });
 // 用户首次交互时尝试锁定横屏并解锁音频
 document.addEventListener('touchstart', ()=>{ unlockAudio(); lockLandscape(); }, {once:false});
 document.addEventListener('click', ()=>{ unlockAudio(); lockLandscape(); }, {once:false});
+// 强制横屏按钮
+document.addEventListener('DOMContentLoaded', ()=>{
+  const btn = document.getElementById('forceLandscapeBtn');
+  if(btn) btn.addEventListener('click', (e)=>{ e.stopPropagation(); enableForcedLandscape(); });
+});
 
 function playSound(type){
   if(!G.soundOn || !audioCtx) return;
