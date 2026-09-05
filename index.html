@@ -225,6 +225,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn" id="digBtn">⛏</button>
       <button class="skillBtn" id="atkBtn">👊</button>
       <button class="skillBtn" id="grenadeBtn">💣</button>
+      <button class="skillBtn" id="dashBtn">💨</button>
     </div>
   </div>
 
@@ -381,6 +382,20 @@ const G = {
   shopCloseCooldown: 0, // 关闭商店后冷却，避免立即自动打开
   keys: {left:false, right:false, up:false, down:false},
   nightGraceTimer: 0, // 夜晚前30秒降低刷怪量
+  // 天气系统
+  weather: 'sunny', // sunny | cloudy | rain | thunder | hot
+  weatherTimer: 0,
+  weatherDuration: 1800, // 每种天气持续30秒
+  rainDrops: [], // 雨滴粒子
+  lightningTimer: 0, // 打雷计时
+  lightningFlash: 0, // 闪电闪光
+  lightningX: 0, lightningY: 0, // 闪电位置
+  // 冲刺技能
+  dashCooldown: 0,
+  dashCooldownMax: 180, // 3秒冷却
+  isDashing: false,
+  dashTimer: 0,
+  dashDir: {x:0, y:0},
 };
 
 // ==================== 声音系统 ====================
@@ -428,6 +443,26 @@ const LANGS = {
     rulesTitle:'📖 游戏规则', rBasic:'🎮 基本操作', rPlayer:'😡 玩家属性', rWeapon:'🔫 武器系统',
     rMob:'👻 怪物系统（仅夜晚刷新）', rNPC:'🤝 NPC系统', rDayNight:'🌙 昼夜系统',
     rShop:'🏪 商店系统', rUnlock:'🏆 击杀解锁', rUpdate:'🆕 新版本更新',
+    rWeather:'🌤️ 天气系统', rWeatherSunny:'晴天：无特殊效果',
+    rWeatherCloudy:'阴天：天色变暗，无其他效果',
+    rWeatherRain:'下雨：地面湿滑，移动时有概率摔倒（旋转90度，2秒不能动），玩家/NPC/怪物都会摔',
+    rWeatherThunder:'打雷：下雨+雷电，雷电会劈死附近的小怪/NPC/玩家（Boss免疫）',
+    rWeatherHot:'大太阳：速度降低20%，每10秒中暑掉1血',
+    rDash:'💨 冲刺技能', rDashDesc:'按Shift或点击💨按钮向移动方向冲刺，冲刺期间短暂无敌，3秒冷却',
+    // 天气toast
+    weatherRain:'🌧️ 下雨了！地面湿滑，小心摔倒！',
+    weatherThunder:'⛈️ 打雷了！小心被雷劈！',
+    weatherHot:'🔥 大太阳！注意防暑！',
+    weatherCloudy:'☁️ 阴天了',
+    weatherSunny:'☀️ 晴天了',
+    lightningHit:'⚡ 被雷劈了！-8HP',
+    slipFall:'💦 滑倒了！2秒不能动',
+    // 更新日志
+    r38:'😎 游离乐子人的音乐会吸引附近怪物',
+    r39:'💨 新增冲刺技能（Shift/💨按钮），3秒冷却，冲刺期间无敌',
+    r40:'🌤️ 新增天气系统：晴天/阴天/下雨/打雷/大太阳',
+    r41:'🌧️ 下雨地面湿滑，玩家/NPC/怪物都会摔倒（旋转90度2秒）',
+    r42:'⛈️ 打雷会劈死附近生物，大太阳会减速和中暑掉血',
     // 规则面板详细内容
     r1:'左下摇杆移动，右下按钮攻击/挖掘/手雷', r2:'方向键移动，J攻击，K挖掘，L手雷，Q切武器',
     r3:'右下橙色瞄准轮盘，左手移动右手瞄准，可边跑边打',
@@ -872,6 +907,14 @@ function buildRulesContent(){
     '<p>• ☀ '+t('r23')+'</p>'+
     '<p>• 🌙 '+t('r24')+'</p>'+
     '<p>• '+t('r25')+'</p>'+
+    '<p><b>'+t('rWeather')+'</b></p>'+
+    '<p>• ☀️ '+t('rWeatherSunny')+'</p>'+
+    '<p>• ☁️ '+t('rWeatherCloudy')+'</p>'+
+    '<p>• 🌧️ '+t('rWeatherRain')+'</p>'+
+    '<p>• ⛈️ '+t('rWeatherThunder')+'</p>'+
+    '<p>• 🔥 '+t('rWeatherHot')+'</p>'+
+    '<p><b>'+t('rDash')+'</b></p>'+
+    '<p>• 💨 '+t('rDashDesc')+'</p>'+
     '<p><b>'+t('rShop')+'</b></p>'+
     '<p>• '+t('r26')+'</p>'+
     '<p>• 🔪 50g / 🔫 120g / 💣×3 40g</p>'+
@@ -884,10 +927,11 @@ function buildRulesContent(){
     '<p>• 💥: 70 '+t('r32')+'</p>'+
     '<p>• 😈: 120 '+t('r33')+'</p>'+
     '<p><b>'+t('rUpdate')+'</b></p>'+
-    '<p>• '+t('r34')+'</p>'+
-    '<p>• '+t('r35')+'</p>'+
-    '<p>• '+t('r36')+'</p>'+
-    '<p>• '+t('r37')+'</p>';
+    '<p>• '+t('r38')+'</p>'+
+    '<p>• '+t('r39')+'</p>'+
+    '<p>• '+t('r40')+'</p>'+
+    '<p>• '+t('r41')+'</p>'+
+    '<p>• '+t('r42')+'</p>';
 }
 
 function setLanguage(lang){
@@ -1009,6 +1053,32 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 function playSound(type){
   if(!G.soundOn || !audioCtx) return;
+  // 打雷音效
+  if(type === 'thunder'){
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.5);
+    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.8);
+    return;
+  }
+  // 冲刺音效
+  if(type === 'dash'){
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    return;
+  }
   const now = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -1236,6 +1306,16 @@ function loadGame(slot){
     G.weapons = d.weapons && d.weapons.length > 0 ? [...d.weapons] : ['fist'];
     G.atkCooldown = 0; G.shake = 0; G._shopOpened = false;
     G.nightGraceTimer = 0;
+    // 重置天气系统
+    G.weather = 'sunny';
+    G.weatherTimer = 0;
+    G.rainDrops = [];
+    G.lightningTimer = 0;
+    G.lightningFlash = 0;
+    // 重置冲刺
+    G.dashCooldown = 0;
+    G.isDashing = false;
+    G.dashTimer = 0;
     G.day = d.day !== undefined ? d.day : true;
     G.dayTimer = d.dayTimer || 0;
     inputState.left=false; inputState.right=false; inputState.up=false; inputState.down=false;
@@ -1423,6 +1503,14 @@ function createPlayer(){
     attackAnim:0,
     aimX:1, aimY:0, // 瞄准方向（枪用）
     bleeding:false, bleedTimer:0, // 流血状态
+    // 冲刺技能
+    dashCooldown:0,
+    isDashing:false,
+    dashTimer:0,
+    dashDir:{x:0,y:0},
+    // 打滑摔倒
+    slipTimer:0,
+    slipRotate:false,
   };
 }
 
@@ -1444,6 +1532,7 @@ function createMob(type){
     face:d.face,dmg:d.dmg,speed:d.speed,atkRange:d.atkRange,
     atkCd:0,maxAtkCd:d.atkCd,ranged:d.ranged,type,
     hurtFlash:0,
+    slipTimer:0, slipRotate:false, // 打滑摔倒
   };
 }
 
@@ -1473,6 +1562,7 @@ function createNPCs(){
     lifeTimer:3600, giveCd:0, moveDir:{x:rand(-1,1),y:rand(-1,1)}, changeDirTimer:0,
     hurtFlash:0, isRobot:true,
     spawnX:rX, spawnY:rY, dead:false, respawnTimer:0,
+    slipTimer:0, slipRotate:false, // 打滑摔倒
   };
   G.npcs.merchant = {
     x:WORLD_W*0.5, y:WORLD_H*0.35, w:44, h:44, hp:9999, face:'🤬',
@@ -1558,6 +1648,36 @@ function calcIncomingDmg(base){
 }
 
 // ==================== 玩家攻击 ====================
+// 冲刺技能
+function playerDash(){
+  const p = G.player;
+  if(!p || G.dashCooldown > 0 || p.isDashing || p.stunTimer > 0 || p.slipTimer > 0) return;
+  // 计算冲刺方向：当前移动方向，没有移动方向则用朝向
+  let dx=0, dy=0;
+  if(inputState.left) dx -= 1;
+  if(inputState.right) dx += 1;
+  if(inputState.up) dy -= 1;
+  if(inputState.down) dy += 1;
+  if(dx===0 && dy===0 && joy.active){
+    dx = isNaN(joy.dx)?0:joy.dx;
+    dy = isNaN(joy.dy)?0:joy.dy;
+  }
+  if(dx===0 && dy===0){
+    dx = p.facing; dy = 0;
+  }
+  const len = Math.hypot(dx,dy);
+  if(len > 0){
+    dx/=len; dy/=len;
+    p.dashDir = {x:dx, y:dy};
+    p.isDashing = true;
+    p.dashTimer = 12; // 冲刺持续0.2秒
+    p.invincible = 15; // 冲刺期间短暂无敌
+    G.dashCooldown = G.dashCooldownMax;
+    playSound('dash');
+    spawnParticles(p.x+p.w/2, p.y+p.h/2, '#88ccff', 10);
+  }
+}
+
 function playerAttack(){
   const p = G.player;
   if(G.atkCooldown>0||p.stunTimer>0) return;
@@ -1710,6 +1830,121 @@ function update(){
   }
   if(G.nightGraceTimer > 0) G.nightGraceTimer--;
 
+  // ===== 天气系统 =====
+  G.weatherTimer++;
+  if(G.weatherTimer >= G.weatherDuration){
+    G.weatherTimer = 0;
+    // 随机切换天气（晴天概率最高，打雷最低）
+    const r = Math.random();
+    let newWeather;
+    if(r < 0.3) newWeather = 'sunny';
+    else if(r < 0.5) newWeather = 'cloudy';
+    else if(r < 0.7) newWeather = 'rain';
+    else if(r < 0.85) newWeather = 'hot';
+    else newWeather = 'thunder';
+    if(newWeather !== G.weather){
+      G.weather = newWeather;
+      if(G.weather === 'rain') showToast(t('weatherRain'));
+      else if(G.weather === 'thunder') showToast(t('weatherThunder'));
+      else if(G.weather === 'hot') showToast(t('weatherHot'));
+      else if(G.weather === 'cloudy') showToast(t('weatherCloudy'));
+      else showToast(t('weatherSunny'));
+    }
+  }
+
+  // 下雨特效：生成雨滴
+  if(G.weather === 'rain' || G.weather === 'thunder'){
+    if(G.rainDrops.length < 150){
+      for(let i=0;i<3;i++){
+        G.rainDrops.push({
+          x: camera.x + rand(-50, W+50),
+          y: camera.y + rand(-100, -10),
+          speed: rand(12, 18),
+          len: rand(10, 20),
+        });
+      }
+    }
+    // 更新雨滴
+    for(let i=G.rainDrops.length-1;i>=0;i--){
+      const rd = G.rainDrops[i];
+      rd.y += rd.speed;
+      rd.x += 2; // 斜风
+      if(rd.y > camera.y + H + 50){
+        G.rainDrops.splice(i,1);
+      }
+    }
+  } else {
+    G.rainDrops = [];
+  }
+
+  // 打雷：随机闪电
+  if(G.weather === 'thunder'){
+    G.lightningTimer++;
+    if(G.lightningFlash > 0) G.lightningFlash--;
+    // 每3-6秒打一次雷
+    if(G.lightningTimer >= rand(180, 360)){
+      G.lightningTimer = 0;
+      G.lightningFlash = 8;
+      // 闪电位置：在玩家附近随机
+      G.lightningX = p.x + rand(-300, 300);
+      G.lightningY = p.y + rand(-300, 300);
+      playSound('thunder');
+      G.shake = 15;
+      // 闪电劈人：检查闪电位置附近的实体
+      const strikeRadius = 60;
+      // 1. 劈玩家
+      if(Math.hypot(p.x+p.w/2 - G.lightningX, p.y+p.h/2 - G.lightningY) < strikeRadius && !G.cheat.infHp){
+        p.hp -= 8;
+        p.invincible = 60;
+        spawnParticles(p.x+p.w/2, p.y+p.h/2, '#ffff00', 15);
+        showToast(t('lightningHit'));
+        if(p.hp <= 0){ makeCorpse(p); gameOver(false); }
+      }
+      // 2. 劈小怪（不能是boss）
+      for(let mi=G.mobs.length-1;mi>=0;mi--){
+        const m = G.mobs[mi];
+        if(Math.hypot(m.x+m.w/2 - G.lightningX, m.y+m.h/2 - G.lightningY) < strikeRadius){
+          m.hp -= 20; // 闪电高伤害
+          spawnParticles(m.x+m.w/2, m.y+m.h/2, '#ffff00', 10);
+          if(m.hp <= 0){
+            makeCorpse(m);
+            spawnParticles(m.x+m.w/2, m.y+m.h/2, '#888', 8);
+            G.mobs.splice(mi,1);
+            G.killCount++;
+            playSound('kill');
+            updateUI();
+          }
+        }
+      }
+      // 3. 劈NPC（🤬商人不算，因为无敌）
+      ['robot', 'trouble', 'wanderer'].forEach(npcKey => {
+        const npc = G.npcs[npcKey];
+        if(npc && !npc.dead && !npc.isMerchant && !npc.invincible){
+          if(Math.hypot(npc.x+npc.w/2 - G.lightningX, npc.y+npc.h/2 - G.lightningY) < strikeRadius){
+            npc.hp -= 15;
+            npc.hurtFlash = 10;
+            spawnParticles(npc.x+npc.w/2, npc.y+npc.h/2, '#ffff00', 10);
+          }
+        }
+      });
+    }
+  }
+
+  // 大太阳：状态下降（速度降低，通过在移动时处理）
+  // 这里只处理玩家的缓慢掉血（中暑）
+  if(G.weather === 'hot' && !G.cheat.infHp){
+    // 每10秒掉1血
+    if(!p.hotTimer) p.hotTimer = 0;
+    p.hotTimer++;
+    if(p.hotTimer >= 600){
+      p.hotTimer = 0;
+      p.hp -= 1;
+      spawnParticles(p.x+p.w/2, p.y, '#ff6600', 3);
+      updateUI();
+      if(p.hp <= 0){ makeCorpse(p); gameOver(false); }
+    }
+  }
+
   // 刷怪（仅夜晚）
   if(!G.day){
     // 检测是否有Boss存活
@@ -1737,7 +1972,25 @@ function update(){
   checkUnlocks();
 
   // 玩家移动
-  if(p.stunTimer>0){
+  // 打滑摔倒：2秒不能动，旋转90度
+  if(p.slipTimer > 0){
+    p.slipTimer--;
+    if(p.slipTimer <= 0) p.slipRotate = false;
+  }
+  // 冲刺中
+  else if(p.isDashing){
+    p.dashTimer--;
+    p.x += p.dashDir.x * 8;
+    p.y += p.dashDir.y * 8;
+    if(p.dashTimer <= 0){
+      p.isDashing = false;
+    }
+    // 冲刺粒子
+    if(Math.random() < 0.5){
+      spawnParticles(p.x+p.w/2, p.y+p.h/2, '#88ccff', 1);
+    }
+  }
+  else if(p.stunTimer>0){
     p.stunTimer--;
   } else {
     let dx=0, dy=0;
@@ -1757,11 +2010,27 @@ function update(){
       dx/=len; dy/=len;
       let spd = p.speed;
       if(G.cheat.alaskey) spd *= 0.7;
+      // 大太阳：速度降低20%
+      if(G.weather === 'hot') spd *= 0.8;
       p.x += dx*spd;
       p.y += dy*spd;
       if(Math.abs(dx)>0.1) p.facing = dx>0?1:-1;
+
+      // 下雨/打雷：有概率打滑摔倒
+      if((G.weather === 'rain' || G.weather === 'thunder') && p.slipTimer <= 0){
+        // 每帧0.15%概率摔倒，移动时才会摔
+        if(Math.random() < 0.0015){
+          p.slipTimer = 120; // 2秒
+          p.slipRotate = true;
+          spawnParticles(p.x+p.w/2, p.y+p.h/2, '#aaddff', 8);
+          showToast(t('slipFall'));
+        }
+      }
     }
   }
+
+  // 冲刺冷却
+  if(G.dashCooldown > 0) G.dashCooldown--;
   p.x = clamp(p.x, 0, WORLD_W-p.w);
   p.y = clamp(p.y, 0, WORLD_H-p.h);
 
@@ -1875,21 +2144,40 @@ function updateMobs(){
     if(m.hurtFlash>0) m.hurtFlash--;
     if(m.atkCd>0) m.atkCd--;
 
+    // 打滑摔倒
+    if(m.slipTimer > 0){
+      m.slipTimer--;
+      if(m.slipTimer <= 0) m.slipRotate = false;
+    } else {
     // AI：向玩家移动
     const cx = m.x+m.w/2, cy = m.y+m.h/2;
     const px = p.x+p.w/2, py = p.y+p.h/2;
     const d = Math.hypot(px-cx, py-cy);
 
+    // 😎音乐吸引怪物：如果游离乐子人在播放音乐，怪物会被吸引过去
+    const wn = G.npcs.wanderer;
+    let attractX = px, attractY = py;
+    if(wn && !wn.dead && wn.musicPlaying){
+      const wcx = wn.x+wn.w/2, wcy = wn.y+wn.h/2;
+      const wd = Math.hypot(wcx-cx, wcy-cy);
+      // 音乐吸引范围400像素，比玩家更近时优先被音乐吸引
+      if(wd < 400 && wd < d){
+        attractX = wcx;
+        attractY = wcy;
+      }
+    }
+
     if(m.ranged){
       // 远程：保持距离
-      if(d < 180){
-        m.x -= (px-cx)/d * m.speed * 0.7;
-        m.y -= (py-cy)/d * m.speed * 0.7;
-      } else if(d > 300){
-        m.x += (px-cx)/d * m.speed;
-        m.y += (py-cy)/d * m.speed;
+      const ad = Math.hypot(attractX-cx, attractY-cy);
+      if(ad < 180){
+        m.x -= (attractX-cx)/ad * m.speed * 0.7;
+        m.y -= (attractY-cy)/ad * m.speed * 0.7;
+      } else if(ad > 300){
+        m.x += (attractX-cx)/ad * m.speed;
+        m.y += (attractY-cy)/ad * m.speed;
       }
-      // 发射声波
+      // 发射声波（只对玩家发射）
       if(m.atkCd<=0 && d < m.atkRange){
         m.atkCd = m.maxAtkCd;
         const ang = Math.atan2(py-cy, px-cx);
@@ -1898,10 +2186,11 @@ function updateMobs(){
         });
       }
     } else {
-      // 近战：冲向玩家
-      if(d > 5){
-        m.x += (px-cx)/d * m.speed;
-        m.y += (py-cy)/d * m.speed;
+      // 近战：冲向目标（玩家或音乐）
+      const ad = Math.hypot(attractX-cx, attractY-cy);
+      if(ad > 5){
+        m.x += (attractX-cx)/ad * m.speed;
+        m.y += (attractY-cy)/ad * m.speed;
       }
       // 近战攻击
       if(m.atkCd<=0 && d < m.atkRange){
@@ -1923,6 +2212,16 @@ function updateMobs(){
 
     m.x = clamp(m.x, -50, WORLD_W+50);
     m.y = clamp(m.y, -50, WORLD_H+50);
+
+    // 下雨/打雷：怪物有概率打滑摔倒
+    if((G.weather === 'rain' || G.weather === 'thunder') && m.slipTimer <= 0){
+      if(Math.random() < 0.001){
+        m.slipTimer = 120;
+        m.slipRotate = true;
+        spawnParticles(m.x+m.w/2, m.y+m.h/2, '#aaddff', 5);
+      }
+    }
+    } // 结束打滑 else 块
 
     // 也攻击机器人NPC
     if(G.npcs.robot && !G.npcs.robot.dead && rectOverlap(m, G.npcs.robot) && m.atkCd<=0){
@@ -2016,16 +2315,32 @@ function updateNPCs(){
     if(r.voiceCd>0) r.voiceCd--;
     r.lifeTimer--;
 
+    // 打滑摔倒
+    if(r.slipTimer > 0){
+      r.slipTimer--;
+      if(r.slipTimer <= 0) r.slipRotate = false;
+    } else {
     // 随机移动
     r.changeDirTimer--;
     if(r.changeDirTimer<=0){
       r.moveDir = {x:rand(-1,1), y:rand(-1,1)};
       r.changeDirTimer = rand(60,180);
     }
-    r.x += r.moveDir.x * r.speed;
-    r.y += r.moveDir.y * r.speed;
+    let rSpeed = r.speed;
+    if(G.weather === 'hot') rSpeed *= 0.8; // 大太阳减速
+    r.x += r.moveDir.x * rSpeed;
+    r.y += r.moveDir.y * rSpeed;
     r.x = clamp(r.x, 20, WORLD_W-r.w-20);
     r.y = clamp(r.y, 20, WORLD_H-r.h-20);
+    // 下雨打滑
+    if((G.weather === 'rain' || G.weather === 'thunder') && r.slipTimer <= 0){
+      if(Math.random() < 0.0008){
+        r.slipTimer = 120;
+        r.slipRotate = true;
+        spawnParticles(r.x+r.w/2, r.y+r.h/2, '#aaddff', 5);
+      }
+    }
+    }
 
     // 爆炸倒计时最后10秒闪烁警告
     if(r.lifeTimer <= 600 && r.lifeTimer % 20 < 10){
@@ -2138,6 +2453,11 @@ function updateNPCs(){
       if(Math.abs(tr.knockback.y)<0.5) tr.knockback.y=0;
     }
 
+    // 打滑摔倒
+    if(tr.slipTimer > 0){
+      tr.slipTimer--;
+      if(tr.slipTimer <= 0) tr.slipRotate = false;
+    } else {
     const cx=tr.x+tr.w/2, cy=tr.y+tr.h/2;
     const px=p.x+p.w/2, py=p.y+p.h/2;
     const d = Math.hypot(px-cx, py-cy);
@@ -2187,6 +2507,16 @@ function updateNPCs(){
     tr.x = clamp(tr.x, 20, WORLD_W-tr.w-20);
     tr.y = clamp(tr.y, 20, WORLD_H-tr.h-20);
 
+    // 下雨打滑
+    if((G.weather === 'rain' || G.weather === 'thunder') && tr.slipTimer <= 0){
+      if(Math.random() < 0.001){
+        tr.slipTimer = 120;
+        tr.slipRotate = true;
+        spawnParticles(tr.x+tr.w/2, tr.y+tr.h/2, '#aaddff', 5);
+      }
+    }
+    } // 结束打滑 else 块
+
     if(tr.hp<=0){
       makeCorpse(tr);
       tr.dead = true;
@@ -2218,16 +2548,32 @@ function updateNPCs(){
         wn.x += wn.knockback.x; wn.y += wn.knockback.y;
         wn.knockback.x *= 0.85; wn.knockback.y *= 0.85;
       }
+      // 打滑摔倒
+      if(wn.slipTimer > 0){
+        wn.slipTimer--;
+        if(wn.slipTimer <= 0) wn.slipRotate = false;
+      } else {
       // 随机乱逛
       wn.changeDirTimer--;
       if(wn.changeDirTimer<=0){
         wn.moveDir = {x:rand(-1,1), y:rand(-1,1)};
         wn.changeDirTimer = rand(90,240);
       }
-      wn.x += wn.moveDir.x * wn.speed;
-      wn.y += wn.moveDir.y * wn.speed;
+      let wSpeed = wn.speed;
+      if(G.weather === 'hot') wSpeed *= 0.8;
+      wn.x += wn.moveDir.x * wSpeed;
+      wn.y += wn.moveDir.y * wSpeed;
       wn.x = clamp(wn.x, 20, WORLD_W-wn.w-20);
       wn.y = clamp(wn.y, 20, WORLD_H-wn.h-20);
+      // 下雨打滑
+      if((G.weather === 'rain' || G.weather === 'thunder') && wn.slipTimer <= 0){
+        if(Math.random() < 0.0008){
+          wn.slipTimer = 120;
+          wn.slipRotate = true;
+          spawnParticles(wn.x+wn.w/2, wn.y+wn.h/2, '#aaddff', 5);
+        }
+      }
+      }
 
       // 靠近玩家播放音乐
       const dw = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:wn.x+wn.w/2,y:wn.y+wn.h/2});
@@ -2476,6 +2822,77 @@ function render(){
     ctx.fillRect(0,0,W,H);
   }
 
+  // ===== 天气特效（屏幕空间） =====
+  // 阴天：变暗
+  if(G.weather === 'cloudy'){
+    ctx.fillStyle = 'rgba(80,80,100,0.25)';
+    ctx.fillRect(0,0,W,H);
+  }
+  // 大太阳：暖色滤镜 + 热浪效果
+  if(G.weather === 'hot'){
+    ctx.fillStyle = 'rgba(255,150,50,0.12)';
+    ctx.fillRect(0,0,W,H);
+    // 太阳图标
+    ctx.font = '32px serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillText('☀️', W-10, 40);
+  }
+  // 下雨/打雷：雨滴
+  if(G.weather === 'rain' || G.weather === 'thunder'){
+    ctx.strokeStyle = 'rgba(150,180,255,0.6)';
+    ctx.lineWidth = 1.5;
+    G.rainDrops.forEach(rd => {
+      const sx = rd.x - camera.x;
+      const sy = rd.y - camera.y;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx + 3, sy + rd.len);
+      ctx.stroke();
+    });
+    // 雨天变暗
+    ctx.fillStyle = 'rgba(50,60,90,0.2)';
+    ctx.fillRect(0,0,W,H);
+  }
+  // 打雷：闪电闪光
+  if(G.weather === 'thunder' && G.lightningFlash > 0){
+    ctx.fillStyle = 'rgba(255,255,255,' + (G.lightningFlash/8 * 0.6) + ')';
+    ctx.fillRect(0,0,W,H);
+    // 绘制闪电
+    if(G.lightningFlash > 3){
+      const sx = G.lightningX - camera.x;
+      const sy = G.lightningY - camera.y;
+      ctx.strokeStyle = '#ffff88';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(sx, 0);
+      let ly = 0;
+      while(ly < sy){
+        ly += rand(20, 50);
+        ctx.lineTo(sx + rand(-30, 30), ly);
+      }
+      ctx.stroke();
+      // 闪电光晕
+      const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 80);
+      grad.addColorStop(0, 'rgba(255,255,150,0.8)');
+      grad.addColorStop(1, 'rgba(255,255,150,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(sx-80, sy-80, 160, 160);
+    }
+  }
+  // 天气图标显示
+  if(G.weather !== 'sunny'){
+    ctx.font = '24px serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    let weatherIcon = '';
+    if(G.weather === 'cloudy') weatherIcon = '☁️';
+    else if(G.weather === 'rain') weatherIcon = '🌧️';
+    else if(G.weather === 'thunder') weatherIcon = '⛈️';
+    else if(G.weather === 'hot') weatherIcon = '🔥';
+    if(weatherIcon) ctx.fillText(weatherIcon, 10, 40);
+  }
+
   // Boss血条（屏幕空间）
   drawBossHpBar();
 
@@ -2556,6 +2973,12 @@ function drawMinimap(){
 
 function drawEntity(e, showHp){
   ctx.save();
+  // 打滑摔倒旋转
+  if(e.slipRotate && e.slipTimer > 0){
+    ctx.translate(e.x+e.w/2, e.y+e.h/2);
+    ctx.rotate(Math.PI/2);
+    ctx.translate(-e.x-e.w/2, -e.y-e.h/2);
+  }
   // 受伤闪红
   if(e.hurtFlash>0){
     ctx.fillStyle = 'rgba(255,0,0,0.5)';
@@ -2635,8 +3058,8 @@ function drawPlayer(){
   ctx.save();
   ctx.translate(p.x+p.w/2, p.y+p.h/2);
 
-  // 被踹转90度
-  if(p.stunRotate && p.stunTimer>0){
+  // 被踹转90度 / 打滑摔倒转90度
+  if((p.stunRotate && p.stunTimer>0) || (p.slipRotate && p.slipTimer>0)){
     ctx.rotate(Math.PI/2);
   }
   // 攻击动画
@@ -2708,6 +3131,17 @@ function updateUI(){
   document.getElementById('hpText').textContent = t('hp')+' '+Math.max(0,p.hp)+'/'+p.maxHp;
   document.getElementById('killText').textContent = t('kills')+':'+G.killCount;
   document.getElementById('goldText').textContent = t('gold')+':'+p.gold;
+  // 冲刺按钮冷却显示
+  const dashBtn = document.getElementById('dashBtn');
+  if(dashBtn){
+    if(G.dashCooldown > 0){
+      dashBtn.disabled = true;
+      dashBtn.textContent = Math.ceil(G.dashCooldown/60);
+    } else {
+      dashBtn.disabled = false;
+      dashBtn.textContent = '💨';
+    }
+  }
   const wNames = {fist:t('fist'),knife:t('knife'),fire:t('fire'),chargeFire:t('chargeFire'),gun:t('gun')};
   document.getElementById('weaponText').textContent = t('weaponLabel')+(wNames[p.weapon]||p.weapon);
   document.getElementById('timeText').textContent = G.day?'☀'+t('day'):'🌙'+t('night');
@@ -2866,6 +3300,7 @@ window.addEventListener('keydown', function(e){
   else if(key==='k'||key==='K'){ playerDig(); }
   else if(key==='l'||key==='L'){ throwGrenade(); }
   else if(key==='q'||key==='Q'){ switchWeapon(); }
+  else if(key==='Shift'){ e.preventDefault(); playerDash(); }
 });
 window.addEventListener('keyup', function(e){
   const key = e.key;
@@ -2896,6 +3331,7 @@ document.getElementById('atkBtn').addEventListener('mouseleave', ()=>clearInterv
 
 document.getElementById('digBtn').addEventListener('click', playerDig);
 document.getElementById('grenadeBtn').addEventListener('click', throwGrenade);
+document.getElementById('dashBtn').addEventListener('click', playerDash);
 
 // 武器切换
 function switchWeapon(){
@@ -3113,6 +3549,16 @@ function startGame(){
   G._shopOpened = false;
   G.paused = false; // 确保新游戏不暂停
   G.nightGraceTimer = 0;
+  // 重置天气系统
+  G.weather = 'sunny';
+  G.weatherTimer = 0;
+  G.rainDrops = [];
+  G.lightningTimer = 0;
+  G.lightningFlash = 0;
+  // 重置冲刺
+  G.dashCooldown = 0;
+  G.isDashing = false;
+  G.dashTimer = 0;
   inputState.left=false; inputState.right=false; inputState.up=false; inputState.down=false;
   G.player = createPlayer();
   createNPCs();
