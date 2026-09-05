@@ -247,11 +247,11 @@ input:checked + .slider:before{transform:translateX(24px)}
   <div id="shopPanel">
     <h3>🤬 军火商店</h3>
     <div class="shopList">
-    <div class="shopItem"><span>🔪 刀 (近战4伤)</span><button id="buyKnife">50金</button></div>
-    <div class="shopItem"><span>🔫 枪 (远程5伤)</span><button id="buyGun">120金</button></div>
-    <div class="shopItem"><span>💣 手雷×3 (范围)</span><button id="buyGrenade">40金</button></div>
-    <div class="shopItem"><span>🩹 绷带 (回5血+止血)</span><button id="buyBandage">30金</button></div>
-    <div class="shopItem"><span>💊 医疗包 (回满血+止血)</span><button id="buyMedkit">80金</button></div>
+    <div class="shopItem"><span id="shopKnifeText">🔪 刀 (近战4伤)</span><button id="buyKnife">50金</button></div>
+    <div class="shopItem"><span id="shopGunText">🔫 枪 (远程5伤)</span><button id="buyGun">120金</button></div>
+    <div class="shopItem"><span id="shopGrenadeText">💣 手雷×3 (范围)</span><button id="buyGrenade">40金</button></div>
+    <div class="shopItem"><span id="shopBandageText">🩹 绷带 (回5血+止血)</span><button id="buyBandage">30金</button></div>
+    <div class="shopItem"><span id="shopMedkitText">💊 医疗包 (回满血+止血)</span><button id="buyMedkit">80金</button></div>
     </div>
     <div class="shopFooter">
     <button id="merchantTalkBtn" style="width:100%;margin-bottom:8px;padding:8px;background:#9b59b6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">💬 聊聊</button>
@@ -325,51 +325,9 @@ input:checked + .slider:before{transform:translateX(24px)}
   <!-- 规则面板 -->
   <div id="rulesPanel">
     <div class="rules-box">
-      <h3>📖 游戏规则</h3>
-      <div class="rules-content">
-        <p><b>🎮 基本操作</b></p>
-        <p>• 移动端：左下摇杆移动，右下按钮攻击/挖掘/手雷</p>
-        <p>• 电脑端：WASD/方向键移动，J攻击，K挖掘，L手雷，Q切武器</p>
-        <p>• 枪模式：右下出现橙色瞄准轮盘，左手移动右手瞄准，可边跑边打</p>
-        <p><b>😡 玩家属性</b></p>
-        <p>• 初始15血，拳头2伤害，移动速度2.8</p>
-        <p>• 受伤后短暂无敌（防止连续掉血）</p>
-        <p>• 30%概率流血：每5秒掉1血，用绷带/医疗包止血</p>
-        <p><b>🔫 武器系统</b></p>
-        <p>• 拳头：近战2伤，开局自带</p>
-        <p>• 🔪 刀：近战4伤，商店50金</p>
-        <p>• 🔫 枪：远程5伤，商店120金，配瞄准轮盘</p>
-        <p>• 🔥 火焰弹：远程6伤，50杀解锁</p>
-        <p>• 💥 蓄力火焰弹：远程8伤，70杀解锁</p>
-        <p>• 💣 手雷：范围伤害，商店40金/3个</p>
-        <p><b>👻 怪物系统（仅夜晚刷新）</b></p>
-        <p>• 👻 幽灵：8血，近战3伤，速度快</p>
-        <p>• 👽 外星人：10血，远程声波2伤</p>
-        <p>• 👾 怪物：12血，近战3伤，速度最快</p>
-        <p>• 😌 小Boss：40血，6伤，30杀出现</p>
-        <p>• 😈 最终Boss：50血，10伤，120杀出现（多阶段，后续更新）</p>
-        <p><b>🤝 NPC系统</b></p>
-        <p>• 😊 机器人：可索要25金币（有冷却），60秒后爆炸，死亡后30秒复活</p>
-        <p>• 🤬 商人：无敌，靠近自动开商店，卖武器和药品</p>
-        <p>• 😝 捣蛋鬼：会踹人眩晕2秒，可击杀，死亡后30秒复活</p>
-        <p>• 😎 游离乐子人：随机乱逛，靠近150像素播放背景音乐，可击杀，死亡后30秒复活</p>
-        <p>• 除🤬商人外，所有生物都可以攻击</p>
-        <p><b>🌙 昼夜系统</b></p>
-        <p>• 白天60秒：安全，无怪物，适合探索和找NPC</p>
-        <p>• 夜晚60秒：怪物出没，前30秒怪物较少，之后最多20只</p>
-        <p>• 击杀怪物35%概率掉3金币</p>
-        <p><b>🏪 商店系统</b></p>
-        <p>• 靠近🤬商人自动打开，商品可上下滑动</p>
-        <p>• 🔪 刀50金 / 🔫 枪120金 / 💣 手雷×3 40金</p>
-        <p>• 🩹 绷带30金：回5血+止血</p>
-        <p>• 💊 医疗包80金：回满血+止血</p>
-        <p><b>🏆 击杀解锁</b></p>
-        <p>• 🛡 盾牌：10杀解锁，受伤减少1/3</p>
-        <p>• ⚠ 小Boss 😌：30杀出现</p>
-        <p>• 🔥 火焰弹：50杀解锁，远程6伤害</p>
-        <p>• 💥 蓄力火焰弹：70杀解锁，远程8伤害</p>
-        <p>• 👹 最终Boss 😈：120杀降临（多阶段，后续更新）</p>
-</div>
+      <h3 id="rulesTitle">📖 游戏规则</h3>
+      <div class="rules-content" id="rulesContent">
+      </div>
       <button id="closeRulesBtn" class="settings-close">关闭</button>
     </div>
   </div>
@@ -438,78 +396,249 @@ function initAudio(){
 }
 // ==================== 八国语言系统 ====================
 const LANGS = {
-  zh: {name:'中文', start:'开始游戏', continue:'继续游戏', rules:'游戏规则', settings:'设置',
-       hp:'HP', kills:'击杀', gold:'金币', day:'白天', night:'夜晚',
-       close:'关闭', chat:'聊聊', shop:'商店', restart:'重新开始', menu:'返回主菜单',
-       weapon:'武器', sound:'游戏声音', viewRules:'查看', exitGame:'退出到主页', clearSave:'清除本地存档',
-       language:'语言', victory:'胜利！', defeat:'你被击败了...',
-       fist:'拳头', knife:'刀', gun:'枪', fire:'火焰弹', chargeFire:'蓄力火焰弹',
-       gotShield:'🛡 获得盾牌！伤害减少1/3', miniBoss:'⚠ 小Boss 😌 出现了！',
-       gotFire:'🔥 获得火焰弹！(6伤害)', gotChargeFire:'💥 获得蓄力火焰弹！(8伤害)',
-       finalBoss:'👹 最终Boss 😈 降临！！'},
-  en: {name:'English', start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings',
-       hp:'HP', kills:'Kills', gold:'Gold', day:'Day', night:'Night',
-       close:'Close', chat:'Chat', shop:'Shop', restart:'Restart', menu:'Main Menu',
-       weapon:'Weapon', sound:'Game Sound', viewRules:'View', exitGame:'Exit to Menu', clearSave:'Clear Save',
-       language:'Language', victory:'Victory!', defeat:'You were defeated...',
-       fist:'Fist', knife:'Knife', gun:'Gun', fire:'Fireball', chargeFire:'Charge Fireball',
-       gotShield:'🛡 Got Shield! Damage -1/3', miniBoss:'⚠ Mini Boss 😌 appeared!',
-       gotFire:'🔥 Got Fireball! (6 dmg)', gotChargeFire:'💥 Got Charge Fireball! (8 dmg)',
-       finalBoss:'👹 Final Boss 😈 arrived!!'},
-  ja: {name:'日本語', start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定',
-       hp:'HP', kills:'キル', gold:'ゴールド', day:'昼', night:'夜',
-       close:'閉じる', chat:'話す', shop:'ショップ', restart:'リスタート', menu:'メインメニュー',
-       weapon:'武器', sound:'ゲーム音声', viewRules:'見る', exitGame:'メニューへ', clearSave:'セーブ削除',
-       language:'言語', victory:'勝利！', defeat:'倒された...',
-       fist:'拳', knife:'ナイフ', gun:'銃', fire:'火炎弾', chargeFire:'溜め火炎弾',
-       gotShield:'🛡 盾を入手！ダメージ1/3減', miniBoss:'⚠ ミニボス 😌 出現！',
-       gotFire:'🔥 火炎弾を入手！(6ダメージ)', gotChargeFire:'💥 溜め火炎弾を入手！(8ダメージ)',
-       finalBoss:'👹 最終ボス 😈 降臨！！'},
-  ko: {name:'한국어', start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정',
-       hp:'HP', kills:'킬', gold:'골드', day:'낮', night:'밤',
-       close:'닫기', chat:'대화', shop:'상점', restart:'다시 시작', menu:'메인 메뉴',
-       weapon:'무기', sound:'게임 소리', viewRules:'보기', exitGame:'메뉴로 나가기', clearSave:'세이브 삭제',
-       language:'언어', victory:'승리!', defeat:'패배했습니다...',
-       fist:'주먹', knife:'칼', gun:'총', fire:'화염구', chargeFire:'차지 화염구',
-       gotShield:'🛡 방패 획득! 데미지 1/3 감소', miniBoss:'⚠ 미니 보스 😌 등장!',
-       gotFire:'🔥 화염구 획득! (6 데미지)', gotChargeFire:'💥 차지 화염구 획득! (8 데미지)',
-       finalBoss:'👹 최종 보스 😈 강림!!'},
-  fr: {name:'Français', start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres',
-       hp:'PV', kills:'Tués', gold:'Or', day:'Jour', night:'Nuit',
-       close:'Fermer', chat:'Parler', shop:'Boutique', restart:'Recommencer', menu:'Menu Principal',
-       weapon:'Arme', sound:'Son du Jeu', viewRules:'Voir', exitGame:'Quitter au Menu', clearSave:'Effacer Sauvegarde',
-       language:'Langue', victory:'Victoire !', defeat:'Vous avez été vaincu...',
-       fist:'Poing', knife:'Couteau', gun:'Pistolet', fire:'Boule de Feu', chargeFire:'Boule de Feu Chargée',
-       gotShield:'🛡 Bouclier obtenu ! Dégâts -1/3', miniBoss:'⚠ Mini Boss 😌 apparu !',
-       gotFire:'🔥 Boule de Feu obtenue ! (6 dégâts)', gotChargeFire:'💥 Boule de Feu Chargée obtenue ! (8 dégâts)',
-       finalBoss:'👹 Boss Final 😈 arrivé !!'},
-  de: {name:'Deutsch', start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen',
-       hp:'HP', kills:'Kills', gold:'Gold', day:'Tag', night:'Nacht',
-       close:'Schließen', chat:'Plaudern', shop:'Laden', restart:'Neustart', menu:'Hauptmenü',
-       weapon:'Waffe', sound:'Spielton', viewRules:'Ansehen', exitGame:'Zum Menü', clearSave:'Speichern Löschen',
-       language:'Sprache', victory:'Sieg!', defeat:'Du wurdest besiegt...',
-       fist:'Faust', knife:'Messer', gun:'Pistole', fire:'Feuerball', chargeFire:'Aufladender Feuerball',
-       gotShield:'🛡 Schild erhalten! Schaden -1/3', miniBoss:'⚠ Mini-Boss 😌 erschienen!',
-       gotFire:'🔥 Feuerball erhalten! (6 Schaden)', gotChargeFire:'💥 Aufladender Feuerball erhalten! (8 Schaden)',
-       finalBoss:'👹 Endboss 😈 angekommen!!'},
-  es: {name:'Español', start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes',
-       hp:'HP', kills:'Bajas', gold:'Oro', day:'Día', night:'Noche',
-       close:'Cerrar', chat:'Hablar', shop:'Tienda', restart:'Reiniciar', menu:'Menú Principal',
-       weapon:'Arma', sound:'Sonido del Juego', viewRules:'Ver', exitGame:'Salir al Menú', clearSave:'Borrar Partida',
-       language:'Idioma', victory:'¡Victoria!', defeat:'Has sido derrotado...',
-       fist:'Puño', knife:'Cuchillo', gun:'Pistola', fire:'Bola de Fuego', chargeFire:'Bola de Fuego Cargada',
-       gotShield:'🛡 ¡Escudo obtenido! Daño -1/3', miniBoss:'⚠ ¡Mini Jefe 😌 apareció!',
-       gotFire:'🔥 ¡Bola de Fuego obtenida! (6 daño)', gotChargeFire:'💥 ¡Bola de Fuego Cargada obtenida! (8 daño)',
-       finalBoss:'👹 ¡Jefe Final 😈 llegó!!'},
-  ru: {name:'Русский', start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки',
-       hp:'HP', kills:'Убийств', gold:'Золото', day:'День', night:'Ночь',
-       close:'Закрыть', chat:'Говорить', shop:'Магазин', restart:'Заново', menu:'Главное Меню',
-       weapon:'Оружие', sound:'Звук Игры', viewRules:'Смотреть', exitGame:'Выйти в Меню', clearSave:'Удалить Сохранение',
-       language:'Язык', victory:'Победа!', defeat:'Ты был повержен...',
-       fist:'Кулак', knife:'Нож', gun:'Пистолет', fire:'Огненный Шар', chargeFire:'Заряженный Огненный Шар',
-       gotShield:'🛡 Щит получен! Урон -1/3', miniBoss:'⚠ Мини-Босс 😌 появился!',
-       gotFire:'🔥 Огненный Шар получен! (6 урона)', gotChargeFire:'💥 Заряженный Огненный Шар получен! (8 урона)',
-       finalBoss:'👹 Финальный Босс 😈 прибыл!!'}
+  zh: {
+    name:'中文', start:'开始游戏', continue:'继续游戏', rules:'游戏规则', settings:'设置',
+    hp:'HP', kills:'击杀', gold:'金币', day:'白天', night:'夜晚',
+    close:'关闭', chat:'聊聊', shop:'商店', restart:'重新开始', menu:'返回主菜单',
+    weapon:'武器', sound:'游戏声音', viewRules:'查看', exitGame:'退出到主页', clearSave:'清除本地存档',
+    language:'语言', victory:'胜利！', defeat:'你被击败了...',
+    fist:'拳头', knife:'刀', gun:'枪', fire:'火焰弹', chargeFire:'蓄力火焰弹',
+    gotShield:'🛡 获得盾牌！伤害减少1/3', miniBoss:'⚠ 小Boss 😌 出现了！伴随大量👾！',
+    gotFire:'🔥 获得火焰弹！(6伤害)', gotChargeFire:'💥 获得蓄力火焰弹！(8伤害)',
+    finalBoss:'👹 最终Boss 😈 降临！！👾大军来袭！',
+    // 局内toast
+    digGold:'挖掘获得5金币', nightCome:'🌙 夜晚降临，怪物出没！(前30秒怪物较少)', dayCome:'☀ 白天来临，安全了！',
+    ghostScare:'👻 惊吓攻击！', bossSlash:'挥砍！', bossKnife:'刀砍！',
+    beatMiniBoss:'🎉 击败小Boss！获得50金币', robotRevive:'😊 机器人复活了！',
+    robotExplode:'💥 机器人爆炸了！30秒后复活', robotDown:'😊 倒下了...30秒后复活',
+    troubleRevive:'😝 捣蛋鬼复活了！', troubleKick:'😝 踹了你一脚！转90度，2秒不能动',
+    troubleDown:'😝 被解决了！30秒后复活', wandererRevive:'😎 游离乐子人又回来了！',
+    wandererMusic:'🎵 听到了游离乐子人的音乐', wandererDown:'😎 游离乐人倒下了...30秒后复活',
+    bleeding:'🩸 你受伤流血了！每5秒掉1血，用绷带/医疗包止血',
+    switchWeapon:'切换武器: ', alaskey:'🐕 我是阿拉斯基！变得更弱了...',
+    robotGive:'😊 给了你25金币！', buyKnife:'🔪 购买了刀！', buyGun:'🔫 购买了枪！右下角出现瞄准轮盘',
+    buyGrenade:'💣 购买了手雷×3！', useBandage:'🩹 使用绷带！回复5血，止血了',
+    useMedkit:'💊 使用医疗包！满血恢复，止血了', noGold:'金币不足！',
+    gameStart:'😡 像素草原战斗开始！夜晚怪物会出现', saveCleared:'🗑 所有存档已清除',
+    loadSave:'已读取，继续战斗！', loadFail:'读取存档失败', deleteSave:'已删除',
+    // 商店物品
+    shopKnife:'🔪 刀 (近战4伤)', shopGun:'🔫 枪 (远程5伤)', shopGrenade:'💣 手雷×3 (范围)',
+    shopBandage:'🩹 绷带 (回5血+止血)', shopMedkit:'💊 医疗包 (回满血+止血)',
+    // 规则面板标题
+    rulesTitle:'📖 游戏规则', rBasic:'🎮 基本操作', rPlayer:'😡 玩家属性', rWeapon:'🔫 武器系统',
+    rMob:'👻 怪物系统（仅夜晚刷新）', rNPC:'🤝 NPC系统', rDayNight:'🌙 昼夜系统',
+    rShop:'🏪 商店系统', rUnlock:'🏆 击杀解锁', rUpdate:'🆕 新版本更新',
+  },
+  en: {
+    name:'English', start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings',
+    hp:'HP', kills:'Kills', gold:'Gold', day:'Day', night:'Night',
+    close:'Close', chat:'Chat', shop:'Shop', restart:'Restart', menu:'Main Menu',
+    weapon:'Weapon', sound:'Game Sound', viewRules:'View', exitGame:'Exit to Menu', clearSave:'Clear Save',
+    language:'Language', victory:'Victory!', defeat:'You were defeated...',
+    fist:'Fist', knife:'Knife', gun:'Gun', fire:'Fireball', chargeFire:'Charge Fireball',
+    gotShield:'🛡 Got Shield! Damage -1/3', miniBoss:'⚠ Mini Boss 😌 appeared! With 👾 army!',
+    gotFire:'🔥 Got Fireball! (6 dmg)', gotChargeFire:'💥 Got Charge Fireball! (8 dmg)',
+    finalBoss:'👹 Final Boss 😈 arrived!! 👾 army incoming!',
+    digGold:'Digged 5 gold', nightCome:'🌙 Night falls, monsters appear! (fewer first 30s)', dayCome:'☀ Day comes, safe now!',
+    ghostScare:'👻 Scare attack!', bossSlash:'Slash!', bossKnife:'Knife slash!',
+    beatMiniBoss:'🎉 Beat Mini Boss! Got 50 gold', robotRevive:'😊 Robot revived!',
+    robotExplode:'💥 Robot exploded! Revives in 30s', robotDown:'😊 Down... revives in 30s',
+    troubleRevive:'😝 Troublemaker revived!', troubleKick:'😝 Kicked you! Spin 90°, 2s stun',
+    troubleDown:'😝 Taken down! Revives in 30s', wandererRevive:'😎 Wanderer is back!',
+    wandererMusic:'🎵 Heard the wanderer\'s music', wandererDown:'😎 Wanderer down... revives in 30s',
+    bleeding:'🩸 You\'re bleeding! -1 HP every 5s, use bandage/medkit to stop',
+    switchWeapon:'Switched weapon: ', alaskey:'🐕 I\'m Alaskan! Got weaker...',
+    robotGive:'😊 Gave you 25 gold!', buyKnife:'🔪 Bought Knife!', buyGun:'🔫 Bought Gun! Aim joystick at bottom right',
+    buyGrenade:'💣 Bought Grenade×3!', useBandage:'🩹 Used Bandage! +5 HP, bleeding stopped',
+    useMedkit:'💊 Used Medkit! Full HP, bleeding stopped', noGold:'Not enough gold!',
+    gameStart:'😡 Pixel Prairie Battle begins! Monsters appear at night', saveCleared:'🗑 All saves cleared',
+    loadSave:'loaded, continue fighting!', loadFail:'Failed to load save', deleteSave:'deleted',
+    shopKnife:'🔪 Knife (Melee 4 dmg)', shopGun:'🔫 Gun (Ranged 5 dmg)', shopGrenade:'💣 Grenade×3 (AOE)',
+    shopBandage:'🩹 Bandage (+5 HP + stop bleed)', shopMedkit:'💊 Medkit (Full HP + stop bleed)',
+    rulesTitle:'📖 Game Rules', rBasic:'🎮 Basic Controls', rPlayer:'😡 Player Stats', rWeapon:'🔫 Weapon System',
+    rMob:'👻 Monster System (Night only)', rNPC:'🤝 NPC System', rDayNight:'🌙 Day/Night System',
+    rShop:'🏪 Shop System', rUnlock:'🏆 Kill Unlocks', rUpdate:'🆕 New Updates',
+  },
+  ja: {
+    name:'日本語', start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定',
+    hp:'HP', kills:'キル', gold:'ゴールド', day:'昼', night:'夜',
+    close:'閉じる', chat:'話す', shop:'ショップ', restart:'リスタート', menu:'メインメニュー',
+    weapon:'武器', sound:'ゲーム音声', viewRules:'見る', exitGame:'メニューへ', clearSave:'セーブ削除',
+    language:'言語', victory:'勝利！', defeat:'倒された...',
+    fist:'拳', knife:'ナイフ', gun:'銃', fire:'火炎弾', chargeFire:'溜め火炎弾',
+    gotShield:'🛡 盾を入手！ダメージ1/3減', miniBoss:'⚠ ミニボス 😌 出現！👾軍団付き！',
+    gotFire:'🔥 火炎弾を入手！(6ダメージ)', gotChargeFire:'💥 溜め火炎弾を入手！(8ダメージ)',
+    finalBoss:'👹 最終ボス 😈 降臨！！👾軍団襲来！',
+    digGold:'掘削で5ゴールド獲得', nightCome:'🌙 夜が来た、モンスター出現！(最初30秒は少なめ)', dayCome:'☀ 昼になった、安全！',
+    ghostScare:'👻 驚かし攻撃！', bossSlash:'斬撃！', bossKnife:'ナイフ斬り！',
+    beatMiniBoss:'🎉 ミニボス撃破！50ゴールド獲得', robotRevive:'😊 ロボット復活！',
+    robotExplode:'💥 ロボット爆発！30秒後復活', robotDown:'😊 ダウン...30秒後復活',
+    troubleRevive:'😝 いたずらっ子復活！', troubleKick:'😝 蹴られた！90度回転、2秒動けない',
+    troubleDown:'😝 倒された！30秒後復活', wandererRevive:'😎 放浪者が帰ってきた！',
+    wandererMusic:'🎵 放浪者の音楽が聞こえる', wandererDown:'😎 放浪者ダウン...30秒後復活',
+    bleeding:'🩸 出血した！5秒ごとに1HP減少、包帯/メディキットで止血',
+    switchWeapon:'武器切替: ', alaskey:'🐕 アラスカンだ！弱くなった...',
+    robotGive:'😊 25ゴールドくれた！', buyKnife:'🔪 ナイフ購入！', buyGun:'🔫 銃購入！右下にエイムジョイスティック',
+    buyGrenade:'💣 グレネード×3購入！', useBandage:'🩹 包帯使用！5HP回復、止血',
+    useMedkit:'💊 メディキット使用！全HP回復、止血', noGold:'ゴールド不足！',
+    gameStart:'😡 ピクセル草原バトル開始！夜にモンスター出現', saveCleared:'🗑 全セーブ削除',
+    loadSave:'読み込み、戦闘続行！', loadFail:'セーブ読み込み失敗', deleteSave:'削除',
+    shopKnife:'🔪 ナイフ (近接4ダメージ)', shopGun:'🔫 銃 (遠隔5ダメージ)', shopGrenade:'💣 グレネード×3 (範囲)',
+    shopBandage:'🩹 包帯 (5HP回復+止血)', shopMedkit:'💊 メディキット (全HP回復+止血)',
+    rulesTitle:'📖 ゲームルール', rBasic:'🎮 基本操作', rPlayer:'😡 プレイヤーステータス', rWeapon:'🔫 武器システム',
+    rMob:'👻 モンスターシステム (夜のみ)', rNPC:'🤝 NPCシステム', rDayNight:'🌙 昼夜システム',
+    rShop:'🏪 ショップシステム', rUnlock:'🏆 キル解除', rUpdate:'🆕 新機能',
+  },
+  ko: {
+    name:'한국어', start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정',
+    hp:'HP', kills:'킬', gold:'골드', day:'낮', night:'밤',
+    close:'닫기', chat:'대화', shop:'상점', restart:'다시 시작', menu:'메인 메뉴',
+    weapon:'무기', sound:'게임 소리', viewRules:'보기', exitGame:'메뉴로 나가기', clearSave:'세이브 삭제',
+    language:'언어', victory:'승리!', defeat:'패배했습니다...',
+    fist:'주먹', knife:'칼', gun:'총', fire:'화염구', chargeFire:'차지 화염구',
+    gotShield:'🛡 방패 획득! 데미지 1/3 감소', miniBoss:'⚠ 미니 보스 😌 등장! 👾 군단과 함께!',
+    gotFire:'🔥 화염구 획득! (6 데미지)', gotChargeFire:'💥 차지 화염구 획득! (8 데미지)',
+    finalBoss:'👹 최종 보스 😈 강림!! 👾 군단 습격!',
+    digGold:'채굴로 5 골드 획득', nightCome:'🌙 밤이 되었다, 몬스터 출현! (처음 30초는 적음)', dayCome:'☀ 낮이 되었다, 안전!',
+    ghostScare:'👻 겁주기 공격!', bossSlash:'베기!', bossKnife:'칼 베기!',
+    beatMiniBoss:'🎉 미니 보스 처치! 50 골드 획득', robotRevive:'😊 로봇 부활!',
+    robotExplode:'💥 로봇 폭발! 30초 후 부활', robotDown:'😊 다운... 30초 후 부활',
+    troubleRevive:'😝 말썽꾸러기 부활!', troubleKick:'😝 발로 찼다! 90도 회전, 2초 기절',
+    troubleDown:'😝 처치됨! 30초 후 부활', wandererRevive:'😎 방랑자가 돌아왔다!',
+    wandererMusic:'🎵 방랑자의 음악이 들린다', wandererDown:'😎 방랑자 다운... 30초 후 부활',
+    bleeding:'🩸 출혈! 5초마다 1 HP 감소, 붕대/메디킷으로 지혈',
+    switchWeapon:'무기 변경: ', alaskey:'🐕 알래스칸이다! 약해졌다...',
+    robotGive:'😊 25 골드를 줬다!', buyKnife:'🔪 칼 구매!', buyGun:'🔫 총 구매! 오른쪽 아래에 조준 조이스틱',
+    buyGrenade:'💣 수류탄×3 구매!', useBandage:'🩹 붕대 사용! 5 HP 회복, 지혈',
+    useMedkit:'💊 메디킷 사용! 전체 HP 회복, 지혈', noGold:'골드 부족!',
+    gameStart:'😡 픽셀 초원 배틀 시작! 밤에 몬스터 출현', saveCleared:'🗑 모든 세이브 삭제',
+    loadSave:'불러오기, 전투 계속!', loadFail:'세이브 불러오기 실패', deleteSave:'삭제',
+    shopKnife:'🔪 칼 (근접 4 데미지)', shopGun:'🔫 총 (원거리 5 데미지)', shopGrenade:'💣 수류탄×3 (범위)',
+    shopBandage:'🩹 붕대 (5 HP 회복+지혈)', shopMedkit:'💊 메디킷 (전체 HP 회복+지혈)',
+    rulesTitle:'📖 게임 규칙', rBasic:'🎮 기본 조작', rPlayer:'😡 플레이어 스탯', rWeapon:'🔫 무기 시스템',
+    rMob:'👻 몬스터 시스템 (밤에만)', rNPC:'🤝 NPC 시스템', rDayNight:'🌙 낮/밤 시스템',
+    rShop:'🏪 상점 시스템', rUnlock:'🏆 킬 해금', rUpdate:'🆕 새로운 업데이트',
+  },
+  fr: {
+    name:'Français', start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres',
+    hp:'PV', kills:'Tués', gold:'Or', day:'Jour', night:'Nuit',
+    close:'Fermer', chat:'Parler', shop:'Boutique', restart:'Recommencer', menu:'Menu Principal',
+    weapon:'Arme', sound:'Son du Jeu', viewRules:'Voir', exitGame:'Quitter au Menu', clearSave:'Effacer Sauvegarde',
+    language:'Langue', victory:'Victoire !', defeat:'Vous avez été vaincu...',
+    fist:'Poing', knife:'Couteau', gun:'Pistolet', fire:'Boule de Feu', chargeFire:'Boule de Feu Chargée',
+    gotShield:'🛡 Bouclier obtenu ! Dégâts -1/3', miniBoss:'⚠ Mini Boss 😌 apparu ! Avec armée 👾 !',
+    gotFire:'🔥 Boule de Feu obtenue ! (6 dégâts)', gotChargeFire:'💥 Boule de Feu Chargée obtenue ! (8 dégâts)',
+    finalBoss:'👹 Boss Final 😈 arrivé !! Armée 👾 en approche !',
+    digGold:'5 or trouvé en creusant', nightCome:'🌙 La nuit tombe, des monstres apparaissent ! (moins les 30 premières secondes)', dayCome:'☀ Le jour arrive, en sécurité !',
+    ghostScare:'👻 Attaque de peur !', bossSlash:'Coup !', bossKnife:'Coup de couteau !',
+    beatMiniBoss:'🎉 Mini Boss vaincu ! 50 or obtenus', robotRevive:'😊 Robot réanimé !',
+    robotExplode:'💥 Robot explosé ! Réanimation dans 30s', robotDown:'😊 À terre... réanimation dans 30s',
+    troubleRevive:'😝 Fauteur de trouble réanimé !', troubleKick:'😝 Vous a donné un coup de pied ! Rotation 90°, 2s étourdi',
+    troubleDown:'😝 Éliminé ! Réanimation dans 30s', wandererRevive:'😎 Le vagabond est de retour !',
+    wandererMusic:'🎵 Musique du vagabond entendue', wandererDown:'😎 Vagabond à terre... réanimation dans 30s',
+    bleeding:'🩸 Vous saignez ! -1 PV toutes les 5s, utilisez bandage/kit médical pour arrêter',
+    switchWeapon:'Arme changée : ', alaskey:'🐕 Je suis un Alaskan ! Plus faible...',
+    robotGive:'😊 Vous a donné 25 or !', buyKnife:'🔪 Couteau acheté !', buyGun:'🔫 Pistolet acheté ! Joystick de visée en bas à droite',
+    buyGrenade:'💣 Grenade×3 achetée !', useBandage:'🩹 Bandage utilisé ! +5 PV, saignement arrêté',
+    useMedkit:'💊 Kit médical utilisé ! PV complets, saignement arrêté', noGold:'Pas assez d\'or !',
+    gameStart:'😡 Bataille de la Prairie Pixel commence ! Des monstres apparaissent la nuit', saveCleared:'🗑 Toutes sauvegardes effacées',
+    loadSave:'chargée, combat continu !', loadFail:'Échec du chargement', deleteSave:'supprimée',
+    shopKnife:'🔪 Couteau (Corps à corps 4 dégâts)', shopGun:'🔫 Pistolet (À distance 5 dégâts)', shopGrenade:'💣 Grenade×3 (Zone)',
+    shopBandage:'🩹 Bandage (+5 PV + arrêt saignement)', shopMedkit:'💊 Kit médical (PV complets + arrêt saignement)',
+    rulesTitle:'📖 Règles du Jeu', rBasic:'🎮 Contrôles de Base', rPlayer:'😡 Stats du Joueur', rWeapon:'🔫 Système d\'Armes',
+    rMob:'👻 Système de Monstres (Nuit seulement)', rNPC:'🤝 Système NPC', rDayNight:'🌙 Système Jour/Nuit',
+    rShop:'🏪 Système de Boutique', rUnlock:'🏆 Déblocages par Tue', rUpdate:'🆕 Nouvelles Mises à Jour',
+  },
+  de: {
+    name:'Deutsch', start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen',
+    hp:'HP', kills:'Kills', gold:'Gold', day:'Tag', night:'Nacht',
+    close:'Schließen', chat:'Plaudern', shop:'Laden', restart:'Neustart', menu:'Hauptmenü',
+    weapon:'Waffe', sound:'Spielton', viewRules:'Ansehen', exitGame:'Zum Menü', clearSave:'Speichern Löschen',
+    language:'Sprache', victory:'Sieg!', defeat:'Du wurdest besiegt...',
+    fist:'Faust', knife:'Messer', gun:'Pistole', fire:'Feuerball', chargeFire:'Aufladender Feuerball',
+    gotShield:'🛡 Schild erhalten! Schaden -1/3', miniBoss:'⚠ Mini-Boss 😌 erschienen! Mit 👾 Armee!',
+    gotFire:'🔥 Feuerball erhalten! (6 Schaden)', gotChargeFire:'💥 Aufladender Feuerball erhalten! (8 Schaden)',
+    finalBoss:'👹 Endboss 😈 angekommen!! 👾 Armee naht!',
+    digGold:'5 Gold beim Graben gefunden', nightCome:'🌙 Nacht bricht an, Monster erscheinen! (weniger die ersten 30s)', dayCome:'☀ Tag kommt, sicher!',
+    ghostScare:'👻 Schreckangriff!', bossSlash:'Hieb!', bossKnife:'Messerhieb!',
+    beatMiniBoss:'🎉 Mini-Boss besiegt! 50 Gold erhalten', robotRevive:'😊 Roboter wiederbelebt!',
+    robotExplode:'💥 Roboter explodiert! Wiederbelebung in 30s', robotDown:'😊 Am Boden... Wiederbelebung in 30s',
+    troubleRevive:'😝 Unruhestifter wiederbelebt!', troubleKick:'😝 Dich getreten! 90° Drehung, 2s betäubt',
+    troubleDown:'😝 Erledigt! Wiederbelebung in 30s', wandererRevive:'😎 Wanderer ist zurück!',
+    wandererMusic:'🎵 Musik des Wanderers gehört', wandererDown:'😎 Wanderer am Boden... Wiederbelebung in 30s',
+    bleeding:'🩸 Du blutest! -1 HP alle 5s, mit Verband/Medikit stoppen',
+    switchWeapon:'Waffe gewechselt: ', alaskey:'🐕 Ich bin ein Alaskan! Schwächer geworden...',
+    robotGive:'😊 Gab dir 25 Gold!', buyKnife:'🔪 Messer gekauft!', buyGun:'🔫 Pistole gekauft! Ziel-Joystick unten rechts',
+    buyGrenade:'💣 Granate×3 gekauft!', useBandage:'🩹 Verband benutzt! +5 HP, Blutung gestoppt',
+    useMedkit:'💊 Medikit benutzt! Volle HP, Blutung gestoppt', noGold:'Nicht genug Gold!',
+    gameStart:'😡 Pixel Prairie Battle beginnt! Monster erscheinen nachts', saveCleared:'🗑 Alle Speicherstände gelöscht',
+    loadSave:'geladen, Kampf geht weiter!', loadFail:'Speicherstand laden fehlgeschlagen', deleteSave:'gelöscht',
+    shopKnife:'🔪 Messer (Nahkampf 4 Schaden)', shopGun:'🔫 Pistole (Fernkampf 5 Schaden)', shopGrenade:'💣 Granate×3 (Fläche)',
+    shopBandage:'🩹 Verband (+5 HP + Blutung stoppen)', shopMedkit:'💊 Medikit (Volle HP + Blutung stoppen)',
+    rulesTitle:'📖 Spielregeln', rBasic:'🎮 Grundsteuerung', rPlayer:'😡 Spielerwerte', rWeapon:'🔫 Waffensystem',
+    rMob:'👻 Monstersystem (Nur nachts)', rNPC:'🤝 NPC-System', rDayNight:'🌙 Tag/Nacht-System',
+    rShop:'🏪 Ladensystem', rUnlock:'🏆 Kill-Freischaltungen', rUpdate:'🆕 Neue Updates',
+  },
+  es: {
+    name:'Español', start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes',
+    hp:'HP', kills:'Bajas', gold:'Oro', day:'Día', night:'Noche',
+    close:'Cerrar', chat:'Hablar', shop:'Tienda', restart:'Reiniciar', menu:'Menú Principal',
+    weapon:'Arma', sound:'Sonido del Juego', viewRules:'Ver', exitGame:'Salir al Menú', clearSave:'Borrar Partida',
+    language:'Idioma', victory:'¡Victoria!', defeat:'Has sido derrotado...',
+    fist:'Puño', knife:'Cuchillo', gun:'Pistola', fire:'Bola de Fuego', chargeFire:'Bola de Fuego Cargada',
+    gotShield:'🛡 ¡Escudo obtenido! Daño -1/3', miniBoss:'⚠ ¡Mini Jefe 😌 apareció! ¡Con ejército 👾!',
+    gotFire:'🔥 ¡Bola de Fuego obtenida! (6 daño)', gotChargeFire:'💥 ¡Bola de Fuego Cargada obtenida! (8 daño)',
+    finalBoss:'👹 ¡Jefe Final 😈 llegó!! ¡Ejército 👾 en camino!',
+    digGold:'5 de oro encontrado cavando', nightCome:'🌙 Cayó la noche, ¡monstruos aparecen! (menos los primeros 30s)', dayCome:'☀ ¡Llegó el día, a salvo!',
+    ghostScare:'👻 ¡Ataque de susto!', bossSlash:'¡Tajo!', bossKnife:'¡Tajo de cuchillo!',
+    beatMiniBoss:'🎉 ¡Mini Jefe derrotado! 50 de oro obtenidos', robotRevive:'😊 ¡Robot revivido!',
+    robotExplode:'💥 ¡Robot explotó! Revive en 30s', robotDown:'😊 En el suelo... revive en 30s',
+    troubleRevive:'😝 ¡Alborotador revivido!', troubleKick:'😝 ¡Te pateó! Giro 90°, 2s aturdido',
+    troubleDown:'😝 ¡Eliminado! Revive en 30s', wandererRevive:'😎 ¡El vagabundo volvió!',
+    wandererMusic:'🎵 Música del vagabundo escuchada', wandererDown:'😎 Vagabundo en el suelo... revive en 30s',
+    bleeding:'🩸 ¡Estás sangrando! -1 HP cada 5s, usa venda/botiquín para parar',
+    switchWeapon:'Arma cambiada: ', alaskey:'🐕 ¡Soy un Alaskan! Más débil...',
+    robotGive:'😊 ¡Te dio 25 de oro!', buyKnife:'🔪 ¡Cuchillo comprado!', buyGun:'🔫 ¡Pistola comprada! Joystick de mira abajo a la derecha',
+    buyGrenade:'💣 ¡Granada×3 comprada!', useBandage:'🩹 ¡Venda usada! +5 HP, sangrado detenido',
+    useMedkit:'💊 ¡Botiquín usado! HP completo, sangrado detenido', noGold:'¡Oro insuficiente!',
+    gameStart:'😡 ¡Batalla de la Pradera Pixel comienza! Monstruos aparecen de noche', saveCleared:'🗑 Todas las partidas borradas',
+    loadSave:'cargada, ¡combate continúa!', loadFail:'Error al cargar partida', deleteSave:'borrada',
+    shopKnife:'🔪 Cuchillo (Cuerpo a cuerpo 4 daño)', shopGun:'🔫 Pistola (A distancia 5 daño)', shopGrenade:'💣 Granada×3 (Área)',
+    shopBandage:'🩹 Venda (+5 HP + parar sangrado)', shopMedkit:'💊 Botiquín (HP completo + parar sangrado)',
+    rulesTitle:'📖 Reglas del Juego', rBasic:'🎮 Controles Básicos', rPlayer:'😡 Estadísticas del Jugador', rWeapon:'🔫 Sistema de Armas',
+    rMob:'👻 Sistema de Monstruos (Solo de noche)', rNPC:'🤝 Sistema NPC', rDayNight:'🌙 Sistema Día/Noche',
+    rShop:'🏪 Sistema de Tienda', rUnlock:'🏆 Desbloqueos por Baja', rUpdate:'🆕 Nuevas Actualizaciones',
+  },
+  ru: {
+    name:'Русский', start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки',
+    hp:'HP', kills:'Убийств', gold:'Золото', day:'День', night:'Ночь',
+    close:'Закрыть', chat:'Говорить', shop:'Магазин', restart:'Заново', menu:'Главное Меню',
+    weapon:'Оружие', sound:'Звук Игры', viewRules:'Смотреть', exitGame:'Выйти в Меню', clearSave:'Удалить Сохранение',
+    language:'Язык', victory:'Победа!', defeat:'Ты был повержен...',
+    fist:'Кулак', knife:'Нож', gun:'Пистолет', fire:'Огненный Шар', chargeFire:'Заряженный Огненный Шар',
+    gotShield:'🛡 Щит получен! Урон -1/3', miniBoss:'⚠ Мини-Босс 😌 появился! С армией 👾!',
+    gotFire:'🔥 Огненный Шар получен! (6 урона)', gotChargeFire:'💥 Заряженный Огненный Шар получен! (8 урона)',
+    finalBoss:'👹 Финальный Босс 😈 прибыл!! Армия 👾 наступает!',
+    digGold:'Найдено 5 золота при копании', nightCome:'🌙 Наступила ночь, монстры появились! (первые 30с меньше)', dayCome:'☀ Наступил день, безопасно!',
+    ghostScare:'👻 Атака страхом!', bossSlash:'Удар!', bossKnife:'Удар ножом!',
+    beatMiniBoss:'🎉 Мини-Босс побежден! Получено 50 золота', robotRevive:'😊 Робот воскрес!',
+    robotExplode:'💥 Робот взорвался! Воскреснет через 30с', robotDown:'😊 Повержен... воскреснет через 30с',
+    troubleRevive:'😝 Задира воскрес!', troubleKick:'😝 Пнул тебя! Поворот 90°, 2с оглушение',
+    troubleDown:'😝 Повержен! Воскреснет через 30с', wandererRevive:'😎 Странник вернулся!',
+    wandererMusic:'🎵 Музыка странника услышана', wandererDown:'😎 Странник повержен... воскреснет через 30с',
+    bleeding:'🩸 Ты истекаешь кровью! -1 HP каждые 5с, используй бинт/аптечку чтобы остановить',
+    switchWeapon:'Оружие сменено: ', alaskey:'🐕 Я Аляскинский! Стал слабее...',
+    robotGive:'😊 Дал тебе 25 золота!', buyKnife:'🔪 Нож куплен!', buyGun:'🔫 Пистолет куплен! Джойстик прицеливания справа внизу',
+    buyGrenade:'💣 Граната×3 куплена!', useBandage:'🩹 Бинт использован! +5 HP, кровотечение остановлено',
+    useMedkit:'💊 Аптечка использована! Полное HP, кровотечение остановлено', noGold:'Недостаточно золота!',
+    gameStart:'😡 Битва на Пиксельной Прерии начинается! Монстры появляются ночью', saveCleared:'🗑 Все сохранения удалены',
+    loadSave:'загружено, бой продолжается!', loadFail:'Ошибка загрузки сохранения', deleteSave:'удалено',
+    shopKnife:'🔪 Нож (Ближний бой 4 урона)', shopGun:'🔫 Пистолет (Дальний бой 5 урона)', shopGrenade:'💣 Граната×3 (Площадь)',
+    shopBandage:'🩹 Бинт (+5 HP + остановка кровотечения)', shopMedkit:'💊 Аптечка (Полное HP + остановка кровотечения)',
+    rulesTitle:'📖 Правила Игры', rBasic:'🎮 Базовое Управление', rPlayer:'😡 Характеристики Игрока', rWeapon:'🔫 Система Оружия',
+    rMob:'👻 Система Монстров (Только ночью)', rNPC:'🤝 NPC Система', rDayNight:'🌙 Система День/Ночь',
+    rShop:'🏪 Система Магазина', rUnlock:'🏆 Разблокировки за Убийства', rUpdate:'🆕 Новые Обновления',
+  }
 };
 function t(key){
   const lang = LANGS[G.language] || LANGS.en;
@@ -545,18 +674,86 @@ function applyLanguage(){
   if(closeShopBtn) closeShopBtn.textContent = t('close');
   const chatBtn = document.getElementById('chatBtn');
   if(chatBtn) chatBtn.textContent = '💬 ' + t('chat');
+  // 商店物品名称
+  const shopKnifeText = document.getElementById('shopKnifeText');
+  if(shopKnifeText) shopKnifeText.textContent = t('shopKnife');
+  const shopGunText = document.getElementById('shopGunText');
+  if(shopGunText) shopGunText.textContent = t('shopGun');
+  const shopGrenadeText = document.getElementById('shopGrenadeText');
+  if(shopGrenadeText) shopGrenadeText.textContent = t('shopGrenade');
+  const shopBandageText = document.getElementById('shopBandageText');
+  if(shopBandageText) shopBandageText.textContent = t('shopBandage');
+  const shopMedkitText = document.getElementById('shopMedkitText');
+  if(shopMedkitText) shopMedkitText.textContent = t('shopMedkit');
+  // 规则面板标题
+  const rulesTitle = document.getElementById('rulesTitle');
+  if(rulesTitle) rulesTitle.textContent = t('rulesTitle');
   // 游戏结束
   const restartBtn = document.getElementById('restartBtn');
   if(restartBtn) restartBtn.textContent = t('restart');
   const menuBtn = document.getElementById('menuBtn');
   if(menuBtn) menuBtn.textContent = t('menu');
 }
+function buildRulesContent(){
+  const c = document.getElementById('rulesContent');
+  if(!c) return;
+  c.innerHTML =
+    '<p><b>'+t('rBasic')+'</b></p>'+
+    '<p>• 📱: '+ (G.language==='zh'?'左下摇杆移动，右下按钮攻击/挖掘/手雷':'Left joystick move, right buttons attack/dig/grenade') +'</p>'+
+    '<p>• 💻: WASD/'+ (G.language==='zh'?'方向键移动，J攻击，K挖掘，L手雷，Q切武器':'Arrows move, J attack, K dig, L grenade, Q switch') +'</p>'+
+    '<p>• 🔫: '+ (G.language==='zh'?'右下橙色瞄准轮盘，左手移动右手瞄准，可边跑边打':'Orange aim joystick, move+aim, shoot while moving') +'</p>'+
+    '<p><b>'+t('rPlayer')+'</b></p>'+
+    '<p>• '+ (G.language==='zh'?'初始15血，拳头2伤害，移动速度2.8':'15 HP, fist 2 dmg, speed 2.8') +'</p>'+
+    '<p>• '+ (G.language==='zh'?'受伤后短暂无敌（防止连续掉血）':'Brief invincibility after hit') +'</p>'+
+    '<p>• '+ (G.language==='zh'?'30%概率流血：每5秒掉1血，用绷带/医疗包止血':'30% bleed: -1 HP/5s, bandage/medkit stops') +'</p>'+
+    '<p><b>'+t('rWeapon')+'</b></p>'+
+    '<p>• 👊 '+t('fist')+': '+ (G.language==='zh'?'近战2伤，开局自带':'Melee 2 dmg, default') +'</p>'+
+    '<p>• 🔪 '+t('knife')+': '+ (G.language==='zh'?'近战4伤，商店50金':'Melee 4 dmg, shop 50g') +'</p>'+
+    '<p>• 🔫 '+t('gun')+': '+ (G.language==='zh'?'远程5伤，商店120金，配瞄准轮盘':'Ranged 5 dmg, shop 120g, aim joystick') +'</p>'+
+    '<p>• 🔥 '+t('fire')+': '+ (G.language==='zh'?'远程6伤，50杀解锁':'Ranged 6 dmg, unlock at 50 kills') +'</p>'+
+    '<p>• 💥 '+t('chargeFire')+': '+ (G.language==='zh'?'远程8伤，70杀解锁':'Ranged 8 dmg, unlock at 70 kills') +'</p>'+
+    '<p>• 💣: '+ (G.language==='zh'?'范围伤害，商店40金/3个':'AOE, shop 40g/3') +'</p>'+
+    '<p><b>'+t('rMob')+'</b></p>'+
+    '<p>• 👻: 8 HP, '+ (G.language==='zh'?'近战3伤，速度快':'melee 3 dmg, fast') +'</p>'+
+    '<p>• 👽: 10 HP, '+ (G.language==='zh'?'远程声波2伤':'ranged sonic 2 dmg') +'</p>'+
+    '<p>• 👾: 12 HP, '+ (G.language==='zh'?'近战3伤，速度最快':'melee 3 dmg, fastest') +'</p>'+
+    '<p>• 😌: 40 HP, 6 dmg, '+ (G.language==='zh'?'30杀出现，伴随👾大军':'appears at 30 kills, with 👾 army') +'</p>'+
+    '<p>• 😈: 50 HP, 10 dmg, '+ (G.language==='zh'?'120杀出现，多阶段，伴随👾大军':'appears at 120 kills, multi-phase, with 👾 army') +'</p>'+
+    '<p><b>'+t('rNPC')+'</b></p>'+
+    '<p>• 😊: '+ (G.language==='zh'?'可索要25金币（有冷却），60秒后爆炸，死亡后30秒复活':'Ask for 25g (cooldown), explodes after 60s, revives 30s') +'</p>'+
+    '<p>• 🤬: '+ (G.language==='zh'?'无敌，靠近自动开商店，卖武器和药品':'Invincible, auto-open shop, sells weapons+items') +'</p>'+
+    '<p>• 😝: '+ (G.language==='zh'?'会踹人眩晕2秒，可击杀，死亡后30秒复活':'Kicks to stun 2s, killable, revives 30s') +'</p>'+
+    '<p>• 😎: '+ (G.language==='zh'?'随机乱逛，靠近150像素播放音乐，可击杀，死亡后30秒复活':'Wanders, music within 150px, killable, revives 30s') +'</p>'+
+    '<p>• '+ (G.language==='zh'?'除🤬商人外，所有生物都可以攻击':'All creatures attackable except 🤬 merchant') +'</p>'+
+    '<p><b>'+t('rDayNight')+'</b></p>'+
+    '<p>• ☀ '+ (G.language==='zh'?'白天60秒：安全，无怪物，适合探索和找NPC':'Day 60s: safe, no monsters, explore/find NPCs') +'</p>'+
+    '<p>• 🌙 '+ (G.language==='zh'?'夜晚60秒：怪物出没，前30秒较少，之后最多20只（Boss战时35只👾）':'Night 60s: monsters, fewer first 30s, max 20 (35 👾 during Boss)') +'</p>'+
+    '<p>• '+ (G.language==='zh'?'击杀怪物35%概率掉3金币':'35% chance to drop 3g on kill') +'</p>'+
+    '<p><b>'+t('rShop')+'</b></p>'+
+    '<p>• '+ (G.language==='zh'?'靠近🤬商人自动打开，商品可上下滑动':'Auto-open near 🤬, scrollable items') +'</p>'+
+    '<p>• 🔪 50g / 🔫 120g / 💣×3 40g</p>'+
+    '<p>• 🩹 30g: '+ (G.language==='zh'?'回5血+止血':'+5 HP + stop bleed') +'</p>'+
+    '<p>• 💊 80g: '+ (G.language==='zh'?'回满血+止血':'Full HP + stop bleed') +'</p>'+
+    '<p><b>'+t('rUnlock')+'</b></p>'+
+    '<p>• 🛡: 10 '+ (G.language==='zh'?'杀解锁，受伤减少1/3':'kills, damage -1/3') +'</p>'+
+    '<p>• 😌: 30 '+ (G.language==='zh'?'杀出现，伴随👾大军':'kills, with 👾 army') +'</p>'+
+    '<p>• 🔥: 50 '+ (G.language==='zh'?'杀解锁，远程6伤害':'kills, ranged 6 dmg') +'</p>'+
+    '<p>• 💥: 70 '+ (G.language==='zh'?'杀解锁，远程8伤害':'kills, ranged 8 dmg') +'</p>'+
+    '<p>• 😈: 120 '+ (G.language==='zh'?'杀降临，多阶段，伴随👾大军':'kills, multi-phase, with 👾 army') +'</p>'+
+    '<p><b>'+t('rUpdate')+'</b></p>'+
+    '<p>• '+ (G.language==='zh'?'Boss登场伴随大量👾并持续刷新':'Boss spawns with 👾 army and continuous spawns') +'</p>'+
+    '<p>• '+ (G.language==='zh'?'八国语言支持（设置里切换）':'8-language support (switch in Settings)') +'</p>'+
+    '<p>• '+ (G.language==='zh'?'火焰弹/蓄力火焰弹使用瞄准轮盘':'Fireball/Charge Fireball use aim joystick') +'</p>'+
+    '<p>• '+ (G.language==='zh'?'瞄准轮盘位置优化，缩小尺寸':'Aim joystick repositioned and resized') +'</p>';
+}
+
 function setLanguage(lang){
   if(LANGS[lang]){
     G.language = lang;
     try{ localStorage.setItem('class_emoji_language', lang); }catch(e){}
     applyLanguage();
-    showToast('🌐 Language: ' + LANGS[lang].name);
+    buildRulesContent();
+    showToast('🌐 ' + LANGS[lang].name);
   }
 }
 
@@ -664,6 +861,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     langSelect.addEventListener('change', (e)=>{ setLanguage(e.target.value); playSound('click'); });
   }
   applyLanguage();
+  buildRulesContent();
 });
 
 function playSound(type){
@@ -916,7 +1114,7 @@ function loadGame(slot){
     document.getElementById('endPanel').style.display = 'none';
     document.getElementById('shopPanel').style.display = 'none';
     closeDialog();
-    showToast('📂 '+SAVE_NAMES[targetSlot]+' 已读取，继续战斗！', 2000);
+    showToast('📂 '+SAVE_NAMES[targetSlot]+' '+t('loadSave'), 2000);
     return true;
   }catch(e){
     console.error('Load failed:', e);
@@ -980,7 +1178,7 @@ function renderSaveSlots(mode){
       playSound('click');
       if(info){
         if(mode === 'continue'){
-          if(!loadGame(i)){ showToast('读取存档失败'); }
+          if(!loadGame(i)){ showToast(t('loadFail')); }
         } else {
           if(confirm('确定要覆盖 '+SAVE_NAMES[i]+' 吗？原有进度将丢失。')){
             currentSaveSlot = i; startGame();
@@ -1010,7 +1208,7 @@ function renderSaveSlots(mode){
         if(confirm('确定要删除 '+SAVE_NAMES[slot]+' 吗？此操作不可撤销。')){
           clearSave(slot);
           renderSaveSlots(mode);
-          showToast('🗑 '+SAVE_NAMES[slot]+' 已删除');
+          showToast('🗑 '+SAVE_NAMES[slot]+' '+t('deleteSave'));
         }
       }
     });
@@ -1323,7 +1521,7 @@ function playerDig(){
       if(wood.hp<=0){
         G.woods.splice(i,1);
         p.gold += 5;
-        showToast('挖掘获得5金币');
+        showToast(t('digGold'));
         updateUI();
         // 重新长一棵
         setTimeout(()=>{
@@ -1360,10 +1558,10 @@ function update(){
       for(let i=0;i<4;i++){
         G.mobs.push(createMob(types[Math.floor(Math.random()*3)]));
       }
-      showToast('🌙 夜晚降临，怪物出没！(前30秒怪物较少)');
+      showToast(t('nightCome'));
     } else {
       G.mobs = []; // 白天清空所有怪物
-      showToast('☀ 白天来临，安全了！');
+      showToast(t('dayCome'));
     }
     updateUI();
   }
@@ -1485,13 +1683,13 @@ function checkUnlocks(){
     G.gotShield = true;
     playSound('unlock');
     saveGame();
-    showToast('🛡 获得盾牌！伤害减少1/3');
+    showToast(t('gotShield'));
   }
   if(k>=30 && !G.miniBossSpawned){
     G.miniBossSpawned = true;
     G.bosses.push(createMiniBoss());
     playSound('boss');
-    showToast('⚠ 小Boss 😌 出现了！伴随大量👾！');
+    showToast(t('miniBoss'));
     G.shake = 20;
     // 立即生成10只👾
     for(let i=0;i<10;i++){
@@ -1504,20 +1702,20 @@ function checkUnlocks(){
     if(!G.weapons.includes('fire')) G.weapons.push('fire');
     playSound('unlock');
     saveGame();
-    showToast('🔥 获得火焰弹！(6伤害)');
+    showToast(t('gotFire'));
   }
   if(k>=70 && !G.gotChargeFire){
     G.gotChargeFire = true;
     if(!G.weapons.includes('chargeFire')) G.weapons.push('chargeFire');
     playSound('unlock');
     saveGame();
-    showToast('💥 获得蓄力火焰弹！(8伤害)');
+    showToast(t('gotChargeFire'));
   }
   if(k>=120 && !G.finalBossSpawned){
     G.finalBossSpawned = true;
     G.bosses.push(createFinalBoss());
     playSound('boss');
-    showToast('👹 最终Boss 😈 降临！！👾大军来袭！');
+    showToast(t('finalBoss'));
     G.shake = 40;
     // 立即生成15只👾
     for(let i=0;i<15;i++){
@@ -1575,7 +1773,7 @@ function updateMobs(){
           G.npcs.trouble.fleeTimer = 60;
         }
         if(m.type==='ghost'){
-          showToast('👻 惊吓攻击！');
+          showToast(t('ghostScare'));
         }
       }
     }
@@ -1631,7 +1829,7 @@ function updateBosses(){
       b.attackAnim = 20;
       damagePlayer(b.dmg);
       G.shake = 10;
-      showToast((b.type==='finalBoss'?'😈 挥砍！':'😌 刀砍！')+' -'+b.dmg+'HP');
+      showToast((b.type==='finalBoss'?'😈 '+t('bossSlash'):'😌 '+t('bossKnife'))+' -'+b.dmg+'HP');
     }
 
     if(b.hp<=0){
@@ -1643,7 +1841,7 @@ function updateBosses(){
       if(b.type==='finalBoss'){
         gameOver(true);
       } else {
-        showToast('🎉 击败小Boss！获得50金币');
+        showToast(t('beatMiniBoss'));
         p.gold += 50;
         updateUI();
       }
@@ -1667,7 +1865,7 @@ function updateNPCs(){
         r.y = r.spawnY;
         r.lifeTimer = 3600;
         r.hurtFlash = 0;
-        showToast('😊 机器人复活了！');
+        showToast(t('robotRevive'));
       }
     } else {
     if(r.hurtFlash>0) r.hurtFlash--;
@@ -1701,7 +1899,7 @@ function updateNPCs(){
       document.getElementById('talkBtn').style.display = 'none';
       closeDialog();
       playVoice('death', 'female'); // 😊 女声死亡"饿啊～"
-      showToast('💥 机器人爆炸了！30秒后复活');
+      showToast(t('robotExplode'));
       G.shake = 15;
       return;
     }
@@ -1716,7 +1914,7 @@ function updateNPCs(){
       closeDialog();
       playSound('kill');
       playVoice('death', 'female'); // 😊 女声死亡"饿啊～"
-      showToast('😊 倒下了...30秒后复活');
+      showToast(t('robotDown'));
       return;
     }
 
@@ -1779,7 +1977,7 @@ function updateNPCs(){
         tr.chasing = false;
         tr.fleeTimer = 0;
         tr.hurtFlash = 0;
-        showToast('😝 捣蛋鬼复活了！');
+        showToast(t('troubleRevive'));
       }
     } else {
     if(tr.hurtFlash>0) tr.hurtFlash--;
@@ -1829,7 +2027,7 @@ function updateNPCs(){
           tr.fleeTimer = 120; // 踹完跑开2秒
           p.stunTimer = 120; // 2秒
           p.stunRotate = true;
-          showToast('😝 踹了你一脚！转90度，2秒不能动');
+          showToast(t('troubleKick'));
           G.shake = 8;
         }
       } else {
@@ -1851,7 +2049,7 @@ function updateNPCs(){
       tr.dead = true;
       tr.respawnTimer = 1800; // 30秒后复活
       playVoice('death', 'male'); // 😝 男声死亡"饿啊～"
-      showToast('😝 被解决了！30秒后复活');
+      showToast(t('troubleDown'));
     }
     }
   }
@@ -1868,7 +2066,7 @@ function updateNPCs(){
         wn.x = wn.spawnX;
         wn.y = wn.spawnY;
         wn.hurtFlash = 0;
-        showToast('😎 游离乐子人又回来了！');
+        showToast(t('wandererRevive'));
       }
     } else {
       if(wn.hurtFlash>0) wn.hurtFlash--;
@@ -1893,7 +2091,7 @@ function updateNPCs(){
       if(dw < 150 && !wn.musicPlaying){
         wn.musicPlaying = true;
         startWandererMusic();
-        showToast('🎵 听到了游离乐子人的音乐');
+        showToast(t('wandererMusic'));
       } else if(dw >= 180 && wn.musicPlaying){
         wn.musicPlaying = false;
         stopWandererMusic();
@@ -1907,7 +2105,7 @@ function updateNPCs(){
         wn.musicPlaying = false;
         stopWandererMusic();
         playSound('kill');
-        showToast('😎 游离乐人倒下了...30秒后复活');
+        showToast(t('wandererDown'));
       }
     }
   }
@@ -2073,7 +2271,7 @@ function damagePlayer(dmg){
   if(!p.bleeding && Math.random() < 0.3){
     p.bleeding = true;
     p.bleedTimer = 0;
-    showToast('🩸 你受伤流血了！每5秒掉1血，用绷带/医疗包止血');
+    showToast(t('bleeding'));
   }
   updateUI();
 }
@@ -2364,12 +2562,12 @@ function drawCorpse(c){
 function updateUI(){
   const p = G.player;
   document.getElementById('hpBar').style.width = Math.max(0,p.hp/p.maxHp*100)+'%';
-  document.getElementById('hpText').textContent = 'HP '+Math.max(0,p.hp)+'/'+p.maxHp;
-  document.getElementById('killText').textContent = '击杀:'+G.killCount;
-  document.getElementById('goldText').textContent = '金币:'+p.gold;
+  document.getElementById('hpText').textContent = t('hp')+' '+Math.max(0,p.hp)+'/'+p.maxHp;
+  document.getElementById('killText').textContent = t('kills')+':'+G.killCount;
+  document.getElementById('goldText').textContent = t('gold')+':'+p.gold;
   const wNames = {fist:'拳头',knife:'刀',fire:'火焰弹',chargeFire:'蓄力火焰弹',gun:'枪'};
   document.getElementById('weaponText').textContent = '武器:'+(wNames[p.weapon]||p.weapon);
-  document.getElementById('timeText').textContent = G.day?'☀白天':'🌙夜晚';
+  document.getElementById('timeText').textContent = G.day?'☀'+t('day'):'🌙'+t('night');
   // 手雷按钮
   document.getElementById('grenadeBtn').style.display = p.grenade>0?'flex':'none';
   if(p.grenade>0) document.getElementById('grenadeBtn').textContent = '💣'+p.grenade;
@@ -2564,7 +2762,7 @@ function switchWeapon(){
   G.player.weapon = list[idx];
   updateUI();
   updateAimJoystick();
-  showToast('切换武器: '+G.player.weapon);
+  showToast(t('switchWeapon')+G.player.weapon);
 }
 function updateAimJoystick(){
   const aim = document.getElementById('aimJoystick');
@@ -2588,7 +2786,7 @@ document.getElementById('infDmg').addEventListener('change', e=>G.cheat.infDmg=e
 document.getElementById('mobSea').addEventListener('change', e=>G.cheat.mobSea=e.target.checked);
 document.getElementById('alaskey').addEventListener('change', e=>{
   G.cheat.alaskey=e.target.checked;
-  if(e.target.checked) showToast('🐕 我是阿拉斯基！变得更弱了...');
+  if(e.target.checked) showToast(t('alaskey'));
 });
 
 // 索要按钮
@@ -2597,7 +2795,7 @@ document.getElementById('askBtn').addEventListener('click', ()=>{
     G.player.gold += 25;
     G.npcs.robot.giveCd = 300;
     playSound('pickup');
-    showToast('😊 给了你25金币！');
+    showToast(t('robotGive'));
     updateUI();
   }
 });
@@ -2609,10 +2807,10 @@ document.getElementById('buyKnife').addEventListener('click', ()=>{
     if(!G.weapons.includes('knife')) G.weapons.push('knife');
     G.player.weapon='knife';
     playSound('pickup');
-    showToast('🔪 购买了刀！');
+    showToast(t('buyKnife'));
     updateUI();
     saveGame();
-  } else showToast('金币不足！');
+  } else showToast(t('noGold'));
 });
 document.getElementById('buyGun').addEventListener('click', ()=>{
   if(G.player.gold>=120){
@@ -2620,7 +2818,7 @@ document.getElementById('buyGun').addEventListener('click', ()=>{
     if(!G.weapons.includes('gun')) G.weapons.push('gun');
     G.player.weapon='gun';
     playSound('pickup');
-    showToast('🔫 购买了枪！右下角出现瞄准轮盘');
+    showToast(t('buyGun'));
     updateUI();
     updateAimJoystick();
     saveGame();
@@ -2631,7 +2829,7 @@ document.getElementById('buyGrenade').addEventListener('click', ()=>{
     G.player.gold-=40;
     G.player.grenade+=3;
     playSound('pickup');
-    showToast('💣 购买了手雷×3！');
+    showToast(t('buyGrenade'));
     updateUI();
     saveGame();
   } else showToast('金币不足！');
@@ -2642,7 +2840,7 @@ document.getElementById('buyBandage').addEventListener('click', ()=>{
     G.player.hp = Math.min(G.player.maxHp, G.player.hp+5);
     G.player.bleeding = false; // 止血
     playSound('pickup');
-    showToast('🩹 使用绷带！回复5血，止血了');
+    showToast(t('useBandage'));
     updateUI();
     saveGame();
   } else showToast('金币不足！');
@@ -2653,7 +2851,7 @@ document.getElementById('buyMedkit').addEventListener('click', ()=>{
     G.player.hp = G.player.maxHp;
     G.player.bleeding = false; // 止血
     playSound('unlock');
-    showToast('💊 使用医疗包！满血恢复，止血了');
+    showToast(t('useMedkit'));
     updateUI();
     saveGame();
   } else showToast('金币不足！');
@@ -2759,6 +2957,8 @@ function renderMenuScene(){
 
 // ==================== 启动 ====================
 function startGame(){
+  applyLanguage();
+  buildRulesContent();
   initAudio();
   G.state = 'playing';
   G.running = true;
@@ -2781,7 +2981,7 @@ function startGame(){
   document.getElementById('endPanel').style.display = 'none';
   document.getElementById('shopPanel').style.display = 'none';
   closeDialog();
-  showToast('😡 像素草原战斗开始！夜晚怪物会出现', 3000);
+  showToast(t('gameStart'), 3000);
   saveGame(); // 立即保存，创建存档
 }
 
@@ -2842,7 +3042,7 @@ document.getElementById('clearSaveBtn').addEventListener('click', ()=>{
   if(confirm('确定要清除所有本地存档吗？此操作不可撤销。')){
     clearSave(); // 不传参数清除所有
     updateContinueBtn();
-    showToast('🗑 所有存档已清除');
+    showToast(t('saveCleared'));
   }
 });
 
