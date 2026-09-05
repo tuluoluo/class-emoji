@@ -35,10 +35,10 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;image
 #joystick{position:absolute;left:30px;bottom:30px;width:130px;height:130px;z-index:15;pointer-events:auto}
 #joyOuter{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid rgba(0,0,0,.4)}
 #joyInner{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:3px solid rgba(0,0,0,.5)}
-/* 瞄准轮盘 - 右下角偏左 */
-#aimJoystick{position:absolute;right:120px;bottom:30px;width:130px;height:130px;z-index:15;pointer-events:auto}
-#aimOuter{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,200,0,.2);border:4px solid rgba(255,150,0,.5)}
-#aimInner{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,200,0,.7);border:3px solid rgba(200,100,0,.8)}
+/* 瞄准轮盘 - 右侧中间，缩小尺寸 */
+#aimJoystick{position:absolute;right:40px;bottom:130px;width:100px;height:100px;z-index:15;pointer-events:auto}
+#aimOuter{position:absolute;top:0;left:0;width:100px;height:100px;border-radius:50%;background:rgba(255,200,0,.2);border:4px solid rgba(255,150,0,.5)}
+#aimInner{position:absolute;top:30px;left:30px;width:40px;height:40px;border-radius:50%;background:rgba(255,200,0,.7);border:3px solid rgba(200,100,0,.8)}
 
 /* 右下角技能按钮 */
 #skillArea{position:absolute;right:25px;bottom:25px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:15}
@@ -303,6 +303,19 @@ input:checked + .slider:before{transform:translateX(24px)}
         <span>📜 游戏规则</span>
         <button id="showRulesBtn" class="settings-small-btn">查看</button>
       </div>
+      <div class="settings-row">
+        <span>🌐 语言 / Language</span>
+        <select id="languageSelect" style="padding:6px 10px;border-radius:6px;border:2px solid #333;font-size:13px;font-weight:bold;cursor:pointer">
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="ru">Русский</option>
+        </select>
+      </div>
       <button id="exitGameBtn" class="settings-exit">退出到主页</button>
       <button id="clearSaveBtn" style="width:100%;margin-top:8px;padding:10px;background:#e67e22;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">🗑 清除本地存档</button>
       <button id="closeSettingsBtn" class="settings-close">关闭</button>
@@ -384,6 +397,7 @@ const G = {
   paused: false, // 打开设置等面板时暂停游戏
   running: true,
   soundOn: true,
+  language: 'en', // 默认英语
   day: true,
   dayTimer: 0,
   dayDuration: 3600, // 白天60秒，夜晚也60秒
@@ -422,6 +436,130 @@ function initAudio(){
     audioCtx.resume().catch(()=>{});
   }
 }
+// ==================== 八国语言系统 ====================
+const LANGS = {
+  zh: {name:'中文', start:'开始游戏', continue:'继续游戏', rules:'游戏规则', settings:'设置',
+       hp:'HP', kills:'击杀', gold:'金币', day:'白天', night:'夜晚',
+       close:'关闭', chat:'聊聊', shop:'商店', restart:'重新开始', menu:'返回主菜单',
+       weapon:'武器', sound:'游戏声音', viewRules:'查看', exitGame:'退出到主页', clearSave:'清除本地存档',
+       language:'语言', victory:'胜利！', defeat:'你被击败了...',
+       fist:'拳头', knife:'刀', gun:'枪', fire:'火焰弹', chargeFire:'蓄力火焰弹',
+       gotShield:'🛡 获得盾牌！伤害减少1/3', miniBoss:'⚠ 小Boss 😌 出现了！',
+       gotFire:'🔥 获得火焰弹！(6伤害)', gotChargeFire:'💥 获得蓄力火焰弹！(8伤害)',
+       finalBoss:'👹 最终Boss 😈 降临！！'},
+  en: {name:'English', start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings',
+       hp:'HP', kills:'Kills', gold:'Gold', day:'Day', night:'Night',
+       close:'Close', chat:'Chat', shop:'Shop', restart:'Restart', menu:'Main Menu',
+       weapon:'Weapon', sound:'Game Sound', viewRules:'View', exitGame:'Exit to Menu', clearSave:'Clear Save',
+       language:'Language', victory:'Victory!', defeat:'You were defeated...',
+       fist:'Fist', knife:'Knife', gun:'Gun', fire:'Fireball', chargeFire:'Charge Fireball',
+       gotShield:'🛡 Got Shield! Damage -1/3', miniBoss:'⚠ Mini Boss 😌 appeared!',
+       gotFire:'🔥 Got Fireball! (6 dmg)', gotChargeFire:'💥 Got Charge Fireball! (8 dmg)',
+       finalBoss:'👹 Final Boss 😈 arrived!!'},
+  ja: {name:'日本語', start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定',
+       hp:'HP', kills:'キル', gold:'ゴールド', day:'昼', night:'夜',
+       close:'閉じる', chat:'話す', shop:'ショップ', restart:'リスタート', menu:'メインメニュー',
+       weapon:'武器', sound:'ゲーム音声', viewRules:'見る', exitGame:'メニューへ', clearSave:'セーブ削除',
+       language:'言語', victory:'勝利！', defeat:'倒された...',
+       fist:'拳', knife:'ナイフ', gun:'銃', fire:'火炎弾', chargeFire:'溜め火炎弾',
+       gotShield:'🛡 盾を入手！ダメージ1/3減', miniBoss:'⚠ ミニボス 😌 出現！',
+       gotFire:'🔥 火炎弾を入手！(6ダメージ)', gotChargeFire:'💥 溜め火炎弾を入手！(8ダメージ)',
+       finalBoss:'👹 最終ボス 😈 降臨！！'},
+  ko: {name:'한국어', start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정',
+       hp:'HP', kills:'킬', gold:'골드', day:'낮', night:'밤',
+       close:'닫기', chat:'대화', shop:'상점', restart:'다시 시작', menu:'메인 메뉴',
+       weapon:'무기', sound:'게임 소리', viewRules:'보기', exitGame:'메뉴로 나가기', clearSave:'세이브 삭제',
+       language:'언어', victory:'승리!', defeat:'패배했습니다...',
+       fist:'주먹', knife:'칼', gun:'총', fire:'화염구', chargeFire:'차지 화염구',
+       gotShield:'🛡 방패 획득! 데미지 1/3 감소', miniBoss:'⚠ 미니 보스 😌 등장!',
+       gotFire:'🔥 화염구 획득! (6 데미지)', gotChargeFire:'💥 차지 화염구 획득! (8 데미지)',
+       finalBoss:'👹 최종 보스 😈 강림!!'},
+  fr: {name:'Français', start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres',
+       hp:'PV', kills:'Tués', gold:'Or', day:'Jour', night:'Nuit',
+       close:'Fermer', chat:'Parler', shop:'Boutique', restart:'Recommencer', menu:'Menu Principal',
+       weapon:'Arme', sound:'Son du Jeu', viewRules:'Voir', exitGame:'Quitter au Menu', clearSave:'Effacer Sauvegarde',
+       language:'Langue', victory:'Victoire !', defeat:'Vous avez été vaincu...',
+       fist:'Poing', knife:'Couteau', gun:'Pistolet', fire:'Boule de Feu', chargeFire:'Boule de Feu Chargée',
+       gotShield:'🛡 Bouclier obtenu ! Dégâts -1/3', miniBoss:'⚠ Mini Boss 😌 apparu !',
+       gotFire:'🔥 Boule de Feu obtenue ! (6 dégâts)', gotChargeFire:'💥 Boule de Feu Chargée obtenue ! (8 dégâts)',
+       finalBoss:'👹 Boss Final 😈 arrivé !!'},
+  de: {name:'Deutsch', start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen',
+       hp:'HP', kills:'Kills', gold:'Gold', day:'Tag', night:'Nacht',
+       close:'Schließen', chat:'Plaudern', shop:'Laden', restart:'Neustart', menu:'Hauptmenü',
+       weapon:'Waffe', sound:'Spielton', viewRules:'Ansehen', exitGame:'Zum Menü', clearSave:'Speichern Löschen',
+       language:'Sprache', victory:'Sieg!', defeat:'Du wurdest besiegt...',
+       fist:'Faust', knife:'Messer', gun:'Pistole', fire:'Feuerball', chargeFire:'Aufladender Feuerball',
+       gotShield:'🛡 Schild erhalten! Schaden -1/3', miniBoss:'⚠ Mini-Boss 😌 erschienen!',
+       gotFire:'🔥 Feuerball erhalten! (6 Schaden)', gotChargeFire:'💥 Aufladender Feuerball erhalten! (8 Schaden)',
+       finalBoss:'👹 Endboss 😈 angekommen!!'},
+  es: {name:'Español', start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes',
+       hp:'HP', kills:'Bajas', gold:'Oro', day:'Día', night:'Noche',
+       close:'Cerrar', chat:'Hablar', shop:'Tienda', restart:'Reiniciar', menu:'Menú Principal',
+       weapon:'Arma', sound:'Sonido del Juego', viewRules:'Ver', exitGame:'Salir al Menú', clearSave:'Borrar Partida',
+       language:'Idioma', victory:'¡Victoria!', defeat:'Has sido derrotado...',
+       fist:'Puño', knife:'Cuchillo', gun:'Pistola', fire:'Bola de Fuego', chargeFire:'Bola de Fuego Cargada',
+       gotShield:'🛡 ¡Escudo obtenido! Daño -1/3', miniBoss:'⚠ ¡Mini Jefe 😌 apareció!',
+       gotFire:'🔥 ¡Bola de Fuego obtenida! (6 daño)', gotChargeFire:'💥 ¡Bola de Fuego Cargada obtenida! (8 daño)',
+       finalBoss:'👹 ¡Jefe Final 😈 llegó!!'},
+  ru: {name:'Русский', start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки',
+       hp:'HP', kills:'Убийств', gold:'Золото', day:'День', night:'Ночь',
+       close:'Закрыть', chat:'Говорить', shop:'Магазин', restart:'Заново', menu:'Главное Меню',
+       weapon:'Оружие', sound:'Звук Игры', viewRules:'Смотреть', exitGame:'Выйти в Меню', clearSave:'Удалить Сохранение',
+       language:'Язык', victory:'Победа!', defeat:'Ты был повержен...',
+       fist:'Кулак', knife:'Нож', gun:'Пистолет', fire:'Огненный Шар', chargeFire:'Заряженный Огненный Шар',
+       gotShield:'🛡 Щит получен! Урон -1/3', miniBoss:'⚠ Мини-Босс 😌 появился!',
+       gotFire:'🔥 Огненный Шар получен! (6 урона)', gotChargeFire:'💥 Заряженный Огненный Шар получен! (8 урона)',
+       finalBoss:'👹 Финальный Босс 😈 прибыл!!'}
+};
+function t(key){
+  const lang = LANGS[G.language] || LANGS.en;
+  return lang[key] || LANGS.en[key] || key;
+}
+function applyLanguage(){
+  // 主菜单
+  const startBtn = document.getElementById('startBtn');
+  if(startBtn) startBtn.textContent = t('start');
+  const continueBtn = document.getElementById('continueBtn');
+  if(continueBtn) continueBtn.textContent = t('continue');
+  const menuRulesBtn = document.getElementById('menuRulesBtn');
+  if(menuRulesBtn) menuRulesBtn.textContent = '📖 ' + t('rules');
+  const menuSettingsBtn = document.getElementById('menuSettingsBtn');
+  if(menuSettingsBtn) menuSettingsBtn.textContent = '⚙ ' + t('settings');
+  // 设置面板
+  const settingsTitle = document.querySelector('#settingsPanel h3');
+  if(settingsTitle) settingsTitle.textContent = t('settings');
+  const soundLabel = document.querySelector('#settingsPanel .settings-row span');
+  if(soundLabel) soundLabel.textContent = '🔊 ' + t('sound');
+  const rulesLabel = document.querySelectorAll('#settingsPanel .settings-row span')[1];
+  if(rulesLabel) rulesLabel.textContent = '📜 ' + t('rules');
+  const viewRulesBtn = document.getElementById('showRulesBtn');
+  if(viewRulesBtn) viewRulesBtn.textContent = t('viewRules');
+  const exitBtn = document.getElementById('exitGameBtn');
+  if(exitBtn) exitBtn.textContent = t('exitGame');
+  const clearBtn = document.getElementById('clearSaveBtn');
+  if(clearBtn) clearBtn.textContent = '🗑 ' + t('clearSave');
+  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+  if(closeSettingsBtn) closeSettingsBtn.textContent = t('close');
+  // 商店
+  const closeShopBtn = document.getElementById('closeShopBtn');
+  if(closeShopBtn) closeShopBtn.textContent = t('close');
+  const chatBtn = document.getElementById('chatBtn');
+  if(chatBtn) chatBtn.textContent = '💬 ' + t('chat');
+  // 游戏结束
+  const restartBtn = document.getElementById('restartBtn');
+  if(restartBtn) restartBtn.textContent = t('restart');
+  const menuBtn = document.getElementById('menuBtn');
+  if(menuBtn) menuBtn.textContent = t('menu');
+}
+function setLanguage(lang){
+  if(LANGS[lang]){
+    G.language = lang;
+    try{ localStorage.setItem('class_emoji_language', lang); }catch(e){}
+    applyLanguage();
+    showToast('🌐 Language: ' + LANGS[lang].name);
+  }
+}
+
 // 全局交互标记：用户首次点击/触摸后解锁音频
 let audioUnlocked = false;
 function unlockAudio(){
@@ -514,6 +652,18 @@ document.addEventListener('click', ()=>{ unlockAudio(); lockLandscape(); }, {onc
 document.addEventListener('DOMContentLoaded', ()=>{
   const btn = document.getElementById('forceLandscapeBtn');
   if(btn) btn.addEventListener('click', (e)=>{ e.stopPropagation(); enableForcedLandscape(); });
+  // 读取保存的语言设置
+  try{
+    const savedLang = localStorage.getItem('class_emoji_language');
+    if(savedLang && LANGS[savedLang]) G.language = savedLang;
+  }catch(e){}
+  // 语言选择
+  const langSelect = document.getElementById('languageSelect');
+  if(langSelect){
+    langSelect.value = G.language;
+    langSelect.addEventListener('change', (e)=>{ setLanguage(e.target.value); playSound('click'); });
+  }
+  applyLanguage();
 });
 
 function playSound(type){
@@ -1088,9 +1238,9 @@ function playerAttack(){
     const dmg = calcPlayerDmg(w==='chargeFire'?8:(w==='fire'?6:5));
     const face = w==='gun'?'•':(w==='chargeFire'?'🔥':'🔥');
     const spd = w==='gun'?9:6;
-    // 枪用瞄准方向，火焰弹用角色面向
-    const dx = w==='gun' ? p.aimX*spd : p.facing*spd;
-    const dy = w==='gun' ? p.aimY*spd : 0;
+    // 枪/火焰弹/蓄力火焰弹都用瞄准方向
+    const dx = (w==='gun'||w==='fire'||w==='chargeFire') ? p.aimX*spd : p.facing*spd;
+    const dy = (w==='gun'||w==='fire'||w==='chargeFire') ? p.aimY*spd : 0;
     spawnProjectile(p.x+p.w/2, p.y+p.h/2, dx, dy, {
       dmg, face, fromPlayer:true, speed:spd, life:120,
       w:w==='chargeFire'?24:16, h:w==='chargeFire'?24:16,
@@ -2301,12 +2451,12 @@ function handleAimMove(e){
     G.player.aimX = dx/maxR;
     G.player.aimY = dy/maxR;
   }
-  aimJoyInner.style.left = (45+dx)+'px';
-  aimJoyInner.style.top = (45+dy)+'px';
+  aimJoyInner.style.left = (30+dx)+'px';
+  aimJoyInner.style.top = (30+dy)+'px';
 }
 function handleAimEnd(e){
   aimJoy.active = false;
-  aimJoyInner.style.left = '45px'; aimJoyInner.style.top = '45px';
+  aimJoyInner.style.left = '30px'; aimJoyInner.style.top = '30px';
 }
 aimJoyEl.addEventListener('touchstart', handleAimStart, {passive:false});
 aimJoyEl.addEventListener('touchmove', handleAimMove, {passive:false});
@@ -2396,7 +2546,7 @@ function switchWeapon(){
 }
 function updateAimJoystick(){
   const aim = document.getElementById('aimJoystick');
-  if(G.player && G.player.weapon === 'gun'){
+  if(G.player && (G.player.weapon === 'gun' || G.player.weapon === 'fire' || G.player.weapon === 'chargeFire')){
     aim.style.display = 'block';
   } else {
     aim.style.display = 'none';
