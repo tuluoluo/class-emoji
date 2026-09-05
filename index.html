@@ -170,7 +170,7 @@ input:checked + .slider:before{transform:translateX(24px)}
   <div class="rotate-icon">📱</div>
   <h2>请横屏游玩</h2>
   <p>将手机横过来获得最佳体验</p>
-  <p>横屏后自动继续游戏</p>
+  <p id="landscapeHint">横屏后自动继续游戏</p>
   <button id="forceLandscapeBtn">🔄 强制横屏模式</button>
   <p style="font-size:12px;margin-top:10px;color:#888">手机锁不了横屏？点这个用旋转模式玩</p>
 </div>
@@ -273,7 +273,7 @@ input:checked + .slider:before{transform:translateX(24px)}
   <div id="mainMenu">
     <div class="menu-overlay"></div>
     <div class="menu-content">
-      <h1 class="game-title">像素草原战斗</h1>
+      <h1 class="game-title" id="gameTitle">像素草原战斗</h1>
       <p class="game-subtitle">生存 · 打怪 · 探索大草原</p>
       <button id="playBtn" class="menu-play">▶ 开始新游戏</button>
       <button id="continueBtn" class="menu-continue">📂 继续游戏</button>
@@ -294,13 +294,13 @@ input:checked + .slider:before{transform:translateX(24px)}
   <!-- 设置面板 -->
   <div id="settingsPanel">
     <div class="settings-box">
-      <h3>设置</h3>
+      <h3 id="settingsTitle">设置</h3>
       <div class="settings-row">
         <span>🔊 游戏声音</span>
         <label class="switch"><input type="checkbox" id="soundToggle" checked><span class="slider"></span></label>
       </div>
       <div class="settings-row">
-        <span>📜 游戏规则</span>
+        <span id="rulesBtnText">📜 游戏规则</span>
         <button id="showRulesBtn" class="settings-small-btn">查看</button>
       </div>
       <div class="settings-row">
@@ -419,7 +419,7 @@ const LANGS = {
     robotGive:'😊 给了你25金币！', buyKnife:'🔪 购买了刀！', buyGun:'🔫 购买了枪！右下角出现瞄准轮盘',
     buyGrenade:'💣 购买了手雷×3！', useBandage:'🩹 使用绷带！回复5血，止血了',
     useMedkit:'💊 使用医疗包！满血恢复，止血了', noGold:'金币不足！',
-    gameStart:'😡 像素草原战斗开始！夜晚怪物会出现', saveCleared:'🗑 所有存档已清除',
+    gameStart:'😡 像素草原战斗开始！夜晚怪物会出现', gameTitle:'像素草原战斗', landscapeHint:'横屏后自动继续游戏', saveCleared:'🗑 所有存档已清除',
     loadSave:'已读取，继续战斗！', loadFail:'读取存档失败', deleteSave:'已删除',
     // 商店物品
     shopKnife:'🔪 刀 (近战4伤)', shopGun:'🔫 枪 (远程5伤)', shopGrenade:'💣 手雷×3 (范围)',
@@ -461,9 +461,25 @@ const LANGS = {
     // 游戏结束面板
     victoryTitle:'🏆 胜利！', defeatTitle:'💀 游戏结束',
     killCount:'击杀数: ', beatFinalBoss:'你击败了最终Boss 😈！',
-    defeatedByMob:'你被怪物打败了...', autoSaved:t('autoSaved'),
+    defeatedByMob:'你被怪物打败了...', autoSaved:'进度已自动保存',
     // 武器显示
     weaponLabel:'武器:',
+    npcMerchantName:'🤬 武器商人（旧友）',
+    npcMerchantText:'子供の頃、毎日一緒に遊んでたよね、親も気にしなかったし…それから会わなかった。まさかここで会えるとは思わなかった。',
+    npcRobotName:'😊 ロボット',
+    npcRobotText:'戦闘力は強いけど、一番脾气が荒いよ。ちょっとしたことですぐ喧嘩する。直したほうがいいよ。',
+    npcTroubleName:'😝 いたずらっ子',
+    npcTroubleText:'（😝はただ変顔をして、そして蹴ってきた——こいつは拳でしか話さない。）',
+    overwriteNewGame:'🆕 上書き新規ゲーム',
+    // NPC对话
+    npcMerchantName:'🤬 军火商（老朋友）',
+    npcMerchantText:'小时候我俩天天一起打闹，家长也不管我们……后来就再也没见到过了。没想到这次我们竟然在这里碰到了。',
+    npcRobotName:'😊 机器人',
+    npcRobotText:'你的战斗力很强，但是脾气是最臭的一个，经常一言不合就动手。我希望你可以改正。',
+    npcTroubleName:'😝 捣蛋鬼',
+    npcTroubleText:'（😝只是冲你做了个鬼脸，然后一脚踹过来——这家伙只会用拳头说话。）',
+    // 存档面板按钮
+    overwriteNewGame:t('overwriteNewGame'),
   },
   en: {
     name:'English', start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings',
@@ -487,7 +503,7 @@ const LANGS = {
     robotGive:'😊 Gave you 25 gold!', buyKnife:'🔪 Bought Knife!', buyGun:'🔫 Bought Gun! Aim joystick at bottom right',
     buyGrenade:'💣 Bought Grenade×3!', useBandage:'🩹 Used Bandage! +5 HP, bleeding stopped',
     useMedkit:'💊 Used Medkit! Full HP, bleeding stopped', noGold:'Not enough gold!',
-    gameStart:'😡 Pixel Prairie Battle begins! Monsters appear at night', saveCleared:'🗑 All saves cleared',
+    gameStart:'😡 Pixel Prairie Battle begins! Monsters appear at night', gameTitle:'Pixel Prairie Battle', landscapeHint:'Rotate to landscape to continue', saveCleared:'🗑 All saves cleared',
     loadSave:'loaded, continue fighting!', loadFail:'Failed to load save', deleteSave:'deleted',
     shopKnife:'🔪 Knife (Melee 4 dmg)', shopGun:'🔫 Gun (Ranged 5 dmg)', shopGrenade:'💣 Grenade×3 (AOE)',
     shopBandage:'🩹 Bandage (+5 HP + stop bleed)', shopMedkit:'💊 Medkit (Full HP + stop bleed)',
@@ -527,6 +543,13 @@ const LANGS = {
         killCount:'Kills: ', beatFinalBoss:'You beat the Final Boss 😈!',
         defeatedByMob:'You were defeated by monsters...', autoSaved:'Progress auto-saved',
         weaponLabel:'Weapon:',
+    npcMerchantName:'🤬 Arms Dealer (Old Friend)',
+    npcMerchantText:'We used to play together every day as kids, our parents didn\'t care... then I never saw you again. Never thought we\'d meet here.',
+    npcRobotName:'😊 Robot',
+    npcRobotText:'Your combat power is strong, but you have the worst temper, always fighting at the drop of a hat. I hope you can change.',
+    npcTroubleName:'😝 Troublemaker',
+    npcTroubleText:'(😝 just made a face at you, then kicked you — this guy only speaks with his fists.)',
+    overwriteNewGame:'🆕 Overwrite New Game',
   },
   ja: {
     name:'日本語', start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定',
@@ -550,7 +573,7 @@ const LANGS = {
     robotGive:'😊 25ゴールドくれた！', buyKnife:'🔪 ナイフ購入！', buyGun:'🔫 銃購入！右下にエイムジョイスティック',
     buyGrenade:'💣 グレネード×3購入！', useBandage:'🩹 包帯使用！5HP回復、止血',
     useMedkit:'💊 メディキット使用！全HP回復、止血', noGold:'ゴールド不足！',
-    gameStart:'😡 ピクセル草原バトル開始！夜にモンスター出現', saveCleared:'🗑 全セーブ削除',
+    gameStart:'😡 ピクセル草原バトル開始！夜にモンスター出現', gameTitle:'ピクセル草原バトル', landscapeHint:'横画面に回転して続行', saveCleared:'🗑 全セーブ削除',
     loadSave:'読み込み、戦闘続行！', loadFail:'セーブ読み込み失敗', deleteSave:'削除',
     shopKnife:'🔪 ナイフ (近接4ダメージ)', shopGun:'🔫 銃 (遠隔5ダメージ)', shopGrenade:'💣 グレネード×3 (範囲)',
     shopBandage:'🩹 包帯 (5HP回復+止血)', shopMedkit:'💊 メディキット (全HP回復+止血)',
@@ -747,18 +770,36 @@ function t(key){
   return lang[key] || LANGS.en[key] || key;
 }
 function applyLanguage(){
+  // 页面标题
+  document.title = t('gameTitle');
+  // 游戏标题
+  const gameTitle = document.getElementById('gameTitle');
+  if(gameTitle) gameTitle.textContent = t('gameTitle');
+  // 主菜单按钮
+  const playBtn = document.getElementById('playBtn');
+  if(playBtn) playBtn.textContent = '▶ ' + t('start');
+  const continueBtn = document.getElementById('continueBtn');
+  if(continueBtn) continueBtn.textContent = '📂 ' + t('continue');
+
+  // 设置面板标题
+  const settingsTitle = document.getElementById('settingsTitle');
+  if(settingsTitle) settingsTitle.textContent = t('settings');
+  // 规则按钮文本
+  const rulesBtnText = document.getElementById('rulesBtnText');
+  if(rulesBtnText) rulesBtnText.textContent = '📜 ' + t('rules');
+  // 横屏提示
+  const landscapeHint = document.getElementById('landscapeHint');
+  if(landscapeHint) landscapeHint.textContent = t('landscapeHint');
   // 主菜单
   const startBtn = document.getElementById('startBtn');
   if(startBtn) startBtn.textContent = t('start');
-  const continueBtn = document.getElementById('continueBtn');
-  if(continueBtn) continueBtn.textContent = t('continue');
+
   const menuRulesBtn = document.getElementById('menuRulesBtn');
   if(menuRulesBtn) menuRulesBtn.textContent = '📖 ' + t('rules');
   const menuSettingsBtn = document.getElementById('menuSettingsBtn');
   if(menuSettingsBtn) menuSettingsBtn.textContent = '⚙ ' + t('settings');
   // 设置面板
-  const settingsTitle = document.querySelector('#settingsPanel h3');
-  if(settingsTitle) settingsTitle.textContent = t('settings');
+
   const soundLabel = document.querySelector('#settingsPanel .settings-row span');
   if(soundLabel) soundLabel.textContent = '🔊 ' + t('sound');
   const rulesLabel = document.querySelectorAll('#settingsPanel .settings-row span')[1];
@@ -1262,15 +1303,15 @@ function renderSaveSlots(mode){
           ${t('weaponLabel')}${info.currentWeapon || t('fist')} | HP: ${info.playerHp || 15}/15
         </div>
         <div class="save-slot-actions">
-          ${mode === 'continue' ? '<button class="btn-load" data-slot="'+i+'" data-action="load">▶ 读取</button>' : '<button class="btn-new" data-slot="'+i+'" data-action="new">🆕 覆盖新游戏</button>'}
-          <button class="btn-delete" data-slot="${i}" data-action="delete">🗑 删除</button>
+          ${mode === 'continue' ? '<button class="btn-load" data-slot="'+i+'" data-action="load">'+t('loadBtn')+'</button>' : '<button class="btn-new" data-slot="'+i+'" data-action="new">'+t('overwriteNewGame')+'</button>'}
+          <button class="btn-delete" data-slot="${i}" data-action="delete">'+t('deleteBtn')+'</button>
         </div>`;
     } else {
       slotDiv.innerHTML = `
-        <div class="save-slot-title"><span>📁 ${SAVE_NAMES()[i]}</span><span style="font-size:12px;color:#aaa">空存档</span></div>
-        <div class="save-slot-info" style="color:#aaa">这个存档槽还是空的</div>
+        <div class="save-slot-title"><span>📁 ${SAVE_NAMES()[i]}</span><span style="font-size:12px;color:#aaa">'+t('emptySave')+'</span></div>
+        <div class="save-slot-info" style="color:#aaa">'+t('emptySaveDesc')+'</div>
         <div class="save-slot-actions">
-          <button class="btn-new" data-slot="${i}" data-action="new" style="flex:2">🆕 开始新游戏</button>
+          <button class="btn-new" data-slot="${i}" data-action="new" style="flex:2">'+t('newGameBtn')+'</button>
         </div>`;
     }
     list.appendChild(slotDiv);
@@ -1328,18 +1369,18 @@ function openSaveSelect(mode){
 const dialogData = {
   merchant: {
     avatar: '🤬',
-    name: '🤬 军火商（老朋友）',
-    text: '小时候我俩天天一起打闹，家长也不管我们……后来就再也没见到过了。没想到这次我们竟然在这里碰到了。'
+    name: t('npcMerchantName'),
+    text: t('npcMerchantText')
   },
   robot: {
     avatar: '😊',
-    name: '😊 机器人',
-    text: '你的战斗力很强，但是脾气是最臭的一个，经常一言不合就动手。我希望你可以改正。'
+    name: t('npcRobotName'),
+    text: t('npcRobotText')
   },
   trouble: {
     avatar: '😝',
-    name: '😝 捣蛋鬼',
-    text: '（😝只是冲你做了个鬼脸，然后一脚踹过来——这家伙只会用拳头说话。）'
+    name: t('npcTroubleName'),
+    text: t('npcTroubleText')
   }
 };
 let currentDialog = null;
@@ -2688,7 +2729,7 @@ function gameOver(win){
   document.getElementById('endTitle').textContent = win?t('victoryTitle'):t('defeatTitle');
   document.getElementById('endStats').innerHTML =
     t('killCount')+G.killCount+'<br>'+t('gold')+': '+G.player.gold+'<br>'+
-    (win?t('beatFinalBoss'):t('defeatedByMob'))+'<br><span style="font-size:12px;color:#aaa">进度已自动保存</span>';
+    (win?t('beatFinalBoss'):t('defeatedByMob'))+'<br><span style="font-size:12px;color:#aaa">'+t('autoSaved')+'</span>';
   panel.style.display = 'block';
 }
 
