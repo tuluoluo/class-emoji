@@ -428,6 +428,42 @@ const LANGS = {
     rulesTitle:'📖 游戏规则', rBasic:'🎮 基本操作', rPlayer:'😡 玩家属性', rWeapon:'🔫 武器系统',
     rMob:'👻 怪物系统（仅夜晚刷新）', rNPC:'🤝 NPC系统', rDayNight:'🌙 昼夜系统',
     rShop:'🏪 商店系统', rUnlock:'🏆 击杀解锁', rUpdate:'🆕 新版本更新',
+    // 规则面板详细内容
+    r1:'左下摇杆移动，右下按钮攻击/挖掘/手雷', r2:'方向键移动，J攻击，K挖掘，L手雷，Q切武器',
+    r3:'右下橙色瞄准轮盘，左手移动右手瞄准，可边跑边打',
+    r4:'初始15血，拳头2伤害，移动速度2.8', r5:'受伤后短暂无敌（防止连续掉血）',
+    r6:'30%概率流血：每5秒掉1血，用绷带/医疗包止血',
+    r7:'近战2伤，开局自带', r8:'近战4伤，商店50金', r9:'远程5伤，商店120金，配瞄准轮盘',
+    r10:'远程6伤，50杀解锁', r11:'远程8伤，70杀解锁', r12:'范围伤害，商店40金/3个',
+    r13:'近战3伤，速度快', r14:'远程声波2伤', r15:'近战3伤，速度最快',
+    r16:'30杀出现，伴随👾大军', r17:'120杀出现，多阶段，伴随👾大军',
+    r18:'可索要25金币（有冷却），60秒后爆炸，死亡后30秒复活',
+    r19:'无敌，靠近自动开商店，卖武器和药品', r20:'会踹人眩晕2秒，可击杀，死亡后30秒复活',
+    r21:'随机乱逛，靠近150像素播放音乐，可击杀，死亡后30秒复活',
+    r22:'除🤬商人外，所有生物都可以攻击',
+    r23:'白天60秒：安全，无怪物，适合探索和找NPC',
+    r24:'夜晚60秒：怪物出没，前30秒较少，之后最多20只（Boss战时35只👾）',
+    r25:'击杀怪物35%概率掉3金币',
+    r26:'靠近🤬商人自动打开，商品可上下滑动',
+    r27:'回5血+止血', r28:'回满血+止血',
+    r29:'杀解锁，受伤减少1/3', r30:'杀出现，伴随👾大军',
+    r31:'杀解锁，远程6伤害', r32:'杀解锁，远程8伤害', r33:'杀降临，多阶段，伴随👾大军',
+    r34:'Boss登场伴随大量👾并持续刷新', r35:'八国语言支持（设置里切换）',
+    r36:'火焰弹/蓄力火焰弹使用瞄准轮盘', r37:'瞄准轮盘位置优化，缩小尺寸',
+    // 存档系统
+    save1:'存档一', save2:'存档二', save3:'存档三',
+    loadBtn:t('loadBtn'), deleteBtn:t('deleteBtn'), newGameBtn:t('newGameBtn'),
+    emptySave:t('emptySave'), emptySaveDesc:t('emptySaveDesc'),
+    confirmOverwrite:'确定要覆盖 ', confirmOverwrite2:' 吗？原有进度将丢失。',
+    confirmDelete:'确定要删除 ', confirmDelete2:' 吗？此操作不可撤销。',
+    confirmClearAll:t('confirmClearAll'),
+    unknownTime:t('unknownTime'),
+    // 游戏结束面板
+    victoryTitle:'🏆 胜利！', defeatTitle:'💀 游戏结束',
+    killCount:'击杀数: ', beatFinalBoss:'你击败了最终Boss 😈！',
+    defeatedByMob:'你被怪物打败了...', autoSaved:t('autoSaved'),
+    // 武器显示
+    weaponLabel:'武器:',
   },
   en: {
     name:'English', start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings',
@@ -458,6 +494,39 @@ const LANGS = {
     rulesTitle:'📖 Game Rules', rBasic:'🎮 Basic Controls', rPlayer:'😡 Player Stats', rWeapon:'🔫 Weapon System',
     rMob:'👻 Monster System (Night only)', rNPC:'🤝 NPC System', rDayNight:'🌙 Day/Night System',
     rShop:'🏪 Shop System', rUnlock:'🏆 Kill Unlocks', rUpdate:'🆕 New Updates',
+    rUpdate:'🆕 New Updates',
+        r1:'Left joystick move, right buttons attack/dig/grenade', r2:'Arrows move, J attack, K dig, L grenade, Q switch',
+        r3:'Orange aim joystick, move+aim, shoot while moving',
+        r4:'15 HP, fist 2 dmg, speed 2.8', r5:'Brief invincibility after hit',
+        r6:'30% bleed: -1 HP/5s, bandage/medkit stops',
+        r7:'Melee 2 dmg, default', r8:'Melee 4 dmg, shop 50g', r9:'Ranged 5 dmg, shop 120g, aim joystick',
+        r10:'Ranged 6 dmg, unlock at 50 kills', r11:'Ranged 8 dmg, unlock at 70 kills', r12:'AOE, shop 40g/3',
+        r13:'Melee 3 dmg, fast', r14:'Ranged sonic 2 dmg', r15:'Melee 3 dmg, fastest',
+        r16:'Appears at 30 kills, with 👾 army', r17:'Appears at 120 kills, multi-phase, with 👾 army',
+        r18:'Ask for 25g (cooldown), explodes after 60s, revives 30s',
+        r19:'Invincible, auto-open shop, sells weapons+items', r20:'Kicks to stun 2s, killable, revives 30s',
+        r21:'Wanders, music within 150px, killable, revives 30s',
+        r22:'All creatures attackable except 🤬 merchant',
+        r23:'Day 60s: safe, no monsters, explore/find NPCs',
+        r24:'Night 60s: monsters, fewer first 30s, max 20 (35 👾 during Boss)',
+        r25:'35% chance to drop 3g on kill',
+        r26:'Auto-open near 🤬, scrollable items',
+        r27:'+5 HP + stop bleed', r28:'Full HP + stop bleed',
+        r29:'kills, damage -1/3', r30:'kills, with 👾 army',
+        r31:'kills, ranged 6 dmg', r32:'kills, ranged 8 dmg', r33:'kills, multi-phase, with 👾 army',
+        r34:'Boss spawns with 👾 army and continuous spawns', r35:'8-language support (switch in Settings)',
+        r36:'Fireball/Charge Fireball use aim joystick', r37:'Aim joystick repositioned and resized',
+        save1:'Save 1', save2:'Save 2', save3:'Save 3',
+        loadBtn:'▶ Load', deleteBtn:'🗑 Delete', newGameBtn:'🆕 New Game',
+        emptySave:'Empty Save', emptySaveDesc:'This save slot is empty',
+        confirmOverwrite:'Overwrite ', confirmOverwrite2:'? Progress will be lost.',
+        confirmDelete:'Delete ', confirmDelete2:'? This cannot be undone.',
+        confirmClearAll:'Clear all local saves? This cannot be undone.',
+        unknownTime:'Unknown time',
+        victoryTitle:'🏆 Victory!', defeatTitle:'💀 Game Over',
+        killCount:'Kills: ', beatFinalBoss:'You beat the Final Boss 😈!',
+        defeatedByMob:'You were defeated by monsters...', autoSaved:'Progress auto-saved',
+        weaponLabel:'Weapon:',
   },
   ja: {
     name:'日本語', start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定',
@@ -488,6 +557,39 @@ const LANGS = {
     rulesTitle:'📖 ゲームルール', rBasic:'🎮 基本操作', rPlayer:'😡 プレイヤーステータス', rWeapon:'🔫 武器システム',
     rMob:'👻 モンスターシステム (夜のみ)', rNPC:'🤝 NPCシステム', rDayNight:'🌙 昼夜システム',
     rShop:'🏪 ショップシステム', rUnlock:'🏆 キル解除', rUpdate:'🆕 新機能',
+    rUpdate:'🆕 新機能',
+        r1:'左ジョイスティック移動、右ボタン攻撃/掘削/グレネード', r2:'矢印移動、J攻撃、K掘削、Lグレネード、Q切替',
+        r3:'オレンジ色エイムジョイスティック、移動+エイム、動きながら撃てる',
+        r4:'15HP、拳2ダメージ、速度2.8', r5:'被ダメージ後短時間無敵',
+        r6:'30%出血：5秒ごとに1HP減少、包帯/メディキットで止血',
+        r7:'近接2ダメージ、初期装備', r8:'近接4ダメージ、ショップ50g', r9:'遠隔5ダメージ、ショップ120g、エイム付き',
+        r10:'遠隔6ダメージ、50キルで解除', r11:'遠隔8ダメージ、70キルで解除', r12:'範囲ダメージ、ショップ40g/3個',
+        r13:'近接3ダメージ、速い', r14:'遠隔音波2ダメージ', r15:'近接3ダメージ、最速',
+        r16:'30キルで出現、👾軍団付き', r17:'120キルで出現、多段階、👾軍団付き',
+        r18:'25g要求可能（クールダウン）、60秒後爆発、死亡後30秒で復活',
+        r19:'無敵、近づくと自動でショップ開く、武器とアイテム販売', r20:'蹴って2秒気絶、倒せる、死亡後30秒で復活',
+        r21:'徘徊、150px以内で音楽、倒せる、死亡後30秒で復活',
+        r22:'🤬商人以外、全生物攻撃可能',
+        r23:'昼60秒：安全、モンスターなし、探索/NPC探しに最適',
+        r24:'夜60秒：モンスター出現、最初30秒は少なめ、その後最大20体（Boss戦は35体👾）',
+        r25:'モンスターキルで35%の確率で3gドロップ',
+        r26:'🤬商人の近くで自動オープン、アイテムスクロール可能',
+        r27:'5HP回復+止血', r28:'全HP回復+止血',
+        r29:'キルで解除、ダメージ1/3減', r30:'キルで出現、👾軍団付き',
+        r31:'キルで解除、遠隔6ダメージ', r32:'キルで解除、遠隔8ダメージ', r33:'キルで降臨、多段階、👾軍団付き',
+        r34:'Boss出現時に👾軍団大量生成＆継続刷新', r35:'8言語対応（設定で切替）',
+        r36:'火炎弾/溜め火炎弾もエイムジョイスティック使用', r37:'エイムジョイスティック位置調整＆小型化',
+        save1:'セーブ1', save2:'セーブ2', save3:'セーブ3',
+        loadBtn:'▶ 読み込み', deleteBtn:'🗑 削除', newGameBtn:'🆕 新規ゲーム',
+        emptySave:'空のセーブ', emptySaveDesc:'このセーブスロットは空です',
+        confirmOverwrite:'上書き ', confirmOverwrite2:'？ 進行が失われます。',
+        confirmDelete:'削除 ', confirmDelete2:'？ 元に戻せません。',
+        confirmClearAll:'全ローカルセーブを削除しますか？元に戻せません。',
+        unknownTime:'不明な時間',
+        victoryTitle:'🏆 勝利！', defeatTitle:'💀 ゲームオーバー',
+        killCount:'キル数: ', beatFinalBoss:'最終ボス 😈 を倒した！',
+        defeatedByMob:'モンスターに倒された...', autoSaved:'進行は自動保存されました',
+        weaponLabel:'武器:',
   },
   ko: {
     name:'한국어', start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정',
@@ -699,52 +801,52 @@ function buildRulesContent(){
   if(!c) return;
   c.innerHTML =
     '<p><b>'+t('rBasic')+'</b></p>'+
-    '<p>• 📱: '+ (G.language==='zh'?'左下摇杆移动，右下按钮攻击/挖掘/手雷':'Left joystick move, right buttons attack/dig/grenade') +'</p>'+
-    '<p>• 💻: WASD/'+ (G.language==='zh'?'方向键移动，J攻击，K挖掘，L手雷，Q切武器':'Arrows move, J attack, K dig, L grenade, Q switch') +'</p>'+
-    '<p>• 🔫: '+ (G.language==='zh'?'右下橙色瞄准轮盘，左手移动右手瞄准，可边跑边打':'Orange aim joystick, move+aim, shoot while moving') +'</p>'+
+    '<p>• 📱: '+t('r1')+'</p>'+
+    '<p>• 💻: WASD/'+t('r2')+'</p>'+
+    '<p>• 🔫: '+t('r3')+'</p>'+
     '<p><b>'+t('rPlayer')+'</b></p>'+
-    '<p>• '+ (G.language==='zh'?'初始15血，拳头2伤害，移动速度2.8':'15 HP, fist 2 dmg, speed 2.8') +'</p>'+
-    '<p>• '+ (G.language==='zh'?'受伤后短暂无敌（防止连续掉血）':'Brief invincibility after hit') +'</p>'+
-    '<p>• '+ (G.language==='zh'?'30%概率流血：每5秒掉1血，用绷带/医疗包止血':'30% bleed: -1 HP/5s, bandage/medkit stops') +'</p>'+
+    '<p>• '+t('r4')+'</p>'+
+    '<p>• '+t('r5')+'</p>'+
+    '<p>• '+t('r6')+'</p>'+
     '<p><b>'+t('rWeapon')+'</b></p>'+
-    '<p>• 👊 '+t('fist')+': '+ (G.language==='zh'?'近战2伤，开局自带':'Melee 2 dmg, default') +'</p>'+
-    '<p>• 🔪 '+t('knife')+': '+ (G.language==='zh'?'近战4伤，商店50金':'Melee 4 dmg, shop 50g') +'</p>'+
-    '<p>• 🔫 '+t('gun')+': '+ (G.language==='zh'?'远程5伤，商店120金，配瞄准轮盘':'Ranged 5 dmg, shop 120g, aim joystick') +'</p>'+
-    '<p>• 🔥 '+t('fire')+': '+ (G.language==='zh'?'远程6伤，50杀解锁':'Ranged 6 dmg, unlock at 50 kills') +'</p>'+
-    '<p>• 💥 '+t('chargeFire')+': '+ (G.language==='zh'?'远程8伤，70杀解锁':'Ranged 8 dmg, unlock at 70 kills') +'</p>'+
-    '<p>• 💣: '+ (G.language==='zh'?'范围伤害，商店40金/3个':'AOE, shop 40g/3') +'</p>'+
+    '<p>• 👊 '+t('fist')+': '+t('r7')+'</p>'+
+    '<p>• 🔪 '+t('knife')+': '+t('r8')+'</p>'+
+    '<p>• 🔫 '+t('gun')+': '+t('r9')+'</p>'+
+    '<p>• 🔥 '+t('fire')+': '+t('r10')+'</p>'+
+    '<p>• 💥 '+t('chargeFire')+': '+t('r11')+'</p>'+
+    '<p>• 💣: '+t('r12')+'</p>'+
     '<p><b>'+t('rMob')+'</b></p>'+
-    '<p>• 👻: 8 HP, '+ (G.language==='zh'?'近战3伤，速度快':'melee 3 dmg, fast') +'</p>'+
-    '<p>• 👽: 10 HP, '+ (G.language==='zh'?'远程声波2伤':'ranged sonic 2 dmg') +'</p>'+
-    '<p>• 👾: 12 HP, '+ (G.language==='zh'?'近战3伤，速度最快':'melee 3 dmg, fastest') +'</p>'+
-    '<p>• 😌: 40 HP, 6 dmg, '+ (G.language==='zh'?'30杀出现，伴随👾大军':'appears at 30 kills, with 👾 army') +'</p>'+
-    '<p>• 😈: 50 HP, 10 dmg, '+ (G.language==='zh'?'120杀出现，多阶段，伴随👾大军':'appears at 120 kills, multi-phase, with 👾 army') +'</p>'+
+    '<p>• 👻: 8 HP, '+t('r13')+'</p>'+
+    '<p>• 👽: 10 HP, '+t('r14')+'</p>'+
+    '<p>• 👾: 12 HP, '+t('r15')+'</p>'+
+    '<p>• 😌: 40 HP, 6 dmg, '+t('r16')+'</p>'+
+    '<p>• 😈: 50 HP, 10 dmg, '+t('r17')+'</p>'+
     '<p><b>'+t('rNPC')+'</b></p>'+
-    '<p>• 😊: '+ (G.language==='zh'?'可索要25金币（有冷却），60秒后爆炸，死亡后30秒复活':'Ask for 25g (cooldown), explodes after 60s, revives 30s') +'</p>'+
-    '<p>• 🤬: '+ (G.language==='zh'?'无敌，靠近自动开商店，卖武器和药品':'Invincible, auto-open shop, sells weapons+items') +'</p>'+
-    '<p>• 😝: '+ (G.language==='zh'?'会踹人眩晕2秒，可击杀，死亡后30秒复活':'Kicks to stun 2s, killable, revives 30s') +'</p>'+
-    '<p>• 😎: '+ (G.language==='zh'?'随机乱逛，靠近150像素播放音乐，可击杀，死亡后30秒复活':'Wanders, music within 150px, killable, revives 30s') +'</p>'+
-    '<p>• '+ (G.language==='zh'?'除🤬商人外，所有生物都可以攻击':'All creatures attackable except 🤬 merchant') +'</p>'+
+    '<p>• 😊: '+t('r18')+'</p>'+
+    '<p>• 🤬: '+t('r19')+'</p>'+
+    '<p>• 😝: '+t('r20')+'</p>'+
+    '<p>• 😎: '+t('r21')+'</p>'+
+    '<p>• '+t('r22')+'</p>'+
     '<p><b>'+t('rDayNight')+'</b></p>'+
-    '<p>• ☀ '+ (G.language==='zh'?'白天60秒：安全，无怪物，适合探索和找NPC':'Day 60s: safe, no monsters, explore/find NPCs') +'</p>'+
-    '<p>• 🌙 '+ (G.language==='zh'?'夜晚60秒：怪物出没，前30秒较少，之后最多20只（Boss战时35只👾）':'Night 60s: monsters, fewer first 30s, max 20 (35 👾 during Boss)') +'</p>'+
-    '<p>• '+ (G.language==='zh'?'击杀怪物35%概率掉3金币':'35% chance to drop 3g on kill') +'</p>'+
+    '<p>• ☀ '+t('r23')+'</p>'+
+    '<p>• 🌙 '+t('r24')+'</p>'+
+    '<p>• '+t('r25')+'</p>'+
     '<p><b>'+t('rShop')+'</b></p>'+
-    '<p>• '+ (G.language==='zh'?'靠近🤬商人自动打开，商品可上下滑动':'Auto-open near 🤬, scrollable items') +'</p>'+
+    '<p>• '+t('r26')+'</p>'+
     '<p>• 🔪 50g / 🔫 120g / 💣×3 40g</p>'+
-    '<p>• 🩹 30g: '+ (G.language==='zh'?'回5血+止血':'+5 HP + stop bleed') +'</p>'+
-    '<p>• 💊 80g: '+ (G.language==='zh'?'回满血+止血':'Full HP + stop bleed') +'</p>'+
+    '<p>• 🩹 30g: '+t('r27')+'</p>'+
+    '<p>• 💊 80g: '+t('r28')+'</p>'+
     '<p><b>'+t('rUnlock')+'</b></p>'+
-    '<p>• 🛡: 10 '+ (G.language==='zh'?'杀解锁，受伤减少1/3':'kills, damage -1/3') +'</p>'+
-    '<p>• 😌: 30 '+ (G.language==='zh'?'杀出现，伴随👾大军':'kills, with 👾 army') +'</p>'+
-    '<p>• 🔥: 50 '+ (G.language==='zh'?'杀解锁，远程6伤害':'kills, ranged 6 dmg') +'</p>'+
-    '<p>• 💥: 70 '+ (G.language==='zh'?'杀解锁，远程8伤害':'kills, ranged 8 dmg') +'</p>'+
-    '<p>• 😈: 120 '+ (G.language==='zh'?'杀降临，多阶段，伴随👾大军':'kills, multi-phase, with 👾 army') +'</p>'+
+    '<p>• 🛡: 10 '+t('r29')+'</p>'+
+    '<p>• 😌: 30 '+t('r30')+'</p>'+
+    '<p>• 🔥: 50 '+t('r31')+'</p>'+
+    '<p>• 💥: 70 '+t('r32')+'</p>'+
+    '<p>• 😈: 120 '+t('r33')+'</p>'+
     '<p><b>'+t('rUpdate')+'</b></p>'+
-    '<p>• '+ (G.language==='zh'?'Boss登场伴随大量👾并持续刷新':'Boss spawns with 👾 army and continuous spawns') +'</p>'+
-    '<p>• '+ (G.language==='zh'?'八国语言支持（设置里切换）':'8-language support (switch in Settings)') +'</p>'+
-    '<p>• '+ (G.language==='zh'?'火焰弹/蓄力火焰弹使用瞄准轮盘':'Fireball/Charge Fireball use aim joystick') +'</p>'+
-    '<p>• '+ (G.language==='zh'?'瞄准轮盘位置优化，缩小尺寸':'Aim joystick repositioned and resized') +'</p>';
+    '<p>• '+t('r34')+'</p>'+
+    '<p>• '+t('r35')+'</p>'+
+    '<p>• '+t('r36')+'</p>'+
+    '<p>• '+t('r37')+'</p>';
 }
 
 function setLanguage(lang){
@@ -1006,7 +1108,7 @@ const MOB_SIZE = 44;
 
 // ==================== 本地存档系统（3个存档槽） ====================
 const SAVE_KEYS = ['pixelGrasslandSave_slot1', 'pixelGrasslandSave_slot2', 'pixelGrasslandSave_slot3'];
-const SAVE_NAMES = ['存档一', '存档二', '存档三'];
+const SAVE_NAMES = () => [t('save1'), t('save2'), t('save3')];
 let currentSaveSlot = 0; // 当前使用的存档槽索引
 const AUTO_SAVE_INTERVAL = 300; // 每5秒自动保存
 let autoSaveTimer = 0;
@@ -1034,7 +1136,7 @@ function saveGame(slot){
     playerX: p.x,
     playerY: p.y,
     savedAt: Date.now(),
-    slotName: SAVE_NAMES[targetSlot],
+    slotName: SAVE_NAMES()[targetSlot],
   };
   try{
     localStorage.setItem(SAVE_KEYS[targetSlot], JSON.stringify(data));
@@ -1114,7 +1216,7 @@ function loadGame(slot){
     document.getElementById('endPanel').style.display = 'none';
     document.getElementById('shopPanel').style.display = 'none';
     closeDialog();
-    showToast('📂 '+SAVE_NAMES[targetSlot]+' '+t('loadSave'), 2000);
+    showToast('📂 '+SAVE_NAMES()[targetSlot]+' '+t('loadSave'), 2000);
     return true;
   }catch(e){
     console.error('Load failed:', e);
@@ -1138,7 +1240,7 @@ function clearSave(slot){
 }
 
 function formatSaveTime(timestamp){
-  if(!timestamp) return '未知时间';
+  if(!timestamp) return t('unknownTime');
   const d = new Date(timestamp);
   const pad = n => n.toString().padStart(2,'0');
   return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
@@ -1154,10 +1256,10 @@ function renderSaveSlots(mode){
     slotDiv.className = 'save-slot' + (info ? '' : ' empty');
     if(info){
       slotDiv.innerHTML = `
-        <div class="save-slot-title"><span>📁 ${SAVE_NAMES[i]}</span><span style="font-size:12px;color:#888">${formatSaveTime(info.savedAt)}</span></div>
+        <div class="save-slot-title"><span>📁 ${SAVE_NAMES()[i]}</span><span style="font-size:12px;color:#888">${formatSaveTime(info.savedAt)}</span></div>
         <div class="save-slot-info">
-          击杀: ${info.killCount || 0} | 金币: ${info.gold || 0}<br>
-          武器: ${info.currentWeapon || '拳头'} | HP: ${info.playerHp || 15}/15
+          ${t('kills')}: ${info.killCount || 0} | ${t('gold')}: ${info.gold || 0}<br>
+          ${t('weaponLabel')}${info.currentWeapon || t('fist')} | HP: ${info.playerHp || 15}/15
         </div>
         <div class="save-slot-actions">
           ${mode === 'continue' ? '<button class="btn-load" data-slot="'+i+'" data-action="load">▶ 读取</button>' : '<button class="btn-new" data-slot="'+i+'" data-action="new">🆕 覆盖新游戏</button>'}
@@ -1165,7 +1267,7 @@ function renderSaveSlots(mode){
         </div>`;
     } else {
       slotDiv.innerHTML = `
-        <div class="save-slot-title"><span>📁 ${SAVE_NAMES[i]}</span><span style="font-size:12px;color:#aaa">空存档</span></div>
+        <div class="save-slot-title"><span>📁 ${SAVE_NAMES()[i]}</span><span style="font-size:12px;color:#aaa">空存档</span></div>
         <div class="save-slot-info" style="color:#aaa">这个存档槽还是空的</div>
         <div class="save-slot-actions">
           <button class="btn-new" data-slot="${i}" data-action="new" style="flex:2">🆕 开始新游戏</button>
@@ -1180,7 +1282,7 @@ function renderSaveSlots(mode){
         if(mode === 'continue'){
           if(!loadGame(i)){ showToast(t('loadFail')); }
         } else {
-          if(confirm('确定要覆盖 '+SAVE_NAMES[i]+' 吗？原有进度将丢失。')){
+          if(confirm(t('confirmOverwrite')+SAVE_NAMES()[i]+t('confirmOverwrite2'))){
             currentSaveSlot = i; startGame();
           }
         }
@@ -1197,18 +1299,18 @@ function renderSaveSlots(mode){
       const action = btn.dataset.action;
       playSound('click');
       if(action === 'load'){
-        if(!loadGame(slot)){ showToast('读取存档失败'); }
+        if(!loadGame(slot)){ showToast(t('loadFail')); }
       } else if(action === 'new'){
         if(hasSave(slot)){
-          if(!confirm('确定要覆盖 '+SAVE_NAMES[slot]+' 吗？原有进度将丢失。')) return;
+          if(!confirm(t('confirmOverwrite')+SAVE_NAMES()[slot]+t('confirmOverwrite2'))) return;
         }
         currentSaveSlot = slot;
         startGame();
       } else if(action === 'delete'){
-        if(confirm('确定要删除 '+SAVE_NAMES[slot]+' 吗？此操作不可撤销。')){
+        if(confirm(t('confirmDelete')+SAVE_NAMES()[slot]+t('confirmDelete2'))){
           clearSave(slot);
           renderSaveSlots(mode);
-          showToast('🗑 '+SAVE_NAMES[slot]+' '+t('deleteSave'));
+          showToast('🗑 '+SAVE_NAMES()[slot]+' '+t('deleteSave'));
         }
       }
     });
@@ -2565,8 +2667,8 @@ function updateUI(){
   document.getElementById('hpText').textContent = t('hp')+' '+Math.max(0,p.hp)+'/'+p.maxHp;
   document.getElementById('killText').textContent = t('kills')+':'+G.killCount;
   document.getElementById('goldText').textContent = t('gold')+':'+p.gold;
-  const wNames = {fist:'拳头',knife:'刀',fire:'火焰弹',chargeFire:'蓄力火焰弹',gun:'枪'};
-  document.getElementById('weaponText').textContent = '武器:'+(wNames[p.weapon]||p.weapon);
+  const wNames = {fist:t('fist'),knife:t('knife'),fire:t('fire'),chargeFire:t('chargeFire'),gun:t('gun')};
+  document.getElementById('weaponText').textContent = t('weaponLabel')+(wNames[p.weapon]||p.weapon);
   document.getElementById('timeText').textContent = G.day?'☀'+t('day'):'🌙'+t('night');
   // 手雷按钮
   document.getElementById('grenadeBtn').style.display = p.grenade>0?'flex':'none';
@@ -2583,10 +2685,10 @@ function gameOver(win){
   saveGame(); // 游戏结束时保存进度
   if(!win){ playVoice('death', 'male'); } // 😡 男声死亡"饿啊～"
   const panel = document.getElementById('endPanel');
-  document.getElementById('endTitle').textContent = win?'🏆 胜利！':'💀 游戏结束';
+  document.getElementById('endTitle').textContent = win?t('victoryTitle'):t('defeatTitle');
   document.getElementById('endStats').innerHTML =
-    '击杀数: '+G.killCount+'<br>金币: '+G.player.gold+'<br>'+
-    (win?'你击败了最终Boss 😈！':'你被怪物打败了...')+'<br><span style="font-size:12px;color:#aaa">进度已自动保存</span>';
+    t('killCount')+G.killCount+'<br>'+t('gold')+': '+G.player.gold+'<br>'+
+    (win?t('beatFinalBoss'):t('defeatedByMob'))+'<br><span style="font-size:12px;color:#aaa">进度已自动保存</span>';
   panel.style.display = 'block';
 }
 
@@ -2822,7 +2924,7 @@ document.getElementById('buyGun').addEventListener('click', ()=>{
     updateUI();
     updateAimJoystick();
     saveGame();
-  } else showToast('金币不足！');
+  } else showToast(t('noGold'));
 });
 document.getElementById('buyGrenade').addEventListener('click', ()=>{
   if(G.player.gold>=40){
@@ -2832,7 +2934,7 @@ document.getElementById('buyGrenade').addEventListener('click', ()=>{
     showToast(t('buyGrenade'));
     updateUI();
     saveGame();
-  } else showToast('金币不足！');
+  } else showToast(t('noGold'));
 });
 document.getElementById('buyBandage').addEventListener('click', ()=>{
   if(G.player.gold>=30){
@@ -2843,7 +2945,7 @@ document.getElementById('buyBandage').addEventListener('click', ()=>{
     showToast(t('useBandage'));
     updateUI();
     saveGame();
-  } else showToast('金币不足！');
+  } else showToast(t('noGold'));
 });
 document.getElementById('buyMedkit').addEventListener('click', ()=>{
   if(G.player.gold>=80){
@@ -2854,7 +2956,7 @@ document.getElementById('buyMedkit').addEventListener('click', ()=>{
     showToast(t('useMedkit'));
     updateUI();
     saveGame();
-  } else showToast('金币不足！');
+  } else showToast(t('noGold'));
 });
 document.getElementById('closeShop').addEventListener('click', ()=>{
   document.getElementById('shopPanel').style.display='none';
@@ -3039,7 +3141,7 @@ document.getElementById('exitGameBtn').addEventListener('click', ()=>{
 });
 document.getElementById('clearSaveBtn').addEventListener('click', ()=>{
   playSound('click');
-  if(confirm('确定要清除所有本地存档吗？此操作不可撤销。')){
+  if(confirm(t('confirmClearAll'))){
     clearSave(); // 不传参数清除所有
     updateContinueBtn();
     showToast(t('saveCleared'));
