@@ -366,6 +366,7 @@ const G = {
   bosses: [],
   npcs: {},
   projectiles: [],
+  fireGrounds: [], // 地面火焰
   corpses: [],
   woods: [],
   particles: [],
@@ -1298,6 +1299,7 @@ function loadGame(slot){
     G.running = true;
     G.killCount = d.killCount || 0;
     G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
+    G.fireGrounds = [];
     G.miniBossSpawned = d.miniBossSpawned || false;
     G.finalBossSpawned = d.finalBossSpawned || false;
     G.gotShield = d.gotShield || false;
@@ -2068,6 +2070,8 @@ function update(){
   updateNPCs();
   // 更新投射物
   updateProjectiles();
+  // 更新地面火焰
+  updateFireGrounds();
   // 更新尸体
   for(let i=G.corpses.length-1;i>=0;i--){
     G.corpses[i].life--;
@@ -2673,7 +2677,21 @@ function updateProjectiles(){
         G.npcs.wanderer.hurtFlash = 8;
         hit = true;
       }
-      if(hit && !pr.isGrenade) G.projectiles.splice(i,1);
+      if(hit && !pr.isGrenade){
+        // 火焰弹/蓄力火焰弹命中后生成地面火焰
+        if(pr.face === '🔥'){
+          const isCharge = pr.w >= 24; // 蓄力火焰弹更大
+          G.fireGrounds.push({
+            x: pr.x, y: pr.y,
+            radius: isCharge ? 50 : 35,
+            life: isCharge ? 360 : 240, // 蓄力6秒，普通4秒
+            damageTimer: 0,
+            isCharge: isCharge,
+          });
+          spawnParticles(pr.x, pr.y, '#ff6600', 15);
+        }
+        G.projectiles.splice(i,1);
+      }
     } else {
       // 打玩家
       if(rectOverlap(box,p) && p.invincible<=0){
@@ -2700,6 +2718,64 @@ function updateProjectiles(){
         G.npcs.wanderer.hp -= pr.dmg;
         G.npcs.wanderer.hurtFlash = 6;
       }
+    }
+  }
+}
+
+// 地面火焰更新：每秒造成1点伤害，对怪物/NPC/Boss有效，不对玩家和商人有效
+function updateFireGrounds(){
+  for(let i=G.fireGrounds.length-1;i>=0;i--){
+    const fg = G.fireGrounds[i];
+    fg.life--;
+    fg.damageTimer++;
+
+    // 每秒（60帧）造成1点伤害
+    if(fg.damageTimer >= 60){
+      fg.damageTimer = 0;
+      const cx = fg.x, cy = fg.y;
+
+      // 伤害怪物
+      G.mobs.forEach(m=>{
+        if(Math.hypot(m.x+m.w/2-cx, m.y+m.h/2-cy) < fg.radius){
+          m.hp -= 1;
+          m.hurtFlash = 5;
+          spawnParticles(m.x+m.w/2, m.y+m.h/2, '#ff4400', 2);
+        }
+      });
+
+      // 伤害Boss
+      G.bosses.forEach(b=>{
+        if(Math.hypot(b.x+b.w/2-cx, b.y+b.h/2-cy) < fg.radius){
+          b.hp -= 1;
+          b.hurtFlash = 5;
+        }
+      });
+
+      // 伤害NPC（除了商人🤬）
+      ['robot', 'trouble', 'wanderer'].forEach(npcKey => {
+        const npc = G.npcs[npcKey];
+        if(npc && !npc.dead && !npc.isMerchant && !npc.invincible){
+          if(Math.hypot(npc.x+npc.w/2-cx, npc.y+npc.h/2-cy) < fg.radius){
+            npc.hp -= 1;
+            npc.hurtFlash = 5;
+          }
+        }
+      });
+    }
+
+    // 火焰粒子效果
+    if(Math.random() < 0.3){
+      spawnParticles(
+        fg.x + rand(-fg.radius*0.5, fg.radius*0.5),
+        fg.y + rand(-fg.radius*0.3, fg.radius*0.3),
+        fg.isCharge ? '#ffaa00' : '#ff6600',
+        1
+      );
+    }
+
+    // 火焰消失
+    if(fg.life <= 0){
+      G.fireGrounds.splice(i,1);
     }
   }
 }
@@ -2805,6 +2881,30 @@ function render(){
 
   // 投射物
   G.projectiles.forEach(pr=>drawProjectile(pr));
+
+  // 地面火焰
+  G.fireGrounds.forEach(fg=>{
+    const alpha = fg.life < 60 ? fg.life/60 : 1;
+    ctx.globalAlpha = alpha * 0.7;
+    // 火焰外圈
+    const grad = ctx.createRadialGradient(fg.x, fg.y, 0, fg.x, fg.y, fg.radius);
+    grad.addColorStop(0, fg.isCharge ? 'rgba(255,200,50,0.9)' : 'rgba(255,150,50,0.9)');
+    grad.addColorStop(0.5, fg.isCharge ? 'rgba(255,100,0,0.6)' : 'rgba(255,80,0,0.5)');
+    grad.addColorStop(1, 'rgba(255,50,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(fg.x, fg.y, fg.radius, 0, Math.PI*2);
+    ctx.fill();
+    // 火焰核心闪烁
+    if(Math.random() < 0.5){
+      ctx.globalAlpha = alpha * 0.9;
+      ctx.fillStyle = fg.isCharge ? '#ffff88' : '#ffcc44';
+      ctx.beginPath();
+      ctx.arc(fg.x + rand(-10,10), fg.y + rand(-10,10), fg.radius*0.3, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  });
 
   // 粒子
   G.particles.forEach(pt=>{
@@ -3543,6 +3643,7 @@ function startGame(){
   G.running = true;
   G.day = true; G.dayTimer = 0; G.killCount = 0;
   G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
+  G.fireGrounds = [];
   G.miniBossSpawned = false; G.finalBossSpawned = false;
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
   G.weapons = ['fist']; G.atkCooldown = 0; G.shake = 0;
