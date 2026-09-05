@@ -326,8 +326,8 @@ input:checked + .slider:before{transform:translateX(24px)}
         <p>• 拳头：近战2伤，开局自带</p>
         <p>• 🔪 刀：近战4伤，商店50金</p>
         <p>• 🔫 枪：远程5伤，商店120金，配瞄准轮盘</p>
-        <p>• 🔥 火焰弹：远程6伤，100杀解锁</p>
-        <p>• 🔥蓄力火焰弹：远程8伤，200杀解锁</p>
+        <p>• 🔥 火焰弹：远程6伤，50杀解锁</p>
+        <p>• 💥 蓄力火焰弹：远程8伤，70杀解锁</p>
         <p>• 💣 手雷：范围伤害，商店40金/3个</p>
         <p><b>👻 怪物系统（仅夜晚刷新）</b></p>
         <p>• 👻 幽灵：8血，近战3伤，速度快</p>
@@ -349,40 +349,13 @@ input:checked + .slider:before{transform:translateX(24px)}
         <p>• 🔪 刀50金 / 🔫 枪120金 / 💣 手雷×3 40金</p>
         <p>• 🩹 绷带30金：回5血+止血</p>
         <p>• 💊 医疗包80金：回满血+止血</p>
-        <p><b>🏆 击杀解锁</b></p>
-        <p>• 30杀：🛡盾牌（受到伤害减1/3）</p>
-        <p>• 50杀：😌小Boss出现</p>
-        <p>• 100杀：🔥火焰弹</p>
-        <p>• 200杀：🔥蓄力火焰弹</p>
-        <p>• 300杀：😈最终Boss出现，击败即胜利！</p>
-        <p><b>💡 小贴士</b></p>
-        <p>• 🌳 树可以挖掉（K键/挖掘按钮）</p>
-        <p>• 游戏自动保存，主页可继续游戏</p>
-        <p>• 右上角"桂"按钮打开功能面板（无限血/无限伤害/怪海等）</p>
-      </div>
-      <h3 style="margin-top:16px;border-top:3px solid #333;padding-top:10px">🆕 新版本更新</h3>
-      <div class="rules-content">
-        <p><b>v1.8 强制横屏+音频修复</b></p>
-        <p>• 新增强制横屏：手机竖屏时弹出提示，必须横屏才能游玩，横屏后自动继续</p>
-        <p>• 新增「强制横屏模式」按钮：手机锁不了横屏时点这个，用CSS旋转整个游戏画面，竖着拿也能横屏玩</p>
-        <p>• 修复游离乐子人音乐不响的问题：浏览器要求用户交互后才能播放音频，现在点击屏幕自动解锁</p>
-        <p>• 桌面端不受影响，正常运行</p>
-        <p><b>v1.7 新角色😎游离乐子人</b></p>
-        <p>• 新增NPC😎游离乐子人：在地图上随机乱逛，12血，可被攻击</p>
-        <p>• 靠近他150像素内会播放欢快的背景音乐（主旋律+低音伴奏+打击乐），远离自动停止</p>
-        <p>• 被打死后30秒在出生点复活，游戏结束或回主菜单时音乐自动停止</p>
-        <p><b>v1.6 商店优化</b></p>
-        <p>• 商店商品列表改为可上下滑动，底部按钮固定可见</p>
-        <p>• 修复关闭商店按钮没反应的bug（关闭后2秒内不自动弹开）</p>
-        <p><b>v1.5 瞄准+医疗+流血</b></p>
-        <p>• 新增瞄准轮盘：枪模式下右手独立瞄准，可边跑边打，不再站撸</p>
-        <p>• 商店新增🩹绷带（回5血+止血）和💊医疗包（回满血+止血）</p>
-        <p>• 新增流血系统：受伤30%概率流血，每5秒掉1血，药品可止血</p>
-        <p><b>v1.4 NPC复活+怪物修复</b></p>
-        <p>• 😊机器人和😝捣蛋鬼死亡后30秒自动在出生点复活</p>
-        <p>• 修复夜晚怪物越来越少的bug：白天清空怪物，夜晚初始生成4只</p>
-        <p>• 提高夜晚刷怪率和怪物上限（最多20只）</p>
-      </div>
+                <p><b>🏆 击杀解锁</b></p>
+        <p>• 🛡 盾牌：10杀解锁，受伤减少1/3</p>
+        <p>• ⚠ 小Boss 😌：30杀出现</p>
+        <p>• 🔥 火焰弹：50杀解锁，远程6伤害</p>
+        <p>• 💥 蓄力火焰弹：70杀解锁，远程8伤害</p>
+        <p>• 👹 最终Boss 😈：120杀降临（多阶段，后续更新）</p>
+</div>
       <button id="closeRulesBtn" class="settings-close">关闭</button>
     </div>
   </div>
@@ -499,6 +472,28 @@ function enableForcedLandscape(){
       cv.height = window.innerWidth;
     }
   }, 100);
+}
+// 强制横屏模式下的触控坐标转换（顺时针旋转90度）
+function transformTouchPoint(x, y){
+  if(!forcedLandscape) return {x, y};
+  const w = window.innerWidth;
+  // 顺时针旋转90度：游戏x=屏幕y，游戏y=屏幕宽-屏幕x
+  return {x: y, y: w - x};
+}
+// 强制横屏模式下的元素边界框转换
+function transformRect(rect){
+  if(!forcedLandscape) return rect;
+  const w = window.innerWidth;
+  // 把rect的四个角都转换，然后求新的边界框
+  const p1 = transformTouchPoint(rect.left, rect.top);
+  const p2 = transformTouchPoint(rect.right, rect.top);
+  const p3 = transformTouchPoint(rect.left, rect.bottom);
+  const p4 = transformTouchPoint(rect.right, rect.bottom);
+  const left = Math.min(p1.x, p2.x, p3.x, p4.x);
+  const right = Math.max(p1.x, p2.x, p3.x, p4.x);
+  const top = Math.min(p1.y, p2.y, p3.y, p4.y);
+  const bottom = Math.max(p1.y, p2.y, p3.y, p4.y);
+  return {left, top, right, bottom, width: right-left, height: bottom-top};
 }
 function lockLandscape(){
   // 尝试锁定横屏（需要用户交互后才能生效）
@@ -1323,34 +1318,34 @@ function update(){
 
 function checkUnlocks(){
   const k = G.killCount;
-  if(k>=30 && !G.gotShield){
+  if(k>=10 && !G.gotShield){
     G.gotShield = true;
     playSound('unlock');
     saveGame();
     showToast('🛡 获得盾牌！伤害减少1/3');
   }
-  if(k>=50 && !G.miniBossSpawned){
+  if(k>=30 && !G.miniBossSpawned){
     G.miniBossSpawned = true;
     G.bosses.push(createMiniBoss());
     playSound('boss');
     showToast('⚠ 小Boss 😌 出现了！');
     G.shake = 20;
   }
-  if(k>=100 && !G.gotFire){
+  if(k>=50 && !G.gotFire){
     G.gotFire = true;
     if(!G.weapons.includes('fire')) G.weapons.push('fire');
     playSound('unlock');
     saveGame();
     showToast('🔥 获得火焰弹！(6伤害)');
   }
-  if(k>=200 && !G.gotChargeFire){
+  if(k>=70 && !G.gotChargeFire){
     G.gotChargeFire = true;
     if(!G.weapons.includes('chargeFire')) G.weapons.push('chargeFire');
     playSound('unlock');
     saveGame();
     showToast('💥 获得蓄力火焰弹！(8伤害)');
   }
-  if(k>=300 && !G.finalBossSpawned){
+  if(k>=120 && !G.finalBossSpawned){
     G.finalBossSpawned = true;
     G.bosses.push(createFinalBoss());
     playSound('boss');
@@ -2239,7 +2234,7 @@ function handleJoyStart(e){
   e.preventDefault();
   const touch = e.touches ? e.touches[0] : e;
   if(!touch || isNaN(touch.clientX)) return; // 防御无效事件
-  const rect = joyEl.getBoundingClientRect();
+  const rect = transformRect(joyEl.getBoundingClientRect());
   joy.active = true;
   joy.dx = 0; joy.dy = 0; // 重置，避免残留NaN
   joy.centerX = rect.left + rect.width/2;
@@ -2251,8 +2246,9 @@ function handleJoyMove(e){
   e.preventDefault();
   const touch = e.touches ? e.touches[0] : e;
   if(!touch || isNaN(touch.clientX) || isNaN(touch.clientY)) return; // 防御无效事件
-  let dx = touch.clientX - joy.centerX;
-  let dy = touch.clientY - joy.centerY;
+  const tp = transformTouchPoint(touch.clientX, touch.clientY);
+  let dx = tp.x - joy.centerX;
+  let dy = tp.y - joy.centerY;
   if(isNaN(dx)||isNaN(dy)){ dx=0; dy=0; } // 防御NaN
   const maxR = 45;
   const len = Math.hypot(dx,dy);
@@ -2281,7 +2277,7 @@ function handleAimStart(e){
   e.preventDefault();
   const touch = e.touches ? e.touches[0] : e;
   if(!touch || isNaN(touch.clientX)) return;
-  const rect = aimJoyEl.getBoundingClientRect();
+  const rect = transformRect(aimJoyEl.getBoundingClientRect());
   aimJoy.active = true;
   aimJoy.centerX = rect.left + rect.width/2;
   aimJoy.centerY = rect.top + rect.height/2;
@@ -2292,8 +2288,9 @@ function handleAimMove(e){
   e.preventDefault();
   const touch = e.touches ? e.touches[0] : e;
   if(!touch || isNaN(touch.clientX) || isNaN(touch.clientY)) return;
-  let dx = touch.clientX - aimJoy.centerX;
-  let dy = touch.clientY - aimJoy.centerY;
+  const tp = transformTouchPoint(touch.clientX, touch.clientY);
+  let dx = tp.x - aimJoy.centerX;
+  let dy = tp.y - aimJoy.centerY;
   if(isNaN(dx)||isNaN(dy)){ dx=0; dy=0; }
   const maxR = 45;
   const len = Math.hypot(dx,dy);
