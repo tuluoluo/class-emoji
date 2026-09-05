@@ -1371,12 +1371,24 @@ function update(){
 
   // 刷怪（仅夜晚）
   if(!G.day){
+    // 检测是否有Boss存活
+    const bossAlive = G.bosses.length > 0;
     let spawnRate = G.cheat.mobSea ? 0.06 : 0.01; // 提高正常刷怪率，确保持续有怪
     if(G.nightGraceTimer > 0) spawnRate *= 0.3; // 夜晚前45秒刷怪量降为30%
-    const maxMobs = G.cheat.mobSea ? 70 : (G.nightGraceTimer > 0 ? 8 : 20); // 正常最多20只，宽限期8只
+    let maxMobs = G.cheat.mobSea ? 70 : (G.nightGraceTimer > 0 ? 8 : 20); // 正常最多20只，宽限期8只
+    // Boss存活时：刷怪率翻倍，最大怪物数提高，只刷👾
+    if(bossAlive){
+      spawnRate = G.cheat.mobSea ? 0.08 : 0.025;
+      maxMobs = G.cheat.mobSea ? 80 : 35;
+    }
     if(Math.random() < spawnRate && G.mobs.length < maxMobs){
-      const types = ['ghost','alien','monster'];
-      G.mobs.push(createMob(types[Math.floor(Math.random()*3)]));
+      if(bossAlive){
+        // Boss存活时只刷👾
+        G.mobs.push(createMob('monster'));
+      } else {
+        const types = ['ghost','alien','monster'];
+        G.mobs.push(createMob(types[Math.floor(Math.random()*3)]));
+      }
     }
   }
 
@@ -1479,8 +1491,13 @@ function checkUnlocks(){
     G.miniBossSpawned = true;
     G.bosses.push(createMiniBoss());
     playSound('boss');
-    showToast('⚠ 小Boss 😌 出现了！');
+    showToast('⚠ 小Boss 😌 出现了！伴随大量👾！');
     G.shake = 20;
+    // 立即生成10只👾
+    for(let i=0;i<10;i++){
+      const m = createMob('monster');
+      G.mobs.push(m);
+    }
   }
   if(k>=50 && !G.gotFire){
     G.gotFire = true;
@@ -1500,8 +1517,13 @@ function checkUnlocks(){
     G.finalBossSpawned = true;
     G.bosses.push(createFinalBoss());
     playSound('boss');
-    showToast('👹 最终Boss 😈 降临！！');
+    showToast('👹 最终Boss 😈 降临！！👾大军来袭！');
     G.shake = 40;
+    // 立即生成15只👾
+    for(let i=0;i<15;i++){
+      const m = createMob('monster');
+      G.mobs.push(m);
+    }
   }
 }
 
