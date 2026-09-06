@@ -2681,6 +2681,23 @@ function createEliteMob(){
 
 function updateNPCs(){
   const p = G.player;
+  // 双人模式：获取最近的玩家（用于NPC交互判定）
+  function getNearestPlayer(nx, ny){
+    let best = p, bestD = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:nx,y:ny});
+    if(G.isCoop && G.player2 && !G.coopP2Dead){
+      const d2 = dist({x:G.player2.x+G.player2.w/2,y:G.player2.y+G.player2.h/2},{x:nx,y:ny});
+      if(d2 < bestD){ best = G.player2; bestD = d2; }
+    }
+    return {player: best, dist: bestD};
+  }
+  // 检查任意玩家是否在范围内
+  function anyPlayerNear(nx, ny, range){
+    if(dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:nx,y:ny}) < range) return true;
+    if(G.isCoop && G.player2 && !G.coopP2Dead){
+      if(dist({x:G.player2.x+G.player2.w/2,y:G.player2.y+G.player2.h/2},{x:nx,y:ny}) < range) return true;
+    }
+    return false;
+  }
 
   // 😊 机器人
   const r = G.npcs.robot;
@@ -2764,16 +2781,31 @@ function updateNPCs(){
       return;
     }
 
-    // 索要按钮 & 对话按钮显示
+    // 索要按钮 & 对话按钮显示（双人模式：取最近玩家）
     if(r){
-      const d = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:r.x+r.w/2,y:r.y+r.h/2});
+      const near = getNearestPlayer(r.x+r.w/2, r.y+r.h/2);
+      const d = near.dist;
+      const nearP = near.player;
       const askBtn = document.getElementById('askBtn');
       const talkBtn = document.getElementById('talkBtn');
       const rect = wrap.getBoundingClientRect();
       const scaleX = rect.width / W;
       const scaleY = rect.height / H;
-      const btnX = (r.x - camera.x) * scaleX;
-      const btnY = (r.y - camera.y) * scaleY;
+      // 双人模式：按钮位置按最近玩家所在半屏的相机计算
+      let btnCamX = camera.x, btnCamY = camera.y;
+      let btnOffsetX = 0;
+      if(G.isCoop){
+        if(nearP === G.player2){
+          btnCamX = clamp(G.player2.x + G.player2.w/2 - W/4, 0, Math.max(0, WORLD_W - W/2));
+          btnCamY = clamp(G.player2.y + G.player2.h/2 - H/2, 0, Math.max(0, WORLD_H - H));
+          btnOffsetX = W/2;
+        } else {
+          btnCamX = clamp(G.player.x + G.player.w/2 - W/4, 0, Math.max(0, WORLD_W - W/2));
+          btnCamY = clamp(G.player.y + G.player.h/2 - H/2, 0, Math.max(0, WORLD_H - H));
+        }
+      }
+      const btnX = (r.x - btnCamX) * scaleX + btnOffsetX * scaleX;
+      const btnY = (r.y - btnCamY) * scaleY;
       // 对话按钮（靠近就显示）
       if(d < 90){
         talkBtn.style.display = 'block';
@@ -2795,15 +2827,15 @@ function updateNPCs(){
     }
   }
 
-  // 🤬 商人 - 靠近打开商店
+  // 🤬 商人 - 靠近打开商店（双人模式：任意玩家靠近都打开）
   const mer = G.npcs.merchant;
   if(mer){
-    const d = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:mer.x+mer.w/2,y:mer.y+mer.h/2});
+    const anyNear = anyPlayerNear(mer.x+mer.w/2, mer.y+mer.h/2, 90);
     const shop = document.getElementById('shopPanel');
-    if(d < 90 && shop.style.display!=='block' && !G._shopOpened && G.shopCloseCooldown <= 0){
+    if(anyNear && shop.style.display!=='block' && !G._shopOpened && G.shopCloseCooldown <= 0){
       shop.style.display = 'flex';
       G._shopOpened = true;
-    } else if(d >= 90 && G._shopOpened){
+    } else if(!anyNear && G._shopOpened){
       shop.style.display = 'none';
       G._shopOpened = false;
     }
@@ -2847,10 +2879,13 @@ function updateNPCs(){
       if(tr.slipTimer <= 0) tr.slipRotate = false;
     } else {
     const cx=tr.x+tr.w/2, cy=tr.y+tr.h/2;
-    const px=p.x+p.w/2, py=p.y+p.h/2;
-    const d = Math.hypot(px-cx, py-cy);
+    // 双人模式：追击最近的玩家
+    const nearT = getNearestPlayer(cx, cy);
+    const targetP = nearT.player;
+    const px=targetP.x+targetP.w/2, py=targetP.y+targetP.h/2;
+    const d = nearT.dist;
 
-    // 逃跑期间不追击，且远离玩家
+    // 逃跑期间不追击，且远离最近玩家
     if(tr.fleeTimer>0){
       tr.chasing = false;
       if(d>1){
@@ -2871,14 +2906,15 @@ function updateNPCs(){
           tr.x += (px-cx)/d * tr.speed;
           tr.y += (py-cy)/d * tr.speed;
         }
-        // 踹到
-        if(rectOverlap(tr,p) && tr.kickCd<=0){
+        // 踹到（踹最近的玩家）
+        if(rectOverlap(tr,targetP) && tr.kickCd<=0){
           tr.kickCd = 240; // 4秒冷却
           tr.chasing = false;
           tr.fleeTimer = 120; // 踹完跑开2秒
-          p.stunTimer = 120; // 2秒
-          p.stunRotate = true;
-          showToast(t('troubleKick'));
+          targetP.stunTimer = 120; // 2秒
+          targetP.stunRotate = true;
+          const kickWho = (targetP === G.player2) ? '2P' : '1P';
+          showToast(kickWho + ' ' + t('troubleKick'));
           G.shake = 8;
         }
       } else {
@@ -2963,13 +2999,14 @@ function updateNPCs(){
       }
       }
 
-      // 靠近玩家播放音乐
-      const dw = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:wn.x+wn.w/2,y:wn.y+wn.h/2});
-      if(dw < 150 && !wn.musicPlaying){
+      // 靠近玩家播放音乐（双人模式：任意玩家靠近都播放）
+      const anyNearMusic = anyPlayerNear(wn.x+wn.w/2, wn.y+wn.h/2, 150);
+      const allFar = !anyPlayerNear(wn.x+wn.w/2, wn.y+wn.h/2, 180);
+      if(anyNearMusic && !wn.musicPlaying){
         wn.musicPlaying = true;
         startWandererMusic();
         showToast(t('wandererMusic'));
-      } else if(dw >= 180 && wn.musicPlaying){
+      } else if(allFar && wn.musicPlaying){
         wn.musicPlaying = false;
         stopWandererMusic();
       }
