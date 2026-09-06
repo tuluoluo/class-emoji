@@ -178,6 +178,22 @@ input:checked + .slider:before{transform:translateX(24px)}
   width: 100% !important;
   height: 100% !important;
 }
+/* 双人模式2P UI */
+#topBar2{position:absolute;top:8px;right:10px;width:200px;display:flex;flex-direction:column;gap:4px;z-index:20;pointer-events:none}
+#hpArea2{display:flex;flex-direction:column;gap:4px}
+#hpBarBg2{width:200px;height:22px;background:#333;border:2px solid #000;border-radius:4px;overflow:hidden}
+#hpBar2{height:100%;background:linear-gradient(to bottom,#ff6b6b,#c0392b);transition:width .2s;width:100%}
+#hpText2{font-size:13px;color:#fff;text-shadow:1px 1px 2px #000;font-weight:bold}
+#infoLine2{font-size:13px;color:#fff;text-shadow:1px 1px 2px #000;font-weight:bold;display:flex;gap:12px}
+/* 2P虚拟摇杆 - 右下角 */
+#joystick2{position:absolute;right:30px;bottom:30px;width:130px;height:130px;z-index:15;pointer-events:auto;display:none}
+#joyOuter2{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid rgba(0,0,0,.4)}
+#joyInner2{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:3px solid rgba(0,0,0,.5)}
+/* 2P技能区 - 左下角 */
+#skillArea2{position:absolute;left:25px;bottom:25px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:15;display:none}
+#skillRow2{display:flex;gap:8px;align-items:flex-end}
+.skillBtn2{width:56px;height:56px;border-radius:50%;font-size:26px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
+.skillBtn2:active{transform:scale(.9);background:rgba(255,255,255,.9)}
 </style>
 </head>
 <body>
@@ -248,6 +264,33 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn" id="atkBtn">👊</button>
       <button class="skillBtn" id="grenadeBtn">💣</button>
       <button class="skillBtn" id="dashBtn">💨</button>
+    </div>
+  </div>
+
+  <!-- 2P顶部状态栏 -->
+  <div id="topBar2" style="display:none">
+    <div id="hpArea2">
+      <div id="hpBarBg2"><div id="hpBar2"></div></div>
+      <div id="hpText2">HP 15/15</div>
+      <div id="infoLine2">
+        <span id="killText2">击杀:0</span>
+        <span id="goldText2">金币:0</span>
+        <span id="weaponText2">武器:拳头</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2P虚拟摇杆 -->
+  <div id="joystick2">
+    <div id="joyOuter2"></div>
+    <div id="joyInner2"></div>
+  </div>
+
+  <!-- 2P技能区 -->
+  <div id="skillArea2">
+    <div id="skillRow2">
+      <button class="skillBtn2" id="atkBtn2">👊</button>
+      <button class="skillBtn2" id="dashBtn2">💨</button>
     </div>
   </div>
 
@@ -1814,6 +1857,36 @@ function playerAttack(){
   }
 }
 
+function player2Attack(){
+  const p = G.player2;
+  if(!p || G.atkCooldown2>0 || p.stunTimer>0) return;
+  playSound('attack');
+  const w = p.weapon;
+  p.attackAnim = 12;
+
+  if(w==='fist'||w==='knife'){
+    const range = w==='knife'?70:55;
+    const dmg = calcPlayerDmg(w==='knife'?4:2);
+    const ax = p.x + (p.facing>0? p.w : -range);
+    const ay = p.y - 5;
+    const hitBox = {x:ax, y:ay, w:range, h:p.h+10};
+    hitAllMobs(hitBox, dmg);
+    G.atkCooldown2 = w==='knife'?20:25;
+  }
+  else if(w==='fire'||w==='chargeFire'||w==='gun'){
+    const dmg = calcPlayerDmg(w==='chargeFire'?8:(w==='fire'?6:5));
+    const face = w==='gun'?'•':(w==='chargeFire'?'🔥':'🔥');
+    const spd = w==='gun'?9:6;
+    const dx = p.facing*spd;
+    const dy = 0;
+    spawnProjectile(p.x+p.w/2, p.y+p.h/2, dx, dy, {
+      dmg, face, fromPlayer:true, speed:spd, life:120,
+      w:w==='chargeFire'?24:16, h:w==='chargeFire'?24:16,
+    });
+    G.atkCooldown2 = w==='gun'?12:(w==='chargeFire'?30:22);
+  }
+}
+
 function hitAllMobs(hitBox, dmg){
   G.mobs.forEach(m=>{
     if(rectOverlap(hitBox,m)){
@@ -2186,6 +2259,9 @@ function update(){
     p2.y = clamp(p2.y, 0, WORLD_H-p2.h);
     if(p2.invincible>0) p2.invincible--;
     if(p2.attackAnim>0) p2.attackAnim--;
+    if(G.atkCooldown2>0) G.atkCooldown2--;
+    // 2P键盘攻击（数字键1）
+    if(inputState2.attack) player2Attack();
     // 2P流血
     if(p2.bleeding && !G.cheat.infHp){
       p2.bleedTimer++;
@@ -3215,6 +3291,106 @@ function render(){
     renderMenuScene();
     return;
   }
+  // 双人模式：左右分屏渲染
+  if(G.isCoop){
+    // 左半屏：1P
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, W/2, H);
+    ctx.clip();
+    const cam1x = clamp(G.player.x + G.player.w/2 - W/4, 0, Math.max(0, WORLD_W - W/2));
+    const cam1y = clamp(G.player.y + G.player.h/2 - H/2, 0, Math.max(0, WORLD_H - H));
+    ctx.save();
+    ctx.translate(-cam1x, -cam1y);
+    drawBackground();
+    G.woods.forEach(w=>drawEntity(w, false));
+    G.corpses.forEach(c=>drawCorpse(c));
+    if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
+    if(G.npcs.merchant) drawEntity(G.npcs.merchant, false);
+    if(G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
+    if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
+    G.mobs.forEach(m=>drawEntity(m, true));
+    G.bosses.forEach(b=>drawBoss(b));
+    if(G.player) drawPlayer();
+    if(G.player2 && !G.coopP2Dead) drawPlayer2();
+    G.projectiles.forEach(pr=>drawProjectile(pr));
+    G.fireGrounds.forEach(fg=>{
+      const alpha = fg.life < 60 ? fg.life/60 : 1;
+      ctx.globalAlpha = alpha * 0.7;
+      const grad = ctx.createRadialGradient(fg.x, fg.y, 0, fg.x, fg.y, fg.radius);
+      grad.addColorStop(0, fg.isCharge ? 'rgba(255,200,50,0.9)' : 'rgba(255,150,50,0.9)');
+      grad.addColorStop(0.5, fg.isCharge ? 'rgba(255,100,0,0.6)' : 'rgba(255,80,0,0.5)');
+      grad.addColorStop(1, 'rgba(255,50,0,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(fg.x, fg.y, fg.radius, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+    G.particles.forEach(pt=>{
+      ctx.globalAlpha = clamp(pt.life/20, 0, 1);
+      ctx.fillStyle = pt.color;
+      ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+    });
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    // 夜晚遮罩
+    if(!G.day){
+      ctx.fillStyle = 'rgba(10,10,60,0.35)';
+      ctx.fillRect(0,0,W/2,H);
+    }
+    ctx.restore();
+
+    // 右半屏：2P
+    if(G.player2 && !G.coopP2Dead){
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(W/2, 0, W/2, H);
+      ctx.clip();
+      const cam2x = clamp(G.player2.x + G.player2.w/2 - W/4, 0, Math.max(0, WORLD_W - W/2));
+      const cam2y = clamp(G.player2.y + G.player2.h/2 - H/2, 0, Math.max(0, WORLD_H - H));
+      ctx.save();
+      ctx.translate(-cam2x + W/2, -cam2y);
+      drawBackground();
+      G.woods.forEach(w=>drawEntity(w, false));
+      G.corpses.forEach(c=>drawCorpse(c));
+      if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
+      if(G.npcs.merchant) drawEntity(G.npcs.merchant, false);
+      if(G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
+      if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
+      G.mobs.forEach(m=>drawEntity(m, true));
+      G.bosses.forEach(b=>drawBoss(b));
+      if(G.player) drawPlayer();
+      if(G.player2 && !G.coopP2Dead) drawPlayer2();
+      G.projectiles.forEach(pr=>drawProjectile(pr));
+      G.fireGrounds.forEach(fg=>{
+        const alpha = fg.life < 60 ? fg.life/60 : 1;
+        ctx.globalAlpha = alpha * 0.7;
+        const grad = ctx.createRadialGradient(fg.x, fg.y, 0, fg.x, fg.y, fg.radius);
+        grad.addColorStop(0, fg.isCharge ? 'rgba(255,200,50,0.9)' : 'rgba(255,150,50,0.9)');
+        grad.addColorStop(0.5, fg.isCharge ? 'rgba(255,100,0,0.6)' : 'rgba(255,80,0,0.5)');
+        grad.addColorStop(1, 'rgba(255,50,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(fg.x, fg.y, fg.radius, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+      G.particles.forEach(pt=>{
+        ctx.globalAlpha = clamp(pt.life/20, 0, 1);
+        ctx.fillStyle = pt.color;
+        ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+      });
+      ctx.globalAlpha = 1;
+      ctx.restore();
+      if(!G.day){
+        ctx.fillStyle = 'rgba(10,10,60,0.35)';
+        ctx.fillRect(W/2,0,W/2,H);
+      }
+      ctx.restore();
+    }
+    return;
+  }
   ctx.save();
   // 屏幕震动
   if(G.shake>0){
@@ -3643,6 +3819,27 @@ function updateUI(){
   document.getElementById('hpText').textContent = t('hp')+' '+Math.max(0,p.hp)+'/'+p.maxHp;
   document.getElementById('killText').textContent = t('kills')+':'+G.killCount;
   document.getElementById('goldText').textContent = t('gold')+':'+p.gold;
+  // 双人模式：更新2P UI
+  if(G.isCoop && G.player2){
+    const p2 = G.player2;
+    const hpBar2 = document.getElementById('hpBar2');
+    const hpText2 = document.getElementById('hpText2');
+    const goldText2 = document.getElementById('goldText2');
+    const weaponText2 = document.getElementById('weaponText2');
+    if(hpBar2) hpBar2.style.width = Math.max(0,p2.hp/p2.maxHp*100)+'%';
+    if(hpText2) hpText2.textContent = '2P HP '+Math.max(0,p2.hp)+'/'+p2.maxHp;
+    if(goldText2) goldText2.textContent = t('gold')+':'+p2.gold;
+    if(weaponText2){
+      const wNames2 = {fist:t('fist'),knife:t('knife'),fire:t('fire'),chargeFire:t('chargeFire'),gun:t('gun')};
+      weaponText2.textContent = t('weaponLabel')+(wNames2[p2.weapon]||p2.weapon);
+    }
+    // 2P攻击按钮图标
+    const atkBtn2 = document.getElementById('atkBtn2');
+    if(atkBtn2){
+      const atkIcons2 = {fist:'👊',knife:'🔪',fire:'🔥',chargeFire:'💥',gun:'🔫'};
+      atkBtn2.textContent = atkIcons2[p2.weapon]||'👊';
+    }
+  }
   // 冲刺按钮冷却显示
   const dashBtn = document.getElementById('dashBtn');
   if(dashBtn){
@@ -4070,6 +4267,36 @@ document.getElementById('merchantTalkBtn').addEventListener('click', ()=>{
   openDialog('merchant');
 });
 document.getElementById('dialogClose').addEventListener('click', closeDialog);
+
+// 2P攻击按钮
+document.getElementById('atkBtn2').addEventListener('click', ()=>{
+  if(G.isCoop) player2Attack();
+});
+document.getElementById('atkBtn2').addEventListener('touchstart', function(e){e.preventDefault();if(G.isCoop) player2Attack();});
+// 2P冲刺按钮
+document.getElementById('dashBtn2').addEventListener('click', ()=>{
+  if(G.isCoop && G.player2){
+    const p2 = G.player2;
+    if(G.dashCooldown > 0 || p2.isDashing || p2.stunTimer > 0 || p2.slipTimer > 0) return;
+    let dx=0, dy=0;
+    if(inputState2.left) dx -= 1;
+    if(inputState2.right) dx += 1;
+    if(inputState2.up) dy -= 1;
+    if(inputState2.down) dy += 1;
+    if(dx===0 && dy===0){ dx = p2.facing; dy = 0; }
+    const len = Math.hypot(dx,dy);
+    if(len > 0){
+      dx/=len; dy/=len;
+      p2.dashDir = {x:dx, y:dy};
+      p2.isDashing = true;
+      p2.dashTimer = 12;
+      p2.invincible = 15;
+      if(!G.cheat.dashNoCd) G.dashCooldown = G.dashCooldownMax;
+      playSound('dash');
+      spawnParticles(p2.x+p2.w/2, p2.y+p2.h/2, '#88ccff', 10);
+    }
+  }
+});
 
 // 重新开始
 document.getElementById('restartBtn').addEventListener('click', restart);
