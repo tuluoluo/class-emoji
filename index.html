@@ -67,6 +67,16 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;image
 #endPanel h2{color:#fff;font-size:28px;margin-bottom:12px}
 #endPanel p{color:#ddd;font-size:15px;margin:6px 0}
 #endPanel button{margin-top:16px;padding:10px 30px;background:#27ae60;color:#fff;border-radius:8px;font-size:16px;font-weight:bold}
+/* 通关标识 */
+.clear-badge{margin:12px 0;padding:12px;background:linear-gradient(135deg,#f1c40f,#f39c12);border:3px solid #e67e22;border-radius:10px;text-align:center;box-shadow:0 0 20px rgba(241,196,15,.5)}
+.clear-badge .badge-title{font-size:18px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,.5);margin-bottom:6px}
+.clear-badge .badge-rating{font-size:32px;font-weight:bold;color:#fff;text-shadow:2px 2px 4px rgba(0,0,0,.5)}
+.clear-badge .badge-cheat{font-size:12px;color:#c0392b;background:rgba(255,255,255,.8);padding:4px 8px;border-radius:4px;margin-top:6px;display:inline-block;font-weight:bold}
+.clear-badge.S{background:linear-gradient(135deg,#f1c40f,#e67e22)}
+.clear-badge.Aplus{background:linear-gradient(135deg,#3498db,#2980b9)}
+.clear-badge.A{background:linear-gradient(135deg,#2ecc71,#27ae60)}
+.clear-badge.B{background:linear-gradient(135deg,#95a5a6,#7f8c8d)}
+.clear-badge.C{background:linear-gradient(135deg,#e74c3c,#c0392b)}
 
 /* 提示文字 */
 #toast{position:absolute;left:50%;top:30%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 20px;border-radius:8px;font-size:15px;font-weight:bold;z-index:35;display:none;pointer-events:none;white-space:nowrap}
@@ -283,6 +293,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button id="playBtn" class="menu-play">▶ 开始新游戏</button>
       <button id="continueBtn" class="menu-continue">📂 继续游戏</button>
       <button id="menuSettingsBtn" class="menu-settings">⚙ 设置</button>
+      <div id="clearBadge" style="display:none"></div>
       <div class="menu-hint">📱 移动端：左下摇杆移动 · 右下攻击/挖掘<br>💻 电脑端：WASD/方向键移动 · J攻击 · K挖掘 · L手雷 · Q切武器 · Enter开始</div>
     </div>
   </div>
@@ -377,6 +388,8 @@ const G = {
   cheat: { infHp:false, infDmg:false, mobSea:false, alaskey:false, noSlip:false, dashNoCd:false, infGold:false },
   miniBossSpawned: false,
   finalBossSpawned: false,
+  medUseCount: 0, // 药物使用次数
+  usedCheat: false, // 是否使用过外挂
   bossStage: 1, // 最终Boss当前阶段
   bossStageTransition: 0, // 阶段切换暂停计时
   bossRedScreen: false, // 第四阶段红色场景
@@ -3487,6 +3500,55 @@ function updateUI(){
 }
 
 // ==================== 游戏结束 ====================
+function calcRating(){
+  const p = G.player;
+  const hpRatio = p.hp / p.maxHp;
+  const isLowHp = hpRatio <= 0.3; // 30%以下算残血
+  const med = G.medUseCount;
+  
+  let rating = 'C';
+  if(med === 0 && !isLowHp) rating = 'S';
+  else if((med > 0 && med <= 2 && !isLowHp) || (med === 0 && isLowHp)) rating = 'A+';
+  else if((med > 0 && med <= 2 && isLowHp) || (med > 2 && med <= 5 && !isLowHp)) rating = 'A';
+  else if(med > 2 && med <= 5 && isLowHp) rating = 'B';
+  else if(med > 5) rating = 'C';
+  
+  return {rating: rating, isLowHp: isLowHp, medUse: med, usedCheat: G.usedCheat};
+}
+
+function saveClearRecord(ratingInfo){
+  try{
+    const record = {
+      rating: ratingInfo.rating,
+      medUse: ratingInfo.medUse,
+      usedCheat: ratingInfo.usedCheat,
+      killCount: G.killCount,
+      date: new Date().toLocaleString()
+    };
+    localStorage.setItem('pixelClearRecord', JSON.stringify(record));
+  }catch(e){}
+}
+
+function showClearBadge(){
+  const badge = document.getElementById('clearBadge');
+  if(!badge) return;
+  try{
+    const record = JSON.parse(localStorage.getItem('pixelClearRecord'));
+    if(!record){ badge.style.display = 'none'; return; }
+    const ratingClass = record.rating === 'A+' ? 'Aplus' : record.rating;
+    let html = '<div class="clear-badge '+ratingClass+'">';
+    html += '<div class="badge-title">🏆 通关记录</div>';
+    html += '<div class="badge-rating">'+record.rating+'</div>';
+    html += '<div style="font-size:12px;color:#fff;margin-top:4px">击杀: '+record.killCount+' | 药物: '+record.medUse+'次</div>';
+    if(record.usedCheat){
+      html += '<div class="badge-cheat">⚠ 这个人开了外挂</div>';
+    }
+    html += '</div>';
+    badge.innerHTML = html;
+    badge.style.display = 'block';
+  }catch(e){ badge.style.display = 'none'; }
+}
+
 function gameOver(win){
   G.running = false;
   stopWandererMusic(); // 停止游离乐子人音乐
@@ -3494,9 +3556,26 @@ function gameOver(win){
   if(!win){ playVoice('death', 'male'); } // 😡 男声死亡"饿啊～"
   const panel = document.getElementById('endPanel');
   document.getElementById('endTitle').textContent = win?t('victoryTitle'):t('defeatTitle');
-  document.getElementById('endStats').innerHTML =
-    t('killCount')+G.killCount+'<br>'+t('gold')+': '+G.player.gold+'<br>'+
-    (win?t('beatFinalBoss'):t('defeatedByMob'))+'<br><span style="font-size:12px;color:#aaa">'+t('autoSaved')+'</span>';
+  
+  let statsHtml = t('killCount')+G.killCount+'<br>'+t('gold')+': '+G.player.gold+'<br>';
+  if(win){
+    const ratingInfo = calcRating();
+    saveClearRecord(ratingInfo);
+    const ratingClass = ratingInfo.rating === 'A+' ? 'Aplus' : ratingInfo.rating;
+    statsHtml += '<div class="clear-badge '+ratingClass+'" style="margin:10px 0">';
+    statsHtml += '<div class="badge-title">🏆 通关评分</div>';
+    statsHtml += '<div class="badge-rating">'+ratingInfo.rating+'</div>';
+    statsHtml += '<div style="font-size:12px;color:#fff">药物使用: '+ratingInfo.medUse+'次 | '+(ratingInfo.isLowHp?'残血':'非残血')+'</div>';
+    if(ratingInfo.usedCheat){
+      statsHtml += '<div class="badge-cheat">⚠ 这个人开了外挂</div>';
+    }
+    statsHtml += '</div>';
+    statsHtml += t('beatFinalBoss');
+  } else {
+    statsHtml += t('defeatedByMob');
+  }
+  statsHtml += '<br><span style="font-size:12px;color:#aaa">'+t('autoSaved')+'</span>';
+  document.getElementById('endStats').innerHTML = statsHtml;
   panel.style.display = 'block';
 }
 
@@ -3693,24 +3772,24 @@ document.getElementById('guiBtn').addEventListener('click', ()=>{
 document.getElementById('closeCheat').addEventListener('click', ()=>{
   document.getElementById('cheatPanel').style.display = 'none';
 });
-document.getElementById('infHp').addEventListener('change', e=>G.cheat.infHp=e.target.checked);
-document.getElementById('infDmg').addEventListener('change', e=>G.cheat.infDmg=e.target.checked);
-document.getElementById('mobSea').addEventListener('change', e=>G.cheat.mobSea=e.target.checked);
+document.getElementById('infHp').addEventListener('change', e=>{G.cheat.infHp=e.target.checked; if(e.target.checked) G.usedCheat=true;});
+document.getElementById('infDmg').addEventListener('change', e=>{G.cheat.infDmg=e.target.checked; if(e.target.checked) G.usedCheat=true;});
+document.getElementById('mobSea').addEventListener('change', e=>{G.cheat.mobSea=e.target.checked; if(e.target.checked) G.usedCheat=true;});
 document.getElementById('alaskey').addEventListener('change', e=>{
   G.cheat.alaskey=e.target.checked;
-  if(e.target.checked) showToast(t('alaskey'));
+  if(e.target.checked){ G.usedCheat=true; showToast(t('alaskey')); }
 });
 document.getElementById('noSlip').addEventListener('change', e=>{
   G.cheat.noSlip=e.target.checked;
-  if(e.target.checked) showToast('🧊 防滑已开启，下雨不会滑倒了');
+  if(e.target.checked){ G.usedCheat=true; showToast('🧊 防滑已开启，下雨不会滑倒了'); }
 });
 document.getElementById('dashNoCd').addEventListener('change', e=>{
   G.cheat.dashNoCd=e.target.checked;
-  if(e.target.checked){ G.dashCooldown = 0; showToast('💨 冲刺无冷却已开启'); }
+  if(e.target.checked){ G.usedCheat=true; G.dashCooldown = 0; showToast('💨 冲刺无冷却已开启'); }
 });
 document.getElementById('infGold').addEventListener('change', e=>{
   G.cheat.infGold=e.target.checked;
-  if(e.target.checked) showToast('💰 无限金币已开启');
+  if(e.target.checked){ G.usedCheat=true; showToast('💰 无限金币已开启'); }
 });
 document.getElementById('skipDay').addEventListener('click', ()=>{
   G.day = false;
@@ -3773,6 +3852,7 @@ document.getElementById('buyBandage').addEventListener('click', ()=>{
     if(!G.cheat.infGold) G.player.gold-=30;
     G.player.hp = Math.min(G.player.maxHp, G.player.hp+5);
     G.player.bleeding = false; // 止血
+    G.medUseCount++; // 记录药物使用
     playSound('pickup');
     showToast(t('useBandage'));
     updateUI();
@@ -3784,6 +3864,7 @@ document.getElementById('buyMedkit').addEventListener('click', ()=>{
     if(!G.cheat.infGold) G.player.gold-=80;
     G.player.hp = G.player.maxHp;
     G.player.bleeding = false; // 止血
+    G.medUseCount++; // 记录药物使用
     playSound('unlock');
     showToast(t('useMedkit'));
     updateUI();
@@ -3900,6 +3981,7 @@ function startGame(){
   G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
   G.fireGrounds = [];
   G.miniBossSpawned = false; G.finalBossSpawned = false;
+  G.medUseCount = 0; G.usedCheat = false;
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
   G.weapons = ['fist']; G.atkCooldown = 0; G.shake = 0;
   G._shopOpened = false;
@@ -3933,6 +4015,7 @@ function startGame(){
 function exitToMenu(){
   G.state = 'menu';
   stopWandererMusic(); // 停止游离乐子人音乐
+  showClearBadge(); // 显示通关标识
   document.getElementById('mainMenu').style.display = 'flex';
   document.getElementById('endPanel').style.display = 'none';
   document.getElementById('shopPanel').style.display = 'none';
