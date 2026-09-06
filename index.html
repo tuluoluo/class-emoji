@@ -190,7 +190,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 #joyOuter2{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid rgba(0,0,0,.4)}
 #joyInner2{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:3px solid rgba(0,0,0,.5)}
 /* 2P技能区 - 右半屏左下角 */
-#skillArea2{position:absolute;left:calc(50% + 25px);bottom:25px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:15;display:none}
+#skillArea2{position:absolute;left:calc(50% + 20px);bottom:170px;display:flex;flex-direction:row;align-items:flex-end;gap:8px;z-index:15;display:none}
 #skillRow2{display:flex;gap:8px;align-items:flex-end}
 .skillBtn2{width:56px;height:56px;border-radius:50%;font-size:26px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
 .skillBtn2:active{transform:scale(.9);background:rgba(255,255,255,.9)}
@@ -2233,10 +2233,17 @@ function update(){
       if(p2.slipTimer <= 0) p2.slipRotate = false;
     } else {
       let dx2=0, dy2=0;
+      // 2P键盘输入
       if(inputState2.left) dx2 -= 1;
       if(inputState2.right) dx2 += 1;
       if(inputState2.up) dy2 -= 1;
       if(inputState2.down) dy2 += 1;
+      // 2P摇杆输入（仅当键盘无输入时生效）
+      if(dx2===0 && dy2===0 && joy2.active){
+        const jx2 = isNaN(joy2.dx)?0:joy2.dx;
+        const jy2 = isNaN(joy2.dy)?0:joy2.dy;
+        dx2 = jx2; dy2 = jy2;
+      }
       const len2 = Math.hypot(dx2,dy2);
       if(len2>0 && !isNaN(len2)){
         dx2/=len2; dy2/=len2;
@@ -4020,6 +4027,7 @@ function restart(){
 
 // ==================== 输入处理 ====================
 const joy = {active:false, dx:0, dy:0, centerX:0, centerY:0};
+const joy2 = {active:false, dx:0, dy:0, centerX:0, centerY:0}; // 2P摇杆
 
 const joyEl = document.getElementById('joystick');
 const joyInner = document.getElementById('joyInner');
@@ -4062,6 +4070,48 @@ joyEl.addEventListener('touchend', handleJoyEnd);
 joyEl.addEventListener('mousedown', handleJoyStart);
 document.addEventListener('mousemove', e=>{if(joy.active)handleJoyMove(e)});
 document.addEventListener('mouseup', handleJoyEnd);
+
+// ===== 2P虚拟摇杆事件绑定 =====
+const joyEl2 = document.getElementById('joystick2');
+const joyInner2 = document.getElementById('joyInner2');
+function handleJoy2Start(e){
+  e.preventDefault();
+  const touch = e.touches ? e.touches[0] : e;
+  if(!touch || isNaN(touch.clientX)) return;
+  const rect = transformRect(joyEl2.getBoundingClientRect());
+  joy2.active = true;
+  joy2.dx = 0; joy2.dy = 0;
+  joy2.centerX = rect.left + rect.width/2;
+  joy2.centerY = rect.top + rect.height/2;
+  handleJoy2Move(e);
+}
+function handleJoy2Move(e){
+  if(!joy2.active) return;
+  e.preventDefault();
+  const touch = e.touches ? e.touches[0] : e;
+  if(!touch || isNaN(touch.clientX) || isNaN(touch.clientY)) return;
+  const tp = transformTouchPoint(touch.clientX, touch.clientY);
+  let dx = tp.x - joy2.centerX;
+  let dy = tp.y - joy2.centerY;
+  if(isNaN(dx)||isNaN(dy)){ dx=0; dy=0; }
+  const maxR = 45;
+  const len = Math.hypot(dx,dy);
+  if(len > maxR && len>0){ dx = dx/len*maxR; dy = dy/len*maxR; }
+  joy2.dx = dx/maxR;
+  joy2.dy = dy/maxR;
+  joyInner2.style.left = (45+dx)+'px';
+  joyInner2.style.top = (45+dy)+'px';
+}
+function handleJoy2End(e){
+  joy2.active = false; joy2.dx = 0; joy2.dy = 0;
+  joyInner2.style.left = '45px'; joyInner2.style.top = '45px';
+}
+joyEl2.addEventListener('touchstart', handleJoy2Start, {passive:false});
+joyEl2.addEventListener('touchmove', handleJoy2Move, {passive:false});
+joyEl2.addEventListener('touchend', handleJoy2End);
+joyEl2.addEventListener('mousedown', handleJoy2Start);
+document.addEventListener('mousemove', e=>{if(joy2.active)handleJoy2Move(e)});
+document.addEventListener('mouseup', handleJoy2End);
 
 // 瞄准轮盘（枪专用）
 const aimJoy = {active:false, dx:0, dy:0, centerX:0, centerY:0};
@@ -4356,6 +4406,10 @@ document.getElementById('dashBtn2').addEventListener('click', ()=>{
     if(inputState2.right) dx += 1;
     if(inputState2.up) dy -= 1;
     if(inputState2.down) dy += 1;
+    if(dx===0 && dy===0 && joy2.active){
+      dx = isNaN(joy2.dx)?0:joy2.dx;
+      dy = isNaN(joy2.dy)?0:joy2.dy;
+    }
     if(dx===0 && dy===0){ dx = p2.facing; dy = 0; }
     const len = Math.hypot(dx,dy);
     if(len > 0){
