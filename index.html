@@ -3302,7 +3302,11 @@ function render(){
     const cam1y = clamp(G.player.y + G.player.h/2 - H/2, 0, Math.max(0, WORLD_H - H));
     ctx.save();
     ctx.translate(-cam1x, -cam1y);
+    // 临时设置全局camera供drawBackground使用
+    const oldCamX = camera.x, oldCamY = camera.y;
+    camera.x = cam1x; camera.y = cam1y;
     drawBackground();
+    camera.x = oldCamX; camera.y = oldCamY;
     G.woods.forEach(w=>drawEntity(w, false));
     G.corpses.forEach(c=>drawCorpse(c));
     if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
@@ -3351,7 +3355,11 @@ function render(){
       const cam2y = clamp(G.player2.y + G.player2.h/2 - H/2, 0, Math.max(0, WORLD_H - H));
       ctx.save();
       ctx.translate(-cam2x + W/2, -cam2y);
+      // 临时设置全局camera供drawBackground使用
+      const oldCamX2 = camera.x, oldCamY2 = camera.y;
+      camera.x = cam2x; camera.y = cam2y;
       drawBackground();
+      camera.x = oldCamX2; camera.y = oldCamY2;
       G.woods.forEach(w=>drawEntity(w, false));
       G.corpses.forEach(c=>drawCorpse(c));
       if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
@@ -4492,6 +4500,9 @@ function startCoopGame(){
   document.getElementById('topBar2').style.display = 'flex';
   document.getElementById('joystick2').style.display = 'block';
   document.getElementById('skillArea2').style.display = 'flex';
+  // 确保1P摇杆显示
+  document.getElementById('joystick').style.display = 'block';
+  document.getElementById('skillArea').style.display = 'flex';
   // 1P技能区移到左半屏右下角
   const skillArea = document.getElementById('skillArea');
   if(skillArea){
@@ -4543,17 +4554,17 @@ function exitToMenu(){
   // 恢复1P技能区位置
   const skillArea = document.getElementById('skillArea');
   if(skillArea){
-    skillArea.style.right = '25px';
-    skillArea.style.left = 'auto';
-    skillArea.style.alignItems = 'flex-end';
+    skillArea.style.right = '';
+    skillArea.style.left = '';
+    skillArea.style.alignItems = '';
   }
   // 恢复单人模式按钮
   const weaponSwitch = document.getElementById('weaponSwitch');
-  if(weaponSwitch) weaponSwitch.style.display = 'flex';
+  if(weaponSwitch) weaponSwitch.style.display = '';
   const digBtn = document.getElementById('digBtn');
-  if(digBtn) digBtn.style.display = 'flex';
+  if(digBtn) digBtn.style.display = '';
   const grenadeBtn = document.getElementById('grenadeBtn');
-  if(grenadeBtn) grenadeBtn.style.display = 'flex';
+  if(grenadeBtn) grenadeBtn.style.display = '';
   const askBtn = document.getElementById('askBtn');
   if(askBtn) askBtn.style.display = 'none';
   const talkBtn = document.getElementById('talkBtn');
