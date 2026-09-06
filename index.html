@@ -179,7 +179,7 @@ input:checked + .slider:before{transform:translateX(24px)}
   height: 100% !important;
 }
 /* 双人模式2P UI */
-#topBar2{position:absolute;top:8px;right:10px;width:200px;display:flex;flex-direction:column;gap:4px;z-index:20;pointer-events:none}
+#topBar2{position:absolute;top:8px;right:80px;width:180px;display:flex;flex-direction:column;gap:4px;z-index:20;pointer-events:none}
 #hpArea2{display:flex;flex-direction:column;gap:4px}
 #hpBarBg2{width:200px;height:22px;background:#333;border:2px solid #000;border-radius:4px;overflow:hidden}
 #hpBar2{height:100%;background:linear-gradient(to bottom,#ff6b6b,#c0392b);transition:width .2s;width:100%}
@@ -189,8 +189,8 @@ input:checked + .slider:before{transform:translateX(24px)}
 #joystick2{position:absolute;right:30px;bottom:30px;width:130px;height:130px;z-index:15;pointer-events:auto;display:none}
 #joyOuter2{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid rgba(0,0,0,.4)}
 #joyInner2{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:3px solid rgba(0,0,0,.5)}
-/* 2P技能区 - 左下角 */
-#skillArea2{position:absolute;left:25px;bottom:25px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:15;display:none}
+/* 2P技能区 - 右半屏左下角 */
+#skillArea2{position:absolute;left:calc(50% + 25px);bottom:25px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:15;display:none}
 #skillRow2{display:flex;gap:8px;align-items:flex-end}
 .skillBtn2{width:56px;height:56px;border-radius:50%;font-size:26px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
 .skillBtn2:active{transform:scale(.9);background:rgba(255,255,255,.9)}
@@ -3741,6 +3741,32 @@ function drawBossHpBar(){
   ctx.fillText(b.face+' Boss '+b.hp+'/'+b.maxHp+stageText, W/2, 20);
 }
 
+function drawPlayer2(){
+  const p = G.player2;
+  if(!p) return;
+  ctx.save();
+  ctx.translate(p.x+p.w/2, p.y+p.h/2);
+  if((p.stunRotate && p.stunTimer>0) || (p.slipRotate && p.slipTimer>0)){
+    ctx.rotate(Math.PI/2);
+  }
+  if(p.attackAnim>0){
+    ctx.translate(p.facing*3, 0);
+  }
+  if(p.invincible>0 && p.invincible%6<3){
+    ctx.fillStyle = 'rgba(255,0,0,0.4)';
+    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+  }
+  ctx.font = p.w + 'px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(p.face, 0, 0);
+  if(p.attackAnim>0 && (p.weapon==='fist'||p.weapon==='knife')){
+    ctx.font = (p.w*0.7)+'px serif';
+    ctx.fillText(p.weapon==='knife'?'🔪':'💥', p.facing*p.w*0.7, 0);
+  }
+  ctx.restore();
+}
+
 function drawPlayer(){
   const p = G.player;
   ctx.save();
@@ -4466,9 +4492,34 @@ function startCoopGame(){
   document.getElementById('topBar2').style.display = 'flex';
   document.getElementById('joystick2').style.display = 'block';
   document.getElementById('skillArea2').style.display = 'flex';
+  // 1P技能区移到左半屏右下角
+  const skillArea = document.getElementById('skillArea');
+  if(skillArea){
+    skillArea.style.right = 'auto';
+    skillArea.style.left = 'calc(50% - 100px)';
+    skillArea.style.alignItems = 'flex-end';
+  }
+  // 1P摇杆保持左下角
+  const joystick = document.getElementById('joystick');
+  if(joystick){
+    joystick.style.left = '30px';
+    joystick.style.right = 'auto';
+  }
+  // 隐藏单人模式多余按钮（双人模式只用攻击和冲刺）
+  const weaponSwitch = document.getElementById('weaponSwitch');
+  if(weaponSwitch) weaponSwitch.style.display = 'none';
+  const digBtn = document.getElementById('digBtn');
+  if(digBtn) digBtn.style.display = 'none';
+  const grenadeBtn = document.getElementById('grenadeBtn');
+  if(grenadeBtn) grenadeBtn.style.display = 'none';
   // 隐藏单人模式的瞄准轮盘（双人模式暂不支持）
   const aimJoy = document.getElementById('aimJoystick');
   if(aimJoy) aimJoy.style.display = 'none';
+  // 隐藏索要按钮和对话按钮（双人模式暂不支持）
+  const askBtn = document.getElementById('askBtn');
+  if(askBtn) askBtn.style.display = 'none';
+  const talkBtn = document.getElementById('talkBtn');
+  if(talkBtn) talkBtn.style.display = 'none';
   document.getElementById('mainMenu').style.display = 'none';
   document.getElementById('endPanel').style.display = 'none';
   document.getElementById('shopPanel').style.display = 'none';
@@ -4489,6 +4540,24 @@ function exitToMenu(){
   document.getElementById('topBar2').style.display = 'none';
   document.getElementById('joystick2').style.display = 'none';
   document.getElementById('skillArea2').style.display = 'none';
+  // 恢复1P技能区位置
+  const skillArea = document.getElementById('skillArea');
+  if(skillArea){
+    skillArea.style.right = '25px';
+    skillArea.style.left = 'auto';
+    skillArea.style.alignItems = 'flex-end';
+  }
+  // 恢复单人模式按钮
+  const weaponSwitch = document.getElementById('weaponSwitch');
+  if(weaponSwitch) weaponSwitch.style.display = 'flex';
+  const digBtn = document.getElementById('digBtn');
+  if(digBtn) digBtn.style.display = 'flex';
+  const grenadeBtn = document.getElementById('grenadeBtn');
+  if(grenadeBtn) grenadeBtn.style.display = 'flex';
+  const askBtn = document.getElementById('askBtn');
+  if(askBtn) askBtn.style.display = 'none';
+  const talkBtn = document.getElementById('talkBtn');
+  if(talkBtn) talkBtn.style.display = 'none';
   document.getElementById('mainMenu').style.display = 'flex';
   document.getElementById('endPanel').style.display = 'none';
   document.getElementById('shopPanel').style.display = 'none';
