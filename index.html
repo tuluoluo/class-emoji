@@ -332,6 +332,11 @@ input:checked + .slider:before{transform:translateX(24px)}
           <option value="ru">Русский</option>
         </select>
       </div>
+      <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <span id="authorEmailLabel">📧 作者邮箱</span>
+        <a href="mailto:tll151120@qq.com" style="color:#3498db;font-size:13px;text-decoration:underline;word-break:break-all">tll151120@qq.com</a>
+        <span style="font-size:11px;color:#888" id="feedbackLabel">提意见请发邮件到</span>
+      </div>
       <button id="exitGameBtn" class="settings-exit">退出到主页</button>
       <button id="clearSaveBtn" style="width:100%;margin-top:8px;padding:10px;background:#e67e22;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">🗑 清除本地存档</button>
       <button id="closeSettingsBtn" class="settings-close">关闭</button>
@@ -479,6 +484,18 @@ const LANGS = {
     weatherSunny:'☀️ 晴天了',
     lightningHit:'⚡ 被雷劈了！-8HP',
     slipFall:'💦 滑倒了！2秒不能动',
+    // 通关标识
+    clearRecord:'🏆 通关记录', clearRating:'🏆 通关评分',
+    medUse:'药物使用', times:'次', lowHp:'残血', fullHp:'非残血',
+    cheatWarning:'⚠ 这个人开了外挂',
+    // 作弊功能提示
+    noSlipOn:'🧊 防滑已开启，下雨不会滑倒了',
+    dashNoCdOn:'💨 冲刺无冷却已开启',
+    infGoldOn:'💰 无限金币已开启',
+    skipDay:'🌙 已跳过白天，进入夜晚',
+    skipNight:'☀ 已跳过夜晚，进入白天',
+    // 作者邮箱
+    authorEmail:'📧 作者邮箱', feedback:'提意见请发邮件到',
     // 更新日志
     r38:'😎 游离乐子人的音乐会吸引附近怪物',
     r39:'💨 新增冲刺技能（Shift/💨按钮），3秒冷却，冲刺期间无敌',
@@ -904,6 +921,11 @@ function applyLanguage(){
   if(clearBtn) clearBtn.textContent = '🗑 ' + t('clearSave');
   const closeSettingsBtn = document.getElementById('closeSettingsBtn');
   if(closeSettingsBtn) closeSettingsBtn.textContent = t('close');
+  // 作者邮箱
+  const authorEmailLabel = document.getElementById('authorEmailLabel');
+  if(authorEmailLabel) authorEmailLabel.textContent = t('authorEmail');
+  const feedbackLabel = document.getElementById('feedbackLabel');
+  if(feedbackLabel) feedbackLabel.textContent = t('feedback');
   // 商店
   const closeShopBtn = document.getElementById('closeShopBtn');
   if(closeShopBtn) closeShopBtn.textContent = t('close');
@@ -2083,7 +2105,7 @@ function update(){
       if(Math.abs(dx)>0.1) p.facing = dx>0?1:-1;
 
       // 下雨/打雷：有概率打滑摔倒
-      if((G.weather === 'rain' || G.weather === 'thunder') && p.slipTimer <= 0){
+      if((G.weather === 'rain' || G.weather === 'thunder') && p.slipTimer <= 0 && !G.cheat.noSlip){
         // 每帧0.15%概率摔倒，移动时才会摔
         if(Math.random() < 0.0015){
           p.slipTimer = 120; // 2秒
@@ -3537,11 +3559,11 @@ function showClearBadge(){
     if(!record){ badge.style.display = 'none'; return; }
     const ratingClass = record.rating === 'A+' ? 'Aplus' : record.rating;
     let html = '<div class="clear-badge '+ratingClass+'">';
-    html += '<div class="badge-title">🏆 通关记录</div>';
+    html += '<div class="badge-title">'+t('clearRecord')+'</div>';
     html += '<div class="badge-rating">'+record.rating+'</div>';
-    html += '<div style="font-size:12px;color:#fff;margin-top:4px">击杀: '+record.killCount+' | 药物: '+record.medUse+'次</div>';
+    html += '<div style="font-size:12px;color:#fff;margin-top:4px">'+t('kills')+': '+record.killCount+' | '+t('medUse')+': '+record.medUse+t('times')+'</div>';
     if(record.usedCheat){
-      html += '<div class="badge-cheat">⚠ 这个人开了外挂</div>';
+      html += '<div class="badge-cheat">'+t('cheatWarning')+'</div>';
     }
     html += '</div>';
     badge.innerHTML = html;
@@ -3563,11 +3585,11 @@ function gameOver(win){
     saveClearRecord(ratingInfo);
     const ratingClass = ratingInfo.rating === 'A+' ? 'Aplus' : ratingInfo.rating;
     statsHtml += '<div class="clear-badge '+ratingClass+'" style="margin:10px 0">';
-    statsHtml += '<div class="badge-title">🏆 通关评分</div>';
+    statsHtml += '<div class="badge-title">'+t('clearRating')+'</div>';
     statsHtml += '<div class="badge-rating">'+ratingInfo.rating+'</div>';
-    statsHtml += '<div style="font-size:12px;color:#fff">药物使用: '+ratingInfo.medUse+'次 | '+(ratingInfo.isLowHp?'残血':'非残血')+'</div>';
+    statsHtml += '<div style="font-size:12px;color:#fff">'+t('medUse')+': '+ratingInfo.medUse+t('times')+' | '+(ratingInfo.isLowHp?t('lowHp'):t('fullHp'))+'</div>';
     if(ratingInfo.usedCheat){
-      statsHtml += '<div class="badge-cheat">⚠ 这个人开了外挂</div>';
+      statsHtml += '<div class="badge-cheat">'+t('cheatWarning')+'</div>';
     }
     statsHtml += '</div>';
     statsHtml += t('beatFinalBoss');
@@ -3781,25 +3803,25 @@ document.getElementById('alaskey').addEventListener('change', e=>{
 });
 document.getElementById('noSlip').addEventListener('change', e=>{
   G.cheat.noSlip=e.target.checked;
-  if(e.target.checked){ G.usedCheat=true; showToast('🧊 防滑已开启，下雨不会滑倒了'); }
+  if(e.target.checked){ G.usedCheat=true; showToast(t('noSlipOn')); }
 });
 document.getElementById('dashNoCd').addEventListener('change', e=>{
   G.cheat.dashNoCd=e.target.checked;
-  if(e.target.checked){ G.usedCheat=true; G.dashCooldown = 0; showToast('💨 冲刺无冷却已开启'); }
+  if(e.target.checked){ G.usedCheat=true; G.dashCooldown = 0; showToast(t('dashNoCdOn')); }
 });
 document.getElementById('infGold').addEventListener('change', e=>{
   G.cheat.infGold=e.target.checked;
-  if(e.target.checked){ G.usedCheat=true; showToast('💰 无限金币已开启'); }
+  if(e.target.checked){ G.usedCheat=true; showToast(t('infGoldOn')); }
 });
 document.getElementById('skipDay').addEventListener('click', ()=>{
   G.day = false;
   G.dayTimer = 0;
-  showToast('🌙 已跳过白天，进入夜晚');
+  showToast(t('skipDay'));
 });
 document.getElementById('skipNight').addEventListener('click', ()=>{
   G.day = true;
   G.dayTimer = 0;
-  showToast('☀ 已跳过夜晚，进入白天');
+  showToast(t('skipNight'));
 });
 
 // 索要按钮
