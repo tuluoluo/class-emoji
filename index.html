@@ -4048,7 +4048,7 @@ function isGameInputBlocked(){
 }
 // ==================== 键盘输入（独立全局状态，确保移动键一定生效）====================
 const inputState = {left:false, right:false, up:false, down:false};
-const inputState2 = {left:false, right:false, up:false, down:false}; // 2P输入状态
+const inputState2 = {left:false, right:false, up:false, down:false, attack:false}; // 2P输入状态
 window.addEventListener('keydown', function(e){
   const key = e.key;
   // === 全局快捷键 ===
@@ -4071,12 +4071,13 @@ window.addEventListener('keydown', function(e){
   if(key==='d'||key==='D'){ inputState.right=true; e.preventDefault(); return; }
   if(key==='w'||key==='W'){ inputState.up=true; e.preventDefault(); return; }
   if(key==='s'||key==='S'){ inputState.down=true; e.preventDefault(); return; }
-  // 2P: 方向键（仅双人模式）
+  // 2P: 方向键 + 数字键1攻击（仅双人模式）
   if(G.isCoop){
     if(key==='ArrowLeft'){ inputState2.left=true; e.preventDefault(); return; }
     if(key==='ArrowRight'){ inputState2.right=true; e.preventDefault(); return; }
     if(key==='ArrowUp'){ inputState2.up=true; e.preventDefault(); return; }
     if(key==='ArrowDown'){ inputState2.down=true; e.preventDefault(); return; }
+    if(key==='1'||key==='Numpad1'){ inputState2.attack=true; e.preventDefault(); return; }
   }
   // === 操作键：被面板阻止 ===
   if(G.state !== 'playing' || isGameInputBlocked()) return;
@@ -4093,18 +4094,19 @@ window.addEventListener('keyup', function(e){
   else if(key==='d'||key==='D') inputState.right=false;
   else if(key==='w'||key==='W') inputState.up=false;
   else if(key==='s'||key==='S') inputState.down=false;
-  // 2P: 方向键
+  // 2P: 方向键 + 攻击键
   if(G.isCoop){
     if(key==='ArrowLeft') inputState2.left=false;
     else if(key==='ArrowRight') inputState2.right=false;
     else if(key==='ArrowUp') inputState2.up=false;
     else if(key==='ArrowDown') inputState2.down=false;
+    else if(key==='1'||key==='Numpad1') inputState2.attack=false;
   }
 });
 // 窗口失焦时重置所有按键，避免按键卡住
 window.addEventListener('blur', function(){
   inputState.left=false; inputState.right=false; inputState.up=false; inputState.down=false;
-  inputState2.left=false; inputState2.right=false; inputState2.up=false; inputState2.down=false;
+  inputState2.left=false; inputState2.right=false; inputState2.up=false; inputState2.down=false; inputState2.attack=false;
 });
 
 // 技能按钮
@@ -4394,7 +4396,7 @@ function startGame(){
   G.miniBossSpawned = false; G.finalBossSpawned = false;
   G.medUseCount = 0; G.usedCheat = false;
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
-  G.weapons = ['fist']; G.atkCooldown = 0; G.shake = 0;
+  G.weapons = ['fist']; G.atkCooldown = 0; G.atkCooldown2 = 0; G.shake = 0;
   G._shopOpened = false;
   G.paused = false; // 确保新游戏不暂停
   G.nightGraceTimer = 0;
@@ -4434,7 +4436,7 @@ function startCoopGame(){
   G.fireGrounds = [];
   G.miniBossSpawned = false; G.finalBossSpawned = false;
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
-  G.weapons = ['fist']; G.atkCooldown = 0; G.shake = 0;
+  G.weapons = ['fist']; G.atkCooldown = 0; G.atkCooldown2 = 0; G.shake = 0;
   G._shopOpened = false;
   G.paused = false;
   G.nightGraceTimer = 0;
@@ -4460,6 +4462,13 @@ function startCoopGame(){
   document.getElementById('coopDivider').style.display = 'block';
   document.getElementById('coopLabel1').style.display = 'block';
   document.getElementById('coopLabel2').style.display = 'block';
+  // 显示2P UI和摇杆
+  document.getElementById('topBar2').style.display = 'flex';
+  document.getElementById('joystick2').style.display = 'block';
+  document.getElementById('skillArea2').style.display = 'flex';
+  // 隐藏单人模式的瞄准轮盘（双人模式暂不支持）
+  const aimJoy = document.getElementById('aimJoystick');
+  if(aimJoy) aimJoy.style.display = 'none';
   document.getElementById('mainMenu').style.display = 'none';
   document.getElementById('endPanel').style.display = 'none';
   document.getElementById('shopPanel').style.display = 'none';
@@ -4476,6 +4485,10 @@ function exitToMenu(){
   document.getElementById('coopDivider').style.display = 'none';
   document.getElementById('coopLabel1').style.display = 'none';
   document.getElementById('coopLabel2').style.display = 'none';
+  // 隐藏2P UI和摇杆
+  document.getElementById('topBar2').style.display = 'none';
+  document.getElementById('joystick2').style.display = 'none';
+  document.getElementById('skillArea2').style.display = 'none';
   document.getElementById('mainMenu').style.display = 'flex';
   document.getElementById('endPanel').style.display = 'none';
   document.getElementById('shopPanel').style.display = 'none';
