@@ -204,6 +204,10 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="cheatRow"><span>攻击伤害无限</span><label><input type="checkbox" id="infDmg">ON</label></div>
     <div class="cheatRow"><span>怪海</span><label><input type="checkbox" id="mobSea">ON</label></div>
     <div class="cheatRow"><span>我是阿拉斯基(变弱)</span><label><input type="checkbox" id="alaskey">ON</label></div>
+    <div class="cheatRow"><span>防滑</span><label><input type="checkbox" id="noSlip">ON</label></div>
+    <div class="cheatRow"><span>冲刺无冷却</span><label><input type="checkbox" id="dashNoCd">ON</label></div>
+    <div class="cheatRow"><span>无限金币</span><label><input type="checkbox" id="infGold">ON</label></div>
+    <div class="cheatRow" style="gap:6px"><button id="skipDay" style="flex:1;padding:4px;font-size:12px;cursor:pointer">跳过白天</button><button id="skipNight" style="flex:1;padding:4px;font-size:12px;cursor:pointer">跳过夜晚</button></div>
   </div>
 
   <!-- 虚拟摇杆 -->
@@ -370,7 +374,7 @@ const G = {
   corpses: [],
   woods: [],
   particles: [],
-  cheat: { infHp:false, infDmg:false, mobSea:false, alaskey:false },
+  cheat: { infHp:false, infDmg:false, mobSea:false, alaskey:false, noSlip:false, dashNoCd:false, infGold:false },
   miniBossSpawned: false,
   finalBossSpawned: false,
   bossStage: 1, // 最终Boss当前阶段
@@ -1721,7 +1725,7 @@ function playerDash(){
     p.isDashing = true;
     p.dashTimer = 12; // 冲刺持续0.2秒
     p.invincible = 15; // 冲刺期间短暂无敌
-    G.dashCooldown = G.dashCooldownMax;
+    if(!G.cheat.dashNoCd) G.dashCooldown = G.dashCooldownMax;
     playSound('dash');
     spawnParticles(p.x+p.w/2, p.y+p.h/2, '#88ccff', 10);
   }
@@ -3696,6 +3700,28 @@ document.getElementById('alaskey').addEventListener('change', e=>{
   G.cheat.alaskey=e.target.checked;
   if(e.target.checked) showToast(t('alaskey'));
 });
+document.getElementById('noSlip').addEventListener('change', e=>{
+  G.cheat.noSlip=e.target.checked;
+  if(e.target.checked) showToast('🧊 防滑已开启，下雨不会滑倒了');
+});
+document.getElementById('dashNoCd').addEventListener('change', e=>{
+  G.cheat.dashNoCd=e.target.checked;
+  if(e.target.checked){ G.dashCooldown = 0; showToast('💨 冲刺无冷却已开启'); }
+});
+document.getElementById('infGold').addEventListener('change', e=>{
+  G.cheat.infGold=e.target.checked;
+  if(e.target.checked) showToast('💰 无限金币已开启');
+});
+document.getElementById('skipDay').addEventListener('click', ()=>{
+  G.day = false;
+  G.dayTimer = 0;
+  showToast('🌙 已跳过白天，进入夜晚');
+});
+document.getElementById('skipNight').addEventListener('click', ()=>{
+  G.day = true;
+  G.dayTimer = 0;
+  showToast('☀ 已跳过夜晚，进入白天');
+});
 
 // 索要按钮
 document.getElementById('askBtn').addEventListener('click', ()=>{
@@ -3710,8 +3736,8 @@ document.getElementById('askBtn').addEventListener('click', ()=>{
 
 // 商店
 document.getElementById('buyKnife').addEventListener('click', ()=>{
-  if(G.player.gold>=50){
-    G.player.gold-=50;
+  if(G.cheat.infGold || G.player.gold>=50){
+    if(!G.cheat.infGold) G.player.gold-=50;
     if(!G.weapons.includes('knife')) G.weapons.push('knife');
     G.player.weapon='knife';
     playSound('pickup');
@@ -3721,8 +3747,8 @@ document.getElementById('buyKnife').addEventListener('click', ()=>{
   } else showToast(t('noGold'));
 });
 document.getElementById('buyGun').addEventListener('click', ()=>{
-  if(G.player.gold>=120){
-    G.player.gold-=120;
+  if(G.cheat.infGold || G.player.gold>=120){
+    if(!G.cheat.infGold) G.player.gold-=120;
     if(!G.weapons.includes('gun')) G.weapons.push('gun');
     G.player.weapon='gun';
     playSound('pickup');
@@ -3733,8 +3759,8 @@ document.getElementById('buyGun').addEventListener('click', ()=>{
   } else showToast(t('noGold'));
 });
 document.getElementById('buyGrenade').addEventListener('click', ()=>{
-  if(G.player.gold>=40){
-    G.player.gold-=40;
+  if(G.cheat.infGold || G.player.gold>=40){
+    if(!G.cheat.infGold) G.player.gold-=40;
     G.player.grenade+=3;
     playSound('pickup');
     showToast(t('buyGrenade'));
@@ -3743,8 +3769,8 @@ document.getElementById('buyGrenade').addEventListener('click', ()=>{
   } else showToast(t('noGold'));
 });
 document.getElementById('buyBandage').addEventListener('click', ()=>{
-  if(G.player.gold>=30){
-    G.player.gold-=30;
+  if(G.cheat.infGold || G.player.gold>=30){
+    if(!G.cheat.infGold) G.player.gold-=30;
     G.player.hp = Math.min(G.player.maxHp, G.player.hp+5);
     G.player.bleeding = false; // 止血
     playSound('pickup');
@@ -3754,8 +3780,8 @@ document.getElementById('buyBandage').addEventListener('click', ()=>{
   } else showToast(t('noGold'));
 });
 document.getElementById('buyMedkit').addEventListener('click', ()=>{
-  if(G.player.gold>=80){
-    G.player.gold-=80;
+  if(G.cheat.infGold || G.player.gold>=80){
+    if(!G.cheat.infGold) G.player.gold-=80;
     G.player.hp = G.player.maxHp;
     G.player.bleeding = false; // 止血
     playSound('unlock');
