@@ -190,7 +190,11 @@ input:checked + .slider:before{transform:translateX(24px)}
 #joyOuter2{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid rgba(0,0,0,.4)}
 #joyInner2{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:3px solid rgba(0,0,0,.5)}
 /* 2P技能区 - 右半屏左下角 */
-#skillArea2{position:absolute;left:calc(50% + 20px);bottom:170px;display:flex;flex-direction:row;align-items:flex-end;gap:8px;z-index:15;display:none}
+#skillArea2{position:absolute;left:calc(50% + 15px);bottom:25px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:15;display:none}
+#skillArea2 #weaponSwitch2{width:56px;height:34px;border-radius:17px;background:rgba(255,255,255,.7);border:2px solid #333;font-size:11px;font-weight:bold;pointer-events:auto;margin-bottom:4px}
+#skillRow2{display:flex;align-items:center;gap:6px}
+.skillBtn2{width:48px;height:48px;border-radius:50%;font-size:22px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
+.skillBtn2:active{transform:scale(.9);background:rgba(255,255,255,.9)}
 #skillRow2{display:flex;gap:8px;align-items:flex-end}
 .skillBtn2{width:56px;height:56px;border-radius:50%;font-size:26px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
 .skillBtn2:active{transform:scale(.9);background:rgba(255,255,255,.9)}
@@ -288,8 +292,11 @@ input:checked + .slider:before{transform:translateX(24px)}
 
   <!-- 2P技能区 -->
   <div id="skillArea2">
+    <button id="weaponSwitch2">切换武器</button>
     <div id="skillRow2">
+      <button class="skillBtn2" id="digBtn2">⛏</button>
       <button class="skillBtn2" id="atkBtn2">👊</button>
+      <button class="skillBtn2" id="grenadeBtn2">💣</button>
       <button class="skillBtn2" id="dashBtn2">💨</button>
     </div>
   </div>
@@ -471,6 +478,7 @@ const G = {
   lightningX: 0, lightningY: 0, // 闪电位置
   // 冲刺技能
   dashCooldown: 0,
+  dashCooldown2: 0, // 2P独立冲刺冷却
   dashCooldownMax: 180, // 3秒冷却
   isDashing: false,
   dashTimer: 0,
@@ -1446,6 +1454,7 @@ function loadGame(slot){
     G.lightningFlash = 0;
     // 重置冲刺
     G.dashCooldown = 0;
+    G.dashCooldown2 = 0;
     G.isDashing = false;
     G.dashTimer = 0;
     G.day = d.day !== undefined ? d.day : true;
@@ -1887,6 +1896,61 @@ function player2Attack(){
   }
 }
 
+// 2P挖掘
+function player2Dig(){
+  const p = G.player2;
+  if(!p || p.stunTimer>0) return;
+  for(let i=G.woods.length-1;i>=0;i--){
+    const wood = G.woods[i];
+    if(dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:wood.x+wood.w/2,y:wood.y+wood.h/2}) < 95){
+      wood.hp--;
+      spawnParticles(wood.x+wood.w/2, wood.y+wood.h/2, '#8B4513', 5);
+      playSound('dig');
+      if(wood.hp<=0){
+        G.woods.splice(i,1);
+        p.wood = (p.wood||0)+1;
+        showToast('2P +1 木头');
+        updateUI();
+      }
+      return;
+    }
+  }
+  // 没挖到东西，小概率挖到金币
+  if(Math.random() < 0.15){
+    p.gold += 2;
+    showToast('2P 挖到 2 金币!');
+    playSound('coin');
+    updateUI();
+  }
+}
+
+// 2P手雷
+function player2Grenade(){
+  const p = G.player2;
+  if(!p || p.grenade<=0 || p.stunTimer>0) return;
+  p.grenade--;
+  updateUI();
+  spawnProjectile(p.x+p.w/2, p.y+p.h/2, p.facing*4, -3, {
+    dmg:0, face:'💣', fromPlayer:true, speed:1, life:999,
+    isGrenade:true, grenadeTimer:60, explosionRadius:90, w:20, h:20,
+  });
+}
+
+// 2P切换武器
+function player2SwitchWeapon(){
+  const p = G.player2;
+  if(!p) return;
+  const list = p.weapons || ['fist'];
+  if(list.length <= 1) return;
+  let idx = list.indexOf(p.weapon);
+  if(idx < 0) idx = 0;
+  idx = (idx + 1) % list.length;
+  p.weapon = list[idx];
+  playSound('switch');
+  updateUI();
+  updateAimJoystick();
+}
+
 function hitAllMobs(hitBox, dmg){
   G.mobs.forEach(m=>{
     if(rectOverlap(hitBox,m)){
@@ -1974,6 +2038,28 @@ function playerDig(){
 }
 
 // ==================== 更新逻辑 ====================
+// 统一处理玩家死亡
+function handlePlayerDeath(player, isP2){
+  if(isP2){
+    if(G.coopP2Dead) return; // 防止重复处理
+    G.coopP2Dead = true;
+    makeCorpse(player);
+    showToast('2P 倒下了！');
+    if(G.coopP1Dead) gameOver(false);
+  } else {
+    if(G.isCoop){
+      if(G.coopP1Dead) return; // 防止重复处理
+      G.coopP1Dead = true;
+      makeCorpse(player);
+      showToast('1P 倒下了！');
+      if(G.coopP2Dead) gameOver(false);
+    } else {
+      makeCorpse(player);
+      gameOver(false);
+    }
+  }
+}
+
 function update(){
   if(!G.running) return;
   const p = G.player;
@@ -2075,7 +2161,7 @@ function update(){
         p.invincible = 60;
         spawnParticles(p.x+p.w/2, p.y+p.h/2, '#ffff00', 15);
         showToast(t('lightningHit'));
-        if(p.hp <= 0){ makeCorpse(p); gameOver(false); }
+        if(p.hp <= 0){ handlePlayerDeath(p, false); }
       }
       // 2. 劈小怪（不能是boss）
       for(let mi=G.mobs.length-1;mi>=0;mi--){
@@ -2118,7 +2204,7 @@ function update(){
       p.hp -= 1;
       spawnParticles(p.x+p.w/2, p.y, '#ff6600', 3);
       updateUI();
-      if(p.hp <= 0){ makeCorpse(p); gameOver(false); }
+      if(p.hp <= 0){ handlePlayerDeath(p, false); }
     }
   }
 
@@ -2208,6 +2294,7 @@ function update(){
 
   // 冲刺冷却
   if(G.dashCooldown > 0) G.dashCooldown--;
+  if(G.dashCooldown2 > 0) G.dashCooldown2--; // 2P独立冲刺冷却
   p.x = clamp(p.x, 0, WORLD_W-p.w);
   p.y = clamp(p.y, 0, WORLD_H-p.h);
 
@@ -2340,9 +2427,12 @@ function update(){
   }
 
   // 检查玩家死亡
-  if(p.hp<=0 && !G.cheat.infHp){
-    makeCorpse(p);
-    gameOver(false);
+  if(p.hp<=0 && !G.cheat.infHp && !G.coopP1Dead){
+    handlePlayerDeath(p, false);
+  }
+  // 检查2P死亡
+  if(G.isCoop && G.player2 && G.player2.hp<=0 && !G.cheat.infHp && !G.coopP2Dead){
+    handlePlayerDeath(G.player2, true);
   }
 }
 
@@ -2419,10 +2509,17 @@ function updateMobs(){
         m.dodgeCd = 30;
       }
     }
-    // AI：向玩家移动
+    // AI：向最近的玩家移动
     const cx = m.x+m.w/2, cy = m.y+m.h/2;
-    const px = p.x+p.w/2, py = p.y+p.h/2;
-    const d = Math.hypot(px-cx, py-cy);
+    let px = p.x+p.w/2, py = p.y+p.h/2;
+    let targetPlayer = p;
+    let d = Math.hypot(px-cx, py-cy);
+    // 双人模式：比较2P距离，追踪更近的玩家
+    if(G.isCoop && G.player2 && !G.coopP2Dead){
+      const p2x = G.player2.x+G.player2.w/2, p2y = G.player2.y+G.player2.h/2;
+      const d2 = Math.hypot(p2x-cx, p2y-cy);
+      if(d2 < d){ px = p2x; py = p2y; d = d2; targetPlayer = G.player2; }
+    }
 
     // 😎音乐吸引怪物：如果游离乐子人在播放音乐，怪物会被吸引过去
     const wn = G.npcs.wanderer;
@@ -2462,10 +2559,14 @@ function updateMobs(){
         m.x += (attractX-cx)/ad * m.speed;
         m.y += (attractY-cy)/ad * m.speed;
       }
-      // 近战攻击
+      // 近战攻击（攻击最近的玩家）
       if(m.atkCd<=0 && d < m.atkRange){
         m.atkCd = m.maxAtkCd;
-        damagePlayer(m.dmg);
+        if(targetPlayer === G.player2){
+          damagePlayer2(m.dmg);
+        } else {
+          damagePlayer(m.dmg);
+        }
         // 怪物也能攻击😝（除🤬外所有生物可攻击）
         if(G.npcs.trouble && !G.npcs.trouble.dead && rectOverlap(m, G.npcs.trouble)){
           G.npcs.trouble.hp -= m.dmg;
@@ -2508,9 +2609,13 @@ function updateMobs(){
       G.mobs.splice(i,1);
       G.killCount++;
       playSound('kill');
-      // 35%掉金币
+      // 35%掉金币（给最近的玩家）
       if(Math.random()<0.35){
-        p.gold += 3;
+        if(targetPlayer === G.player2){
+          G.player2.gold += 3;
+        } else {
+          p.gold += 3;
+        }
       }
       updateUI();
     }
@@ -2834,17 +2939,36 @@ function updateNPCs(){
     }
   }
 
-  // 🤬 商人 - 靠近打开商店（双人模式：任意玩家靠近都打开）
+  // 🤬 商人 - 靠近打开商店（双人模式：记录谁打开的，定位到对应半屏）
   const mer = G.npcs.merchant;
   if(mer){
-    const anyNear = anyPlayerNear(mer.x+mer.w/2, mer.y+mer.h/2, 90);
     const shop = document.getElementById('shopPanel');
-    if(anyNear && shop.style.display!=='block' && !G._shopOpened && G.shopCloseCooldown <= 0){
+    // 检查哪个玩家靠近
+    let nearPlayer = null;
+    const d1 = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:mer.x+mer.w/2,y:mer.y+mer.h/2});
+    if(d1 < 90) nearPlayer = '1P';
+    if(G.isCoop && G.player2 && !G.coopP2Dead){
+      const d2 = dist({x:G.player2.x+G.player2.w/2,y:G.player2.y+G.player2.h/2},{x:mer.x+mer.w/2,y:mer.y+mer.h/2});
+      if(d2 < 90 && (!nearPlayer || d2 < d1)) nearPlayer = '2P';
+    }
+    if(nearPlayer && shop.style.display!=='block' && !G._shopOpened && G.shopCloseCooldown <= 0){
       shop.style.display = 'flex';
       G._shopOpened = true;
-    } else if(!anyNear && G._shopOpened){
+      G.shopOpener = nearPlayer;
+      // 双人模式：定位到对应玩家的半屏
+      if(G.isCoop){
+        if(nearPlayer === '2P'){
+          shop.style.left = '75%';
+        } else {
+          shop.style.left = '25%';
+        }
+      } else {
+        shop.style.left = '50%';
+      }
+    } else if(!nearPlayer && G._shopOpened){
       shop.style.display = 'none';
       G._shopOpened = false;
+      G.shopOpener = null;
     }
   }
 
@@ -3269,6 +3393,25 @@ function damagePlayer(dmg){
   updateUI();
 }
 
+// 伤害2P
+function damagePlayer2(dmg){
+  const p = G.player2;
+  if(!p || p.invincible>0 || G.cheat.infHp) return;
+  playSound('hurt');
+  playVoice('hurt', 'male');
+  const actual = calcIncomingDmg(dmg);
+  p.hp -= actual;
+  p.invincible = 40;
+  G.shake = 6;
+  spawnParticles(p.x+p.w/2, p.y+p.h/2, '#ff0000', 6);
+  if(!p.bleeding && Math.random() < 0.3){
+    p.bleeding = true;
+    p.bleedTimer = 0;
+    showToast('2P ' + t('bleeding'));
+  }
+  updateUI();
+}
+
 // ==================== 渲染 ====================
 function renderWorld(){
   // 背景
@@ -3441,6 +3584,13 @@ function render(){
       }
       ctx.restore();
     }
+    // 双人模式UI层：小地图（在左右半屏各画一个）
+    ctx.save();
+    // 左半屏小地图
+    drawCoopMinimap(10, 82, W/2 - 20);
+    // 右半屏小地图
+    drawCoopMinimap(W/2 + 10, 82, W/2 - 20);
+    ctx.restore();
     return;
   }
   ctx.save();
@@ -3675,6 +3825,50 @@ function drawMinimap(){
   // 视野框
   ctx.strokeStyle = 'rgba(255,255,255,0.5)';
   ctx.strokeRect(mx + camera.x*scaleX, my + camera.y*scaleY, W*scaleX, H*scaleY);
+  ctx.restore();
+}
+
+// 双人模式小地图（简化版，指定位置和宽度）
+function drawCoopMinimap(mx, my, mw){
+  const mh = mw * 0.75;
+  const scaleX = mw / WORLD_W, scaleY = mh / WORLD_H;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(mx, my, mw, mh);
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(mx, my, mw, mh);
+  // 树木
+  ctx.fillStyle = '#2d5016';
+  G.woods.forEach(w=>{
+    ctx.fillRect(mx + w.x*scaleX, my + w.y*scaleY, 2, 2);
+  });
+  // 怪物
+  ctx.fillStyle = '#ff4444';
+  G.mobs.forEach(m=>{
+    ctx.fillRect(mx + m.x*scaleX - 1, my + m.y*scaleY - 1, 3, 3);
+  });
+  // Boss
+  ctx.fillStyle = '#ff00ff';
+  G.bosses.forEach(b=>{
+    ctx.fillRect(mx + b.x*scaleX - 2, my + b.y*scaleY - 2, 5, 5);
+  });
+  // NPC
+  ctx.fillStyle = '#44ff44';
+  if(G.npcs.robot && !G.npcs.robot.dead) ctx.fillRect(mx + G.npcs.robot.x*scaleX - 1, my + G.npcs.robot.y*scaleY - 1, 3, 3);
+  if(G.npcs.merchant) ctx.fillRect(mx + G.npcs.merchant.x*scaleX - 1, my + G.npcs.merchant.y*scaleY - 1, 3, 3);
+  if(G.npcs.trouble && !G.npcs.trouble.dead) ctx.fillRect(mx + G.npcs.trouble.x*scaleX - 1, my + G.npcs.trouble.y*scaleY - 1, 3, 3);
+  if(G.npcs.wanderer && !G.npcs.wanderer.dead) ctx.fillRect(mx + G.npcs.wanderer.x*scaleX - 1, my + G.npcs.wanderer.y*scaleY - 1, 3, 3);
+  // 1P玩家（蓝色）
+  if(G.player && !G.coopP1Dead){
+    ctx.fillStyle = '#4488ff';
+    ctx.fillRect(mx + G.player.x*scaleX - 2, my + G.player.y*scaleY - 2, 4, 4);
+  }
+  // 2P玩家（青色）
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    ctx.fillStyle = '#44ffff';
+    ctx.fillRect(mx + G.player2.x*scaleX - 2, my + G.player2.y*scaleY - 2, 4, 4);
+  }
   ctx.restore();
 }
 
@@ -3917,6 +4111,26 @@ function updateUI(){
       const atkIcons2 = {fist:'👊',knife:'🔪',fire:'🔥',chargeFire:'💥',gun:'🔫'};
       atkBtn2.textContent = atkIcons2[p2.weapon]||'👊';
     }
+    // 2P击杀数（全局合并统计）
+    const killText2 = document.getElementById('killText2');
+    if(killText2) killText2.textContent = t('kills')+':'+G.killCount;
+    // 2P手雷按钮
+    const grenadeBtn2 = document.getElementById('grenadeBtn2');
+    if(grenadeBtn2){
+      grenadeBtn2.style.display = p2.grenade>0?'flex':'none';
+      if(p2.grenade>0) grenadeBtn2.textContent = '💣'+p2.grenade;
+    }
+    // 2P冲刺按钮冷却
+    const dashBtn2 = document.getElementById('dashBtn2');
+    if(dashBtn2){
+      if(G.dashCooldown2 > 0){
+        dashBtn2.disabled = true;
+        dashBtn2.textContent = Math.ceil(G.dashCooldown2/60);
+      } else {
+        dashBtn2.disabled = false;
+        dashBtn2.textContent = '💨';
+      }
+    }
   }
   // 冲刺按钮冷却显示
   const dashBtn = document.getElementById('dashBtn');
@@ -4026,8 +4240,8 @@ function restart(){
 }
 
 // ==================== 输入处理 ====================
-const joy = {active:false, dx:0, dy:0, centerX:0, centerY:0};
-const joy2 = {active:false, dx:0, dy:0, centerX:0, centerY:0}; // 2P摇杆
+const joy = {active:false, dx:0, dy:0, centerX:0, centerY:0, touchId:null};
+const joy2 = {active:false, dx:0, dy:0, centerX:0, centerY:0, touchId:null}; // 2P摇杆
 
 const joyEl = document.getElementById('joystick');
 const joyInner = document.getElementById('joyInner');
@@ -4064,12 +4278,35 @@ function handleJoyEnd(e){
   joy.active = false; joy.dx = 0; joy.dy = 0;
   joyInner.style.left = '45px'; joyInner.style.top = '45px';
 }
-joyEl.addEventListener('touchstart', handleJoyStart, {passive:false});
-joyEl.addEventListener('touchmove', handleJoyMove, {passive:false});
-joyEl.addEventListener('touchend', handleJoyEnd);
+joyEl.addEventListener('touchstart', function(e){
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  if(!touch) return;
+  joy.touchId = touch.identifier;
+  handleJoyStart(e);
+}, {passive:false});
+joyEl.addEventListener('touchmove', function(e){
+  e.preventDefault();
+  for(let i=0;i<e.changedTouches.length;i++){
+    const touch = e.changedTouches[i];
+    if(touch.identifier === joy.touchId){
+      handleJoyMove({touches:[touch], clientX:touch.clientX, clientY:touch.clientY});
+      break;
+    }
+  }
+}, {passive:false});
+joyEl.addEventListener('touchend', function(e){
+  for(let i=0;i<e.changedTouches.length;i++){
+    if(e.changedTouches[i].identifier === joy.touchId){
+      handleJoyEnd(e);
+      joy.touchId = null;
+      break;
+    }
+  }
+});
 joyEl.addEventListener('mousedown', handleJoyStart);
 document.addEventListener('mousemove', e=>{if(joy.active)handleJoyMove(e)});
-document.addEventListener('mouseup', handleJoyEnd);
+document.addEventListener('mouseup', function(e){ if(joy.active) handleJoyEnd(e); });
 
 // ===== 2P虚拟摇杆事件绑定 =====
 const joyEl2 = document.getElementById('joystick2');
@@ -4106,12 +4343,35 @@ function handleJoy2End(e){
   joy2.active = false; joy2.dx = 0; joy2.dy = 0;
   joyInner2.style.left = '45px'; joyInner2.style.top = '45px';
 }
-joyEl2.addEventListener('touchstart', handleJoy2Start, {passive:false});
-joyEl2.addEventListener('touchmove', handleJoy2Move, {passive:false});
-joyEl2.addEventListener('touchend', handleJoy2End);
+joyEl2.addEventListener('touchstart', function(e){
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  if(!touch) return;
+  joy2.touchId = touch.identifier;
+  handleJoy2Start(e);
+}, {passive:false});
+joyEl2.addEventListener('touchmove', function(e){
+  e.preventDefault();
+  for(let i=0;i<e.changedTouches.length;i++){
+    const touch = e.changedTouches[i];
+    if(touch.identifier === joy2.touchId){
+      handleJoy2Move({touches:[touch], clientX:touch.clientX, clientY:touch.clientY});
+      break;
+    }
+  }
+}, {passive:false});
+joyEl2.addEventListener('touchend', function(e){
+  for(let i=0;i<e.changedTouches.length;i++){
+    if(e.changedTouches[i].identifier === joy2.touchId){
+      handleJoy2End(e);
+      joy2.touchId = null;
+      break;
+    }
+  }
+});
 joyEl2.addEventListener('mousedown', handleJoy2Start);
 document.addEventListener('mousemove', e=>{if(joy2.active)handleJoy2Move(e)});
-document.addEventListener('mouseup', handleJoy2End);
+document.addEventListener('mouseup', function(e){ if(joy2.active) handleJoy2End(e); });
 
 // 瞄准轮盘（枪专用）
 const aimJoy = {active:false, dx:0, dy:0, centerX:0, centerY:0};
@@ -4156,7 +4416,7 @@ aimJoyEl.addEventListener('touchmove', handleAimMove, {passive:false});
 aimJoyEl.addEventListener('touchend', handleAimEnd);
 aimJoyEl.addEventListener('mousedown', handleAimStart);
 document.addEventListener('mousemove', e=>{if(aimJoy.active)handleAimMove(e)});
-document.addEventListener('mouseup', handleAimEnd);
+document.addEventListener('mouseup', function(e){ if(aimJoy.active) handleAimEnd(e); });
 
 // 键盘支持
 // 键盘控制（电脑端）
@@ -4207,6 +4467,27 @@ window.addEventListener('keydown', function(e){
   else if(key==='l'||key==='L'){ throwGrenade(); }
   else if(key==='q'||key==='Q'){ switchWeapon(); }
   else if(key==='Shift'){ e.preventDefault(); playerDash(); }
+  // 2P操作键（数字键2-5，仅双人模式）
+  if(G.isCoop){
+    if(key==='2'||key==='Numpad2'){ e.preventDefault();
+      // 2P冲刺
+      const p2 = G.player2;
+      if(p2 && G.dashCooldown2 <= 0 && !p2.isDashing && p2.stunTimer<=0 && p2.slipTimer<=0){
+        let dx=0, dy=0;
+        if(inputState2.left) dx -= 1;
+        if(inputState2.right) dx += 1;
+        if(inputState2.up) dy -= 1;
+        if(inputState2.down) dy += 1;
+        if(dx===0 && dy===0 && joy2.active){ dx=joy2.dx||0; dy=joy2.dy||0; }
+        if(dx===0 && dy===0){ dx = p2.facing; dy = 0; }
+        const len = Math.hypot(dx,dy);
+        if(len>0){ dx/=len; dy/=len; p2.dashDir={x:dx,y:dy}; p2.isDashing=true; p2.dashTimer=12; p2.invincible=15; if(!G.cheat.dashNoCd) G.dashCooldown2=G.dashCooldownMax; playSound('dash'); spawnParticles(p2.x+p2.w/2,p2.y+p2.h/2,'#88ccff',10); }
+      }
+    }
+    else if(key==='3'||key==='Numpad3'){ player2Dig(); }
+    else if(key==='4'||key==='Numpad4'){ player2Grenade(); }
+    else if(key==='5'||key==='Numpad5'){ player2SwitchWeapon(); }
+  }
 });
 window.addEventListener('keyup', function(e){
   const key = e.key;
@@ -4289,7 +4570,7 @@ document.getElementById('noSlip').addEventListener('change', e=>{
 });
 document.getElementById('dashNoCd').addEventListener('change', e=>{
   G.cheat.dashNoCd=e.target.checked;
-  if(e.target.checked){ G.usedCheat=true; G.dashCooldown = 0; showToast(t('dashNoCdOn')); }
+  if(e.target.checked){ G.usedCheat=true; G.dashCooldown = 0; G.dashCooldown2 = 0; showToast(t('dashNoCdOn')); }
 });
 document.getElementById('infGold').addEventListener('change', e=>{
   G.cheat.infGold=e.target.checked;
@@ -4318,59 +4599,82 @@ document.getElementById('askBtn').addEventListener('click', ()=>{
 });
 
 // 商店
+// 获取商店购买者（根据G.shopOpener返回对应玩家对象）
+function getShopBuyer(){
+  if(G.isCoop && G.shopOpener === '2P' && G.player2) return G.player2;
+  return G.player;
+}
+
 document.getElementById('buyKnife').addEventListener('click', ()=>{
-  if(G.cheat.infGold || G.player.gold>=50){
-    if(!G.cheat.infGold) G.player.gold-=50;
+  const buyer = getShopBuyer();
+  if(G.cheat.infGold || buyer.gold>=50){
+    if(!G.cheat.infGold) buyer.gold-=50;
     if(!G.weapons.includes('knife')) G.weapons.push('knife');
-    G.player.weapon='knife';
+    if(!buyer.weapons.includes('knife')) buyer.weapons.push('knife');
+    buyer.weapon='knife';
     playSound('pickup');
-    showToast(t('buyKnife'));
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('buyKnife'));
     updateUI();
     saveGame();
   } else showToast(t('noGold'));
 });
 document.getElementById('buyGun').addEventListener('click', ()=>{
-  if(G.cheat.infGold || G.player.gold>=120){
-    if(!G.cheat.infGold) G.player.gold-=120;
+  const buyer = getShopBuyer();
+  if(G.cheat.infGold || buyer.gold>=120){
+    if(!G.cheat.infGold) buyer.gold-=120;
     if(!G.weapons.includes('gun')) G.weapons.push('gun');
-    G.player.weapon='gun';
+    if(!buyer.weapons.includes('gun')) buyer.weapons.push('gun');
+    buyer.weapon='gun';
     playSound('pickup');
-    showToast(t('buyGun'));
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('buyGun'));
     updateUI();
     updateAimJoystick();
     saveGame();
   } else showToast(t('noGold'));
 });
 document.getElementById('buyGrenade').addEventListener('click', ()=>{
-  if(G.cheat.infGold || G.player.gold>=40){
-    if(!G.cheat.infGold) G.player.gold-=40;
-    G.player.grenade+=3;
+  const buyer = getShopBuyer();
+  if(G.cheat.infGold || buyer.gold>=40){
+    if(!G.cheat.infGold) buyer.gold-=40;
+    buyer.grenade+=3;
     playSound('pickup');
-    showToast(t('buyGrenade'));
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('buyGrenade'));
     updateUI();
     saveGame();
   } else showToast(t('noGold'));
 });
 document.getElementById('buyBandage').addEventListener('click', ()=>{
-  if(G.cheat.infGold || G.player.gold>=30){
-    if(!G.cheat.infGold) G.player.gold-=30;
-    G.player.hp = Math.min(G.player.maxHp, G.player.hp+5);
-    G.player.bleeding = false; // 止血
-    G.medUseCount++; // 记录药物使用
+  const buyer = getShopBuyer();
+  if(G.cheat.infGold || buyer.gold>=30){
+    if(!G.cheat.infGold) buyer.gold-=30;
+    buyer.hp = Math.min(buyer.maxHp, buyer.hp+5);
+    buyer.bleeding = false; // 止血
+    if(buyer === G.player2){
+      if(!G.medUseCount2) G.medUseCount2 = 0;
+      G.medUseCount2++;
+    } else {
+      G.medUseCount++;
+    }
     playSound('pickup');
-    showToast(t('useBandage'));
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('useBandage'));
     updateUI();
     saveGame();
   } else showToast(t('noGold'));
 });
 document.getElementById('buyMedkit').addEventListener('click', ()=>{
-  if(G.cheat.infGold || G.player.gold>=80){
-    if(!G.cheat.infGold) G.player.gold-=80;
-    G.player.hp = G.player.maxHp;
-    G.player.bleeding = false; // 止血
-    G.medUseCount++; // 记录药物使用
+  const buyer = getShopBuyer();
+  if(G.cheat.infGold || buyer.gold>=80){
+    if(!G.cheat.infGold) buyer.gold-=80;
+    buyer.hp = buyer.maxHp;
+    buyer.bleeding = false; // 止血
+    if(buyer === G.player2){
+      if(!G.medUseCount2) G.medUseCount2 = 0;
+      G.medUseCount2++;
+    } else {
+      G.medUseCount++;
+    }
     playSound('unlock');
-    showToast(t('useMedkit'));
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('useMedkit'));
     updateUI();
     saveGame();
   } else showToast(t('noGold'));
@@ -4396,11 +4700,25 @@ document.getElementById('atkBtn2').addEventListener('click', ()=>{
   if(G.isCoop) player2Attack();
 });
 document.getElementById('atkBtn2').addEventListener('touchstart', function(e){e.preventDefault();if(G.isCoop) player2Attack();});
+// 2P挖掘按钮
+document.getElementById('digBtn2').addEventListener('click', ()=>{
+  if(G.isCoop) player2Dig();
+});
+document.getElementById('digBtn2').addEventListener('touchstart', function(e){e.preventDefault();if(G.isCoop) player2Dig();});
+// 2P手雷按钮
+document.getElementById('grenadeBtn2').addEventListener('click', ()=>{
+  if(G.isCoop) player2Grenade();
+});
+document.getElementById('grenadeBtn2').addEventListener('touchstart', function(e){e.preventDefault();if(G.isCoop) player2Grenade();});
+// 2P切换武器按钮
+document.getElementById('weaponSwitch2').addEventListener('click', ()=>{
+  if(G.isCoop) player2SwitchWeapon();
+});
 // 2P冲刺按钮
 document.getElementById('dashBtn2').addEventListener('click', ()=>{
   if(G.isCoop && G.player2){
     const p2 = G.player2;
-    if(G.dashCooldown > 0 || p2.isDashing || p2.stunTimer > 0 || p2.slipTimer > 0) return;
+    if(G.dashCooldown2 > 0 || p2.isDashing || p2.stunTimer > 0 || p2.slipTimer > 0) return;
     let dx=0, dy=0;
     if(inputState2.left) dx -= 1;
     if(inputState2.right) dx += 1;
@@ -4418,7 +4736,7 @@ document.getElementById('dashBtn2').addEventListener('click', ()=>{
       p2.isDashing = true;
       p2.dashTimer = 12;
       p2.invincible = 15;
-      if(!G.cheat.dashNoCd) G.dashCooldown = G.dashCooldownMax;
+      if(!G.cheat.dashNoCd) G.dashCooldown2 = G.dashCooldownMax;
       playSound('dash');
       spawnParticles(p2.x+p2.w/2, p2.y+p2.h/2, '#88ccff', 10);
     }
@@ -4533,6 +4851,7 @@ function startGame(){
   G.lightningFlash = 0;
   // 重置冲刺
   G.dashCooldown = 0;
+  G.dashCooldown2 = 0;
   G.isDashing = false;
   G.dashTimer = 0;
   inputState.left=false; inputState.right=false; inputState.up=false; inputState.down=false;
@@ -4571,10 +4890,12 @@ function startCoopGame(){
   G.lightningTimer = 0;
   G.lightningFlash = 0;
   G.dashCooldown = 0;
+  G.dashCooldown2 = 0;
   G.isDashing = false;
   G.dashTimer = 0;
   G.coopP1Dead = false;
   G.coopP2Dead = false;
+  G.shopOpener = null; // 记录谁打开的商店（1P或2P）
   G.cheat = { infHp:false, infDmg:false, mobSea:false, alaskey:false, noSlip:false, dashNoCd:false, infGold:false };
   G.medUseCount = 0; G.usedCheat = false;
   G.bossStage = 1; G.bossStageTransition = 0; G.bossRedScreen = false; G.eliteMobSpawnTimer = 0;
