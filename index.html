@@ -1904,23 +1904,20 @@ function player2Dig(){
     const wood = G.woods[i];
     if(dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:wood.x+wood.w/2,y:wood.y+wood.h/2}) < 95){
       wood.hp--;
-      spawnParticles(wood.x+wood.w/2, wood.y+wood.h/2, '#8B4513', 5);
+      spawnParticles(wood.x+wood.w/2, wood.y+wood.h/2, '#8B4513', 6);
       playSound('dig');
       if(wood.hp<=0){
         G.woods.splice(i,1);
-        p.wood = (p.wood||0)+1;
-        showToast('2P +1 木头');
+        p.gold += 5;
+        showToast('2P ' + t('digGold'));
         updateUI();
+        // 重新长一棵
+        setTimeout(()=>{
+          if(G.running) G.woods.push({x:rand(60,WORLD_W-60),y:rand(60,WORLD_H-60),w:54,h:72,hp:3,face:'🌳'});
+        },8000);
       }
       return;
     }
-  }
-  // 没挖到东西，小概率挖到金币
-  if(Math.random() < 0.15){
-    p.gold += 2;
-    showToast('2P 挖到 2 金币!');
-    playSound('coin');
-    updateUI();
   }
 }
 
@@ -2025,7 +2022,7 @@ function playerDig(){
       if(wood.hp<=0){
         G.woods.splice(i,1);
         p.gold += 5;
-        showToast(t('digGold'));
+        showToast((G.isCoop ? '1P ' : '') + t('digGold'));
         updateUI();
         // 重新长一棵
         setTimeout(()=>{
@@ -2624,8 +2621,22 @@ function updateMobs(){
 
 function updateBosses(){
   const p = G.player;
+  // 双人模式：获取Boss最近的存活玩家
+  function getNearestAlivePlayer(bx, by){
+    let best = p, bestD = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:bx,y:by});
+    let label = '1P';
+    if(G.isCoop && G.player2 && !G.coopP2Dead){
+      const d2 = dist({x:G.player2.x+G.player2.w/2,y:G.player2.y+G.player2.h/2},{x:bx,y:by});
+      if(d2 < bestD){ best = G.player2; bestD = d2; label = '2P'; }
+    }
+    return {player: best, dist: bestD, label: label};
+  }
   for(let i=G.bosses.length-1;i>=0;i--){
     const b = G.bosses[i];
+    // 双人模式：Boss目标改为最近玩家
+    const near = getNearestAlivePlayer(b.x+b.w/2, b.y+b.h/2);
+    const targetP = near.player;
+    const targetLabel = near.label;
     if(b.hurtFlash>0) b.hurtFlash--;
     if(b.atkCd>0) b.atkCd--;
     if(b.attackAnim>0) b.attackAnim--;
@@ -2717,7 +2728,7 @@ function updateBosses(){
     } else if(b.stage>=3 && b.dashCd<=0){
       // 开始冲刺
       const cx = b.x+b.w/2, cy = b.y+b.h/2;
-      const px = p.x+p.w/2, py = p.y+p.h/2;
+      const px = targetP.x+targetP.w/2, py = targetP.y+targetP.h/2;
       const d = Math.hypot(px-cx, py-cy);
       if(d > 150){
         b.dashDir = {x:(px-cx)/d, y:(py-cy)/d};
@@ -2729,7 +2740,7 @@ function updateBosses(){
     }
 
     const cx = b.x+b.w/2, cy = b.y+b.h/2;
-    const px = p.x+p.w/2, py = p.y+p.h/2;
+    const px = targetP.x+targetP.w/2, py = targetP.y+targetP.h/2;
     const d = Math.hypot(px-cx, py-cy);
 
     // 普通移动（冲刺中不移动）
@@ -2743,9 +2754,14 @@ function updateBosses(){
     if(b.atkCd<=0 && d < b.atkRange){
       b.atkCd = b.maxAtkCd;
       b.attackAnim = 20;
-      damagePlayer(b.dmg);
+      // 双人模式：伤害最近的玩家
+      if(G.isCoop && targetP === G.player2){
+        damagePlayer2(b.dmg);
+      } else {
+        damagePlayer(b.dmg);
+      }
       G.shake = 10;
-      showToast((b.type==='finalBoss'?'😈 '+t('bossSlash'):'😌 '+t('bossKnife'))+' -'+b.dmg+'HP');
+      showToast((G.isCoop ? targetLabel + ' ' : '') + (b.type==='finalBoss'?'😈 '+t('bossSlash'):'😌 '+t('bossKnife'))+' -'+b.dmg+'HP');
     }
 
     // 第四阶段：持续召唤精英👾
@@ -2770,6 +2786,7 @@ function updateBosses(){
       } else {
         showToast(t('beatMiniBoss'));
         p.gold += 50;
+        if(G.isCoop && G.player2) G.player2.gold += 50;
         updateUI();
       }
     }
@@ -3245,10 +3262,19 @@ function updateProjectiles(){
         G.projectiles.splice(i,1);
       }
     } else {
-      // 打玩家
+      // 打玩家（双人模式：1P和2P都能被打中）
+      let projectileHit = false;
       if(rectOverlap(box,p) && p.invincible<=0){
         damagePlayer(pr.dmg);
         spawnParticles(p.x+p.w/2, p.y+p.h/2, '#00ffff', 5);
+        projectileHit = true;
+      }
+      if(G.isCoop && G.player2 && !G.coopP2Dead && rectOverlap(box,G.player2) && G.player2.invincible<=0){
+        damagePlayer2(pr.dmg);
+        spawnParticles(G.player2.x+G.player2.w/2, G.player2.y+G.player2.h/2, '#00ffff', 5);
+        projectileHit = true;
+      }
+      if(projectileHit && !pr.isGrenade){
         G.projectiles.splice(i,1);
       }
       // 也打机器人
@@ -3349,9 +3375,12 @@ function explode(x, y, radius, dmg){
       b.hp -= dmg; b.hurtFlash = 10;
     }
   });
-  // 伤害玩家
+  // 伤害玩家（双人模式：1P和2P都能被炸到）
   if(dist({x,y},{x:p.x+p.w/2,y:p.y+p.h/2}) < radius){
     damagePlayer(dmg);
+  }
+  if(G.isCoop && G.player2 && !G.coopP2Dead && dist({x,y},{x:G.player2.x+G.player2.w/2,y:G.player2.y+G.player2.h/2}) < radius){
+    damagePlayer2(dmg);
   }
   // 爆炸也能炸😝
   if(G.npcs.trouble && !G.npcs.trouble.dead && dist({x,y},{x:G.npcs.trouble.x+G.npcs.trouble.w/2,y:G.npcs.trouble.y+G.npcs.trouble.h/2}) < radius){
@@ -3388,7 +3417,7 @@ function damagePlayer(dmg){
   if(!p.bleeding && Math.random() < 0.3){
     p.bleeding = true;
     p.bleedTimer = 0;
-    showToast(t('bleeding'));
+    showToast((G.isCoop ? '1P ' : '') + t('bleeding'));
   }
   updateUI();
 }
@@ -4538,7 +4567,7 @@ function switchWeapon(){
   G.player.weapon = list[idx];
   updateUI();
   updateAimJoystick();
-  showToast(t('switchWeapon')+G.player.weapon);
+  showToast((G.isCoop ? '1P ' : '') + t('switchWeapon')+G.player.weapon);
 }
 function updateAimJoystick(){
   const aim = document.getElementById('aimJoystick');
@@ -4590,10 +4619,20 @@ document.getElementById('skipNight').addEventListener('click', ()=>{
 // 索要按钮
 document.getElementById('askBtn').addEventListener('click', ()=>{
   if(G.npcs.robot && G.npcs.robot.giveCd<=0){
-    G.player.gold += 25;
+    // 双人模式：给最近的玩家
+    let receiver = G.player;
+    let receiverLabel = '';
+    if(G.isCoop && G.player2 && !G.coopP2Dead){
+      const r = G.npcs.robot;
+      const d1 = dist({x:G.player.x+G.player.w/2,y:G.player.y+G.player.h/2},{x:r.x+r.w/2,y:r.y+r.h/2});
+      const d2 = dist({x:G.player2.x+G.player2.w/2,y:G.player2.y+G.player2.h/2},{x:r.x+r.w/2,y:r.y+r.h/2});
+      if(d2 < d1){ receiver = G.player2; receiverLabel = '2P '; }
+      else { receiverLabel = '1P '; }
+    }
+    receiver.gold += 25;
     G.npcs.robot.giveCd = 300;
     playSound('pickup');
-    showToast(t('robotGive'));
+    showToast(receiverLabel + t('robotGive'));
     updateUI();
   }
 });
@@ -4616,7 +4655,7 @@ document.getElementById('buyKnife').addEventListener('click', ()=>{
     showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('buyKnife'));
     updateUI();
     saveGame();
-  } else showToast(t('noGold'));
+  } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
 });
 document.getElementById('buyGun').addEventListener('click', ()=>{
   const buyer = getShopBuyer();
@@ -4630,7 +4669,7 @@ document.getElementById('buyGun').addEventListener('click', ()=>{
     updateUI();
     updateAimJoystick();
     saveGame();
-  } else showToast(t('noGold'));
+  } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
 });
 document.getElementById('buyGrenade').addEventListener('click', ()=>{
   const buyer = getShopBuyer();
@@ -4641,7 +4680,7 @@ document.getElementById('buyGrenade').addEventListener('click', ()=>{
     showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('buyGrenade'));
     updateUI();
     saveGame();
-  } else showToast(t('noGold'));
+  } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
 });
 document.getElementById('buyBandage').addEventListener('click', ()=>{
   const buyer = getShopBuyer();
@@ -4659,7 +4698,7 @@ document.getElementById('buyBandage').addEventListener('click', ()=>{
     showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('useBandage'));
     updateUI();
     saveGame();
-  } else showToast(t('noGold'));
+  } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
 });
 document.getElementById('buyMedkit').addEventListener('click', ()=>{
   const buyer = getShopBuyer();
@@ -4677,7 +4716,7 @@ document.getElementById('buyMedkit').addEventListener('click', ()=>{
     showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('useMedkit'));
     updateUI();
     saveGame();
-  } else showToast(t('noGold'));
+  } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
 });
 document.getElementById('closeShop').addEventListener('click', ()=>{
   document.getElementById('shopPanel').style.display='none';
