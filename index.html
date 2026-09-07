@@ -2379,6 +2379,40 @@ function update(){
     camera.y = clamp(p.y + p.h/2 - H/2, 0, Math.max(0, WORLD_H - H));
   }
 
+  // ===== 双人模式：救助倒计时 =====
+  if(G.isCoop){
+    if(G.revivingP1 && G.reviveTimerP1 > 0){
+      G.reviveTimerP1--;
+      if(G.reviveTimerP1 <= 0){
+        // 1P复活
+        G.coopP1Dead = false;
+        G.revivingP1 = false;
+        G.player.hp = Math.floor(G.player.maxHp / 2); // 半血复活
+        G.player.bleeding = false;
+        G.player.invincible = 180; // 3秒无敌
+        spawnParticles(G.player.x+G.player.w/2, G.player.y+G.player.h/2, '#ff69b4', 20);
+        playSound('unlock');
+        showToast('1P 复活了！半血');
+        updateUI();
+      }
+    }
+    if(G.revivingP2 && G.reviveTimerP2 > 0){
+      G.reviveTimerP2--;
+      if(G.reviveTimerP2 <= 0){
+        // 2P复活
+        G.coopP2Dead = false;
+        G.revivingP2 = false;
+        G.player2.hp = Math.floor(G.player2.maxHp / 2); // 半血复活
+        G.player2.bleeding = false;
+        G.player2.invincible = 180; // 3秒无敌
+        spawnParticles(G.player2.x+G.player2.w/2, G.player2.y+G.player2.h/2, '#ff69b4', 20);
+        playSound('unlock');
+        showToast('2P 复活了！半血');
+        updateUI();
+      }
+    }
+  }
+
   // ===== 双人模式：更新2P玩家 =====
   if(G.isCoop && G.player2 && !G.coopP2Dead){
     const p2 = G.player2;
@@ -4935,6 +4969,30 @@ document.getElementById('dashBtn2').addEventListener('click', ()=>{
       playSound('dash');
       spawnParticles(p2.x+p2.w/2, p2.y+p2.h/2, '#88ccff', 10);
     }
+  }
+});
+// 1P使用救助器
+document.getElementById('reviveBtn').addEventListener('click', ()=>{
+  if(!G.isCoop || !G.player || !G.player2) return;
+  if(G.coopP2Dead && (G.player.reviveKit || 0) > 0 && !G.revivingP2){
+    G.player.reviveKit--;
+    G.revivingP2 = true;
+    G.reviveTimerP2 = 420; // 7秒 * 60帧
+    playSound('unlock');
+    showToast('1P 开始救助2P！7秒后复活');
+    updateUI();
+  }
+});
+// 2P使用救助器
+document.getElementById('reviveBtn2').addEventListener('click', ()=>{
+  if(!G.isCoop || !G.player || !G.player2) return;
+  if(G.coopP1Dead && (G.player2.reviveKit || 0) > 0 && !G.revivingP1){
+    G.player2.reviveKit--;
+    G.revivingP1 = true;
+    G.reviveTimerP1 = 420; // 7秒 * 60帧
+    playSound('unlock');
+    showToast('2P 开始救助1P！7秒后复活');
+    updateUI();
   }
 });
 
