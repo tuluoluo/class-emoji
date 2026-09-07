@@ -268,6 +268,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn" id="atkBtn">👊</button>
       <button class="skillBtn" id="grenadeBtn">💣</button>
       <button class="skillBtn" id="dashBtn">💨</button>
+      <button class="skillBtn" id="reviveBtn" style="display:none;background:#ff69b4">💖</button>
     </div>
   </div>
 
@@ -298,6 +299,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn2" id="atkBtn2">👊</button>
       <button class="skillBtn2" id="grenadeBtn2">💣</button>
       <button class="skillBtn2" id="dashBtn2">💨</button>
+      <button class="skillBtn2" id="reviveBtn2" style="display:none;background:#ff69b4">💖</button>
     </div>
   </div>
 
@@ -325,6 +327,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="shopItem"><span id="shopGrenadeText">💣 手雷×3 (范围)</span><button id="buyGrenade">40金</button></div>
     <div class="shopItem"><span id="shopBandageText">🩹 绷带 (回5血+止血)</span><button id="buyBandage">30金</button></div>
     <div class="shopItem"><span id="shopMedkitText">💊 医疗包 (回满血+止血)</span><button id="buyMedkit">80金</button></div>
+    <div class="shopItem"><span id="shopReviveText">💖 救助器 (复活队友，7秒)</span><button id="buyRevive">100金</button></div>
     </div>
     <div class="shopFooter">
     <button id="merchantTalkBtn" style="width:100%;margin-bottom:8px;padding:8px;background:#9b59b6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">💬 聊聊</button>
@@ -1387,7 +1390,24 @@ function saveGame(slot){
     playerY: p.y,
     savedAt: Date.now(),
     slotName: SAVE_NAMES()[targetSlot],
+    isCoop: G.isCoop || false,
   };
+  // 双人模式：保存2P状态
+  if(G.isCoop && G.player2){
+    data.player2 = {
+      hp: G.player2.hp,
+      gold: G.player2.gold,
+      weapon: G.player2.weapon,
+      grenade: G.player2.grenade,
+      x: G.player2.x,
+      y: G.player2.y,
+      weapons: [...G.player2.weapons],
+      reviveKit: G.player2.reviveKit || 0,
+    };
+    data.player1ReviveKit = G.player.reviveKit || 0;
+    data.coopP1Dead = G.coopP1Dead || false;
+    data.coopP2Dead = G.coopP2Dead || false;
+  }
   try{
     localStorage.setItem(SAVE_KEYS[targetSlot], JSON.stringify(data));
     return true;
@@ -1468,6 +1488,64 @@ function loadGame(slot){
     G.player.grenade = d.grenade || 0;
     if(d.playerX !== undefined) G.player.x = d.playerX;
     if(d.playerY !== undefined) G.player.y = d.playerY;
+    // 双人模式：重建2P
+    if(d.isCoop){
+      G.isCoop = true;
+      G.player2 = createPlayer2();
+      if(d.player2){
+        G.player2.hp = d.player2.hp || G.player2.maxHp;
+        G.player2.gold = d.player2.gold || 0;
+        G.player2.weapon = d.player2.weapon || 'fist';
+        G.player2.grenade = d.player2.grenade || 0;
+        if(d.player2.x !== undefined) G.player2.x = d.player2.x;
+        if(d.player2.y !== undefined) G.player2.y = d.player2.y;
+        if(d.player2.weapons && d.player2.weapons.length > 0) G.player2.weapons = [...d.player2.weapons];
+        G.player2.reviveKit = d.player2.reviveKit || 0;
+      }
+      G.player.reviveKit = d.player1ReviveKit || 0;
+      G.revivingP1 = false;
+      G.revivingP2 = false;
+      G.reviveTimerP1 = 0;
+      G.reviveTimerP2 = 0;
+      G.coopP1Dead = d.coopP1Dead || false;
+      G.coopP2Dead = d.coopP2Dead || false;
+      G.shopOpener = null;
+      // 显示分屏元素
+      document.getElementById('coopDivider').style.display = 'block';
+      document.getElementById('coopLabel1').style.display = 'block';
+      document.getElementById('coopLabel2').style.display = 'block';
+      document.getElementById('topBar2').style.display = 'flex';
+      document.getElementById('joystick2').style.display = 'block';
+      document.getElementById('skillArea2').style.display = 'flex';
+      document.getElementById('joystick').style.display = 'block';
+      document.getElementById('skillArea').style.display = 'flex';
+      // 1P技能区移到左半屏
+      const skillArea = document.getElementById('skillArea');
+      if(skillArea){ skillArea.style.right = 'auto'; skillArea.style.left = '170px'; skillArea.style.bottom = '25px'; skillArea.style.alignItems = 'flex-start'; }
+      const joystick = document.getElementById('joystick');
+      if(joystick){ joystick.style.left = '30px'; joystick.style.bottom = '30px'; }
+      // 2P技能区移到右半屏
+      const skillArea2 = document.getElementById('skillArea2');
+      if(skillArea2){ skillArea2.style.left = 'auto'; skillArea2.style.right = '170px'; skillArea2.style.bottom = '25px'; skillArea2.style.alignItems = 'flex-end'; }
+      const joystick2 = document.getElementById('joystick2');
+      if(joystick2){ joystick2.style.right = '30px'; joystick2.style.bottom = '30px'; }
+      // 隐藏2P手雷按钮（初始没有）
+      const grenadeBtn2 = document.getElementById('grenadeBtn2');
+      if(grenadeBtn2) grenadeBtn2.style.display = (G.player2.grenade > 0) ? 'flex' : 'none';
+    } else {
+      G.isCoop = false;
+      G.player2 = null;
+      // 隐藏分屏元素
+      document.getElementById('coopDivider').style.display = 'none';
+      document.getElementById('coopLabel1').style.display = 'none';
+      document.getElementById('coopLabel2').style.display = 'none';
+      document.getElementById('topBar2').style.display = 'none';
+      document.getElementById('joystick2').style.display = 'none';
+      document.getElementById('skillArea2').style.display = 'none';
+      // 1P技能区恢复右下角
+      const skillArea = document.getElementById('skillArea');
+      if(skillArea){ skillArea.style.left = 'auto'; skillArea.style.right = '25px'; skillArea.style.bottom = '25px'; skillArea.style.alignItems = 'flex-end'; }
+    }
     // 重建NPC和树木
     createNPCs();
     createWoods();
@@ -1478,7 +1556,7 @@ function loadGame(slot){
     document.getElementById('endPanel').style.display = 'none';
     document.getElementById('shopPanel').style.display = 'none';
     closeDialog();
-    showToast('📂 '+SAVE_NAMES()[targetSlot]+' '+t('loadSave'), 2000);
+    showToast('📂 '+SAVE_NAMES()[targetSlot]+' '+(d.isCoop ? '[双人] ' : '')+t('loadSave'), 2000);
     return true;
   }catch(e){
     console.error('Load failed:', e);
@@ -1520,8 +1598,8 @@ function renderSaveSlots(mode){
       slotDiv.innerHTML = `
         <div class="save-slot-title"><span>📁 ${SAVE_NAMES()[i]}</span><span style="font-size:12px;color:#888">${formatSaveTime(info.savedAt)}</span></div>
         <div class="save-slot-info">
-          ${t('kills')}: ${info.killCount || 0} | ${t('gold')}: ${info.gold || 0}<br>
-          ${t('weaponLabel')}${info.currentWeapon || t('fist')} | HP: ${info.playerHp || 15}/15
+          ${info.isCoop ? '<span style="color:#e74c3c;font-weight:bold">[双人模式]</span> ' : ''}${t('kills')}: ${info.killCount || 0} | ${t('gold')}: ${info.gold || 0}<br>
+          ${t('weaponLabel')}${info.currentWeapon || t('fist')} | HP: ${info.playerHp || 15}/15${info.isCoop && info.player2 ? ' | 2P HP: ' + (info.player2.hp || 15) + '/15' : ''}
         </div>
         <div class="save-slot-actions">
           ${mode === 'continue' ? '<button class="btn-load" data-slot="'+i+'" data-action="load">'+t('loadBtn')+'</button>' : '<button class="btn-new" data-slot="'+i+'" data-action="new">'+t('overwriteNewGame')+'</button>'}
@@ -4149,6 +4227,34 @@ function updateUI(){
       grenadeBtn2.style.display = p2.grenade>0?'flex':'none';
       if(p2.grenade>0) grenadeBtn2.textContent = '💣'+p2.grenade;
     }
+    // 救助器按钮：1P救助2P（只有2P死亡且1P有救助器时显示）
+    const reviveBtn = document.getElementById('reviveBtn');
+    if(reviveBtn){
+      const canRevive = G.coopP2Dead && (p.reviveKit || 0) > 0 && !G.revivingP2;
+      reviveBtn.style.display = canRevive ? 'flex' : 'none';
+      if(canRevive) reviveBtn.textContent = '💖'+(p.reviveKit || 0);
+      if(G.revivingP2 && G.reviveTimerP2 > 0){
+        reviveBtn.style.display = 'flex';
+        reviveBtn.textContent = '⏳'+Math.ceil(G.reviveTimerP2/60);
+        reviveBtn.disabled = true;
+      } else if(reviveBtn) {
+        reviveBtn.disabled = false;
+      }
+    }
+    // 救助器按钮：2P救助1P（只有1P死亡且2P有救助器时显示）
+    const reviveBtn2 = document.getElementById('reviveBtn2');
+    if(reviveBtn2){
+      const canRevive2 = G.coopP1Dead && (p2.reviveKit || 0) > 0 && !G.revivingP1;
+      reviveBtn2.style.display = canRevive2 ? 'flex' : 'none';
+      if(canRevive2) reviveBtn2.textContent = '💖'+(p2.reviveKit || 0);
+      if(G.revivingP1 && G.reviveTimerP1 > 0){
+        reviveBtn2.style.display = 'flex';
+        reviveBtn2.textContent = '⏳'+Math.ceil(G.reviveTimerP1/60);
+        reviveBtn2.disabled = true;
+      } else if(reviveBtn2) {
+        reviveBtn2.disabled = false;
+      }
+    }
     // 2P冲刺按钮冷却
     const dashBtn2 = document.getElementById('dashBtn2');
     if(dashBtn2){
@@ -4186,6 +4292,23 @@ function updateUI(){
 // ==================== 游戏结束 ====================
 function calcRating(){
   const p = G.player;
+  // 双人模式：计算两个玩家的综合情况
+  if(G.isCoop && G.player2){
+    const hpRatio1 = p.hp / p.maxHp;
+    const hpRatio2 = G.player2.hp / G.player2.maxHp;
+    const isLowHp = (hpRatio1 <= 0.3) || (hpRatio2 <= 0.3); // 任意一个玩家残血就算残血
+    const med = (G.medUseCount || 0) + (G.medUseCount2 || 0); // 两个玩家的药物使用总和
+    
+    let rating = 'C';
+    if(med === 0 && !isLowHp) rating = 'S';
+    else if((med > 0 && med <= 2 && !isLowHp) || (med === 0 && isLowHp)) rating = 'A+';
+    else if((med > 0 && med <= 2 && isLowHp) || (med > 2 && med <= 5 && !isLowHp)) rating = 'A';
+    else if(med > 2 && med <= 5 && isLowHp) rating = 'B';
+    else if(med > 5) rating = 'C';
+    
+    return {rating: rating, isLowHp: isLowHp, medUse: med, usedCheat: G.usedCheat, isCoop: true};
+  }
+  // 单人模式
   const hpRatio = p.hp / p.maxHp;
   const isLowHp = hpRatio <= 0.3; // 30%以下算残血
   const med = G.medUseCount;
@@ -4197,7 +4320,7 @@ function calcRating(){
   else if(med > 2 && med <= 5 && isLowHp) rating = 'B';
   else if(med > 5) rating = 'C';
   
-  return {rating: rating, isLowHp: isLowHp, medUse: med, usedCheat: G.usedCheat};
+  return {rating: rating, isLowHp: isLowHp, medUse: med, usedCheat: G.usedCheat, isCoop: false};
 }
 
 function saveClearRecord(ratingInfo){
@@ -4207,9 +4330,12 @@ function saveClearRecord(ratingInfo){
       medUse: ratingInfo.medUse,
       usedCheat: ratingInfo.usedCheat,
       killCount: G.killCount,
-      date: new Date().toLocaleString()
+      date: new Date().toLocaleString(),
+      isCoop: ratingInfo.isCoop || false
     };
-    localStorage.setItem('pixelClearRecord', JSON.stringify(record));
+    // 双人模式保存到独立的通关记录key
+    const key = ratingInfo.isCoop ? 'pixelCoopClearRecord' : 'pixelClearRecord';
+    localStorage.setItem(key, JSON.stringify(record));
   }catch(e){}
 }
 
@@ -4217,17 +4343,33 @@ function showClearBadge(){
   const badge = document.getElementById('clearBadge');
   if(!badge) return;
   try{
-    const record = JSON.parse(localStorage.getItem('pixelClearRecord'));
-    if(!record){ badge.style.display = 'none'; return; }
-    const ratingClass = record.rating === 'A+' ? 'Aplus' : record.rating;
-    let html = '<div class="clear-badge '+ratingClass+'">';
-    html += '<div class="badge-title">'+t('clearRecord')+'</div>';
-    html += '<div class="badge-rating">'+record.rating+'</div>';
-    html += '<div style="font-size:12px;color:#fff;margin-top:4px">'+t('kills')+': '+record.killCount+' | '+t('medUse')+': '+record.medUse+t('times')+'</div>';
-    if(record.usedCheat){
-      html += '<div class="badge-cheat">'+t('cheatWarning')+'</div>';
+    let html = '';
+    let hasRecord = false;
+    // 单人通关记录
+    const record1 = JSON.parse(localStorage.getItem('pixelClearRecord'));
+    if(record1){
+      hasRecord = true;
+      const ratingClass = record1.rating === 'A+' ? 'Aplus' : record1.rating;
+      html += '<div class="clear-badge '+ratingClass+'" style="margin-bottom:8px">';
+      html += '<div class="badge-title">👤 '+t('clearRecord')+'</div>';
+      html += '<div class="badge-rating">'+record1.rating+'</div>';
+      html += '<div style="font-size:12px;color:#fff;margin-top:4px">'+t('kills')+': '+record1.killCount+' | '+t('medUse')+': '+record1.medUse+t('times')+'</div>';
+      if(record1.usedCheat){ html += '<div class="badge-cheat">'+t('cheatWarning')+'</div>'; }
+      html += '</div>';
     }
-    html += '</div>';
+    // 双人通关记录
+    const record2 = JSON.parse(localStorage.getItem('pixelCoopClearRecord'));
+    if(record2){
+      hasRecord = true;
+      const ratingClass = record2.rating === 'A+' ? 'Aplus' : record2.rating;
+      html += '<div class="clear-badge '+ratingClass+'">';
+      html += '<div class="badge-title">👥 双人 '+t('clearRecord')+'</div>';
+      html += '<div class="badge-rating">'+record2.rating+'</div>';
+      html += '<div style="font-size:12px;color:#fff;margin-top:4px">'+t('kills')+': '+record2.killCount+' | '+t('medUse')+': '+record2.medUse+t('times')+'</div>';
+      if(record2.usedCheat){ html += '<div class="badge-cheat">'+t('cheatWarning')+'</div>'; }
+      html += '</div>';
+    }
+    if(!hasRecord){ badge.style.display = 'none'; return; }
     badge.innerHTML = html;
     badge.style.display = 'block';
   }catch(e){ badge.style.display = 'none'; }
@@ -4241,7 +4383,9 @@ function gameOver(win){
   const panel = document.getElementById('endPanel');
   document.getElementById('endTitle').textContent = win?t('victoryTitle'):t('defeatTitle');
   
-  let statsHtml = t('killCount')+G.killCount+'<br>'+t('gold')+': '+G.player.gold+'<br>';
+  let statsHtml = t('killCount')+G.killCount+'<br>'+t('gold')+': '+G.player.gold;
+  if(G.isCoop && G.player2) statsHtml += ' | 2P '+t('gold')+': '+G.player2.gold;
+  statsHtml += '<br>';
   if(win){
     const ratingInfo = calcRating();
     saveClearRecord(ratingInfo);
@@ -4718,6 +4862,18 @@ document.getElementById('buyMedkit').addEventListener('click', ()=>{
     saveGame();
   } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
 });
+// 购买救助器
+document.getElementById('buyRevive').addEventListener('click', ()=>{
+  const buyer = getShopBuyer();
+  if(G.cheat.infGold || buyer.gold>=100){
+    if(!G.cheat.infGold) buyer.gold-=100;
+    buyer.reviveKit = (buyer.reviveKit || 0) + 1;
+    playSound('pickup');
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '💖 购买了救助器！');
+    updateUI();
+    saveGame();
+  } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
+});
 document.getElementById('closeShop').addEventListener('click', ()=>{
   document.getElementById('shopPanel').style.display='none';
   G._shopOpened = false;
@@ -4935,6 +5091,10 @@ function startCoopGame(){
   G.coopP1Dead = false;
   G.coopP2Dead = false;
   G.shopOpener = null; // 记录谁打开的商店（1P或2P）
+  G.revivingP1 = false;
+  G.revivingP2 = false;
+  G.reviveTimerP1 = 0;
+  G.reviveTimerP2 = 0;
   G.cheat = { infHp:false, infDmg:false, mobSea:false, alaskey:false, noSlip:false, dashNoCd:false, infGold:false };
   G.medUseCount = 0; G.usedCheat = false;
   G.bossStage = 1; G.bossStageTransition = 0; G.bossRedScreen = false; G.eliteMobSpawnTimer = 0;
