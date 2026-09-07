@@ -4247,7 +4247,7 @@ const joyEl = document.getElementById('joystick');
 const joyInner = document.getElementById('joyInner');
 
 function handleJoyStart(e){
-  e.preventDefault();
+  if(e.preventDefault) e.preventDefault();
   const touch = e.touches ? e.touches[0] : e;
   if(!touch || isNaN(touch.clientX)) return; // 防御无效事件
   const rect = transformRect(joyEl.getBoundingClientRect());
@@ -4259,7 +4259,7 @@ function handleJoyStart(e){
 }
 function handleJoyMove(e){
   if(!joy.active) return;
-  e.preventDefault();
+  if(e.preventDefault) e.preventDefault();
   const touch = e.touches ? e.touches[0] : e;
   if(!touch || isNaN(touch.clientX) || isNaN(touch.clientY)) return; // 防御无效事件
   const tp = transformTouchPoint(touch.clientX, touch.clientY);
@@ -4312,7 +4312,7 @@ document.addEventListener('mouseup', function(e){ if(joy.active) handleJoyEnd(e)
 const joyEl2 = document.getElementById('joystick2');
 const joyInner2 = document.getElementById('joyInner2');
 function handleJoy2Start(e){
-  e.preventDefault();
+  if(e.preventDefault) e.preventDefault();
   const touch = e.touches ? e.touches[0] : e;
   if(!touch || isNaN(touch.clientX)) return;
   const rect = transformRect(joyEl2.getBoundingClientRect());
@@ -4324,7 +4324,7 @@ function handleJoy2Start(e){
 }
 function handleJoy2Move(e){
   if(!joy2.active) return;
-  e.preventDefault();
+  if(e.preventDefault) e.preventDefault();
   const touch = e.touches ? e.touches[0] : e;
   if(!touch || isNaN(touch.clientX) || isNaN(touch.clientY)) return;
   const tp = transformTouchPoint(touch.clientX, touch.clientY);
