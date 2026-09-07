@@ -190,7 +190,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 #joyOuter2{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid rgba(0,0,0,.4)}
 #joyInner2{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:3px solid rgba(0,0,0,.5)}
 /* 2P技能区 - 右半屏左下角 */
-#skillArea2{position:absolute;left:calc(50% + 15px);bottom:25px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:15;display:none}
+#skillArea2{position:absolute;right:170px;left:auto;bottom:25px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:15;display:none}
 #skillArea2 #weaponSwitch2{width:56px;height:34px;border-radius:17px;background:rgba(255,255,255,.7);border:2px solid #333;font-size:11px;font-weight:bold;pointer-events:auto;margin-bottom:4px}
 #skillRow2{display:flex;align-items:center;gap:6px}
 .skillBtn2{width:48px;height:48px;border-radius:50%;font-size:22px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
@@ -3587,9 +3587,9 @@ function render(){
     // 双人模式UI层：小地图（在左右半屏各画一个）
     ctx.save();
     // 左半屏小地图
-    drawCoopMinimap(10, 82, W/2 - 20);
+    drawCoopMinimap(10, 82, 100);
     // 右半屏小地图
-    drawCoopMinimap(W/2 + 10, 82, W/2 - 20);
+    drawCoopMinimap(W - 110, 82, 100);
     ctx.restore();
     return;
   }
@@ -4915,12 +4915,13 @@ function startCoopGame(){
   // 确保1P摇杆显示
   document.getElementById('joystick').style.display = 'block';
   document.getElementById('skillArea').style.display = 'flex';
-  // 1P技能区移到左半屏右下角
+  // 1P技能区移到左半屏，摇杆右边
   const skillArea = document.getElementById('skillArea');
   if(skillArea){
     skillArea.style.right = 'auto';
-    skillArea.style.left = 'calc(50% - 100px)';
-    skillArea.style.alignItems = 'flex-end';
+    skillArea.style.left = '170px';
+    skillArea.style.bottom = '25px';
+    skillArea.style.alignItems = 'flex-start';
   }
   // 1P摇杆保持左下角
   const joystick = document.getElementById('joystick');
@@ -4928,13 +4929,13 @@ function startCoopGame(){
     joystick.style.left = '30px';
     joystick.style.right = 'auto';
   }
-  // 隐藏单人模式多余按钮（双人模式只用攻击和冲刺）
+  // 确保1P的挖掘、切换武器、手雷按钮在双人模式下显示
   const weaponSwitch = document.getElementById('weaponSwitch');
-  if(weaponSwitch) weaponSwitch.style.display = 'none';
+  if(weaponSwitch) weaponSwitch.style.display = '';
   const digBtn = document.getElementById('digBtn');
-  if(digBtn) digBtn.style.display = 'none';
+  if(digBtn) digBtn.style.display = '';
   const grenadeBtn = document.getElementById('grenadeBtn');
-  if(grenadeBtn) grenadeBtn.style.display = 'none';
+  if(grenadeBtn) grenadeBtn.style.display = '';
   // 隐藏单人模式的瞄准轮盘（双人模式暂不支持）
   const aimJoy = document.getElementById('aimJoystick');
   if(aimJoy) aimJoy.style.display = 'none';
