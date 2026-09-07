@@ -190,7 +190,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 #joyOuter2{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid rgba(0,0,0,.4)}
 #joyInner2{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:3px solid rgba(0,0,0,.5)}
 /* 2P技能区 - 右半屏左下角 */
-#skillArea2{position:absolute;right:170px;left:auto;bottom:25px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:15;display:none}
+#skillArea2{position:absolute;right:150px;left:auto;bottom:25px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:15;display:none}
 #skillArea2 #weaponSwitch2{width:56px;height:34px;border-radius:17px;background:rgba(255,255,255,.7);border:2px solid #333;font-size:11px;font-weight:bold;pointer-events:auto;margin-bottom:4px}
 #skillRow2{display:flex;align-items:center;gap:6px}
 .skillBtn2{width:48px;height:48px;border-radius:50%;font-size:22px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
@@ -1521,12 +1521,12 @@ function loadGame(slot){
       document.getElementById('skillArea').style.display = 'flex';
       // 1P技能区移到左半屏
       const skillArea = document.getElementById('skillArea');
-      if(skillArea){ skillArea.style.right = 'auto'; skillArea.style.left = '170px'; skillArea.style.bottom = '25px'; skillArea.style.alignItems = 'flex-start'; }
+      if(skillArea){ skillArea.style.right = 'auto'; skillArea.style.left = '150px'; skillArea.style.bottom = '25px'; skillArea.style.alignItems = 'flex-start'; }
       const joystick = document.getElementById('joystick');
       if(joystick){ joystick.style.left = '30px'; joystick.style.bottom = '30px'; }
       // 2P技能区移到右半屏
       const skillArea2 = document.getElementById('skillArea2');
-      if(skillArea2){ skillArea2.style.left = 'auto'; skillArea2.style.right = '170px'; skillArea2.style.bottom = '25px'; skillArea2.style.alignItems = 'flex-end'; }
+      if(skillArea2){ skillArea2.style.left = 'auto'; skillArea2.style.right = '150px'; skillArea2.style.bottom = '25px'; skillArea2.style.alignItems = 'flex-end'; }
       const joystick2 = document.getElementById('joystick2');
       if(joystick2){ joystick2.style.right = '30px'; joystick2.style.bottom = '30px'; }
       // 隐藏2P手雷按钮（初始没有）
@@ -2310,10 +2310,13 @@ function update(){
   checkUnlocks();
 
   // 玩家移动
+  // 安全检查：防止stun/slip卡住
+  if(p.stunTimer > 300) p.stunTimer = 0;
+  if(p.slipTimer > 300) p.slipTimer = 0;
   // 打滑摔倒：2秒不能动，旋转90度
   if(p.slipTimer > 0){
     p.slipTimer--;
-    if(p.slipTimer <= 0) p.slipRotate = false;
+    if(p.slipTimer <= 0){ p.slipRotate = false; p.slipTimer = 0; }
   }
   // 冲刺中
   else if(p.isDashing){
@@ -2322,6 +2325,7 @@ function update(){
     p.y += p.dashDir.y * 8;
     if(p.dashTimer <= 0){
       p.isDashing = false;
+      p.dashTimer = 0;
     }
     // 冲刺粒子
     if(Math.random() < 0.5){
@@ -2330,6 +2334,7 @@ function update(){
   }
   else if(p.stunTimer>0){
     p.stunTimer--;
+    if(p.stunTimer <= 0) p.stunTimer = 0;
   } else {
     let dx=0, dy=0;
     // === 键盘输入：最高优先级，直接计算，不依赖摇杆 ===
@@ -2416,17 +2421,21 @@ function update(){
   // ===== 双人模式：更新2P玩家 =====
   if(G.isCoop && G.player2 && !G.coopP2Dead){
     const p2 = G.player2;
+    // 安全检查：防止stun/slip卡住
+    if(p2.stunTimer > 300) p2.stunTimer = 0;
+    if(p2.slipTimer > 300) p2.slipTimer = 0;
     // 2P冲刺
     if(p2.isDashing){
       p2.dashTimer--;
       p2.x += p2.dashDir.x * 10;
       p2.y += p2.dashDir.y * 10;
-      if(p2.dashTimer <= 0) p2.isDashing = false;
+      if(p2.dashTimer <= 0){ p2.isDashing = false; p2.dashTimer = 0; }
     } else if(p2.stunTimer > 0){
       p2.stunTimer--;
+      if(p2.stunTimer <= 0) p2.stunTimer = 0;
     } else if(p2.slipTimer > 0){
       p2.slipTimer--;
-      if(p2.slipTimer <= 0) p2.slipRotate = false;
+      if(p2.slipTimer <= 0){ p2.slipRotate = false; p2.slipTimer = 0; }
     } else {
       let dx2=0, dy2=0;
       // 2P键盘输入
@@ -5003,11 +5012,24 @@ document.getElementById('restartBtn').addEventListener('touchstart', function(e)
 
 // ==================== 游戏主循环 ====================
 function gameLoop(){
-  // 竖屏时冻结游戏逻辑
-  if(G.state === 'playing' && !G.paused && !isPortrait){
-    update();
+  try {
+    // 竖屏时冻结游戏逻辑
+    if(G.state === 'playing' && !G.paused && !isPortrait){
+      update();
+    }
+    render();
+  } catch(e) {
+    console.error('游戏循环错误:', e);
+    // 出错时尝试重置玩家状态，避免卡死
+    if(G.player){
+      if(G.player.stunTimer > 120) G.player.stunTimer = 0;
+      if(G.player.slipTimer > 120) G.player.slipTimer = 0;
+    }
+    if(G.player2){
+      if(G.player2.stunTimer > 120) G.player2.stunTimer = 0;
+      if(G.player2.slipTimer > 120) G.player2.slipTimer = 0;
+    }
   }
-  render();
   requestAnimationFrame(gameLoop);
 }
 
