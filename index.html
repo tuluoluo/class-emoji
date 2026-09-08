@@ -2120,16 +2120,25 @@ function handlePlayerDeath(player, isP2){
     G.coopP2Dead = true;
     makeCorpse(player);
     showToast('2P 倒下了！');
-    if(G.coopP1Dead) gameOver(false);
+    // 确保1P也死亡时游戏结束
+    if(G.coopP1Dead){
+      G.running = false;
+      gameOver(false);
+    }
   } else {
     if(G.isCoop){
       if(G.coopP1Dead) return; // 防止重复处理
       G.coopP1Dead = true;
       makeCorpse(player);
       showToast('1P 倒下了！');
-      if(G.coopP2Dead) gameOver(false);
+      // 确保2P也死亡时游戏结束
+      if(G.coopP2Dead){
+        G.running = false;
+        gameOver(false);
+      }
     } else {
       makeCorpse(player);
+      G.running = false;
       gameOver(false);
     }
   }
@@ -2138,6 +2147,12 @@ function handlePlayerDeath(player, isP2){
 function update(){
   if(!G.running) return;
   const p = G.player;
+  // 双人模式：两人都死亡时确保游戏结束
+  if(G.isCoop && G.coopP1Dead && G.coopP2Dead){
+    G.running = false;
+    gameOver(false);
+    return;
+  }
 
   // 自动保存
   autoSaveTimer++;
@@ -2310,6 +2325,10 @@ function update(){
   checkUnlocks();
 
   // 玩家移动
+  // 双人模式：1P死亡后不能移动
+  if(G.isCoop && G.coopP1Dead){
+    // 1P已死亡，跳过移动逻辑
+  } else {
   // 安全检查：防止stun/slip卡住
   if(p.stunTimer > 300) p.stunTimer = 0;
   if(p.slipTimer > 300) p.slipTimer = 0;
@@ -2372,11 +2391,14 @@ function update(){
     }
   }
 
+  } // 1P死亡检查闭合
   // 冲刺冷却
   if(G.dashCooldown > 0) G.dashCooldown--;
   if(G.dashCooldown2 > 0) G.dashCooldown2--; // 2P独立冲刺冷却
-  p.x = clamp(p.x, 0, WORLD_W-p.w);
-  p.y = clamp(p.y, 0, WORLD_H-p.h);
+  if(!(G.isCoop && G.coopP1Dead)){
+    p.x = clamp(p.x, 0, WORLD_W-p.w);
+    p.y = clamp(p.y, 0, WORLD_H-p.h);
+  }
 
   // 相机跟随玩家（单人模式）
   if(!G.isCoop){
@@ -2485,7 +2507,10 @@ function update(){
           makeCorpse(p2);
           showToast('2P 倒下了！');
           // 检查是否两人都死亡
-          if(G.coopP1Dead) gameOver(false);
+          if(G.coopP1Dead){
+            G.running = false;
+            gameOver(false);
+          }
         }
       }
     }
