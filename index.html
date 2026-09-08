@@ -2594,72 +2594,73 @@ function update(){
   // ===== 双人模式：更新2P玩家 =====
   if(G.isCoop && G.player2 && !G.coopP2Dead){
 
-      // 光线武器持续伤害（2P）
-      if(p2.laserActive && p2.laserTimer > 0){
-        p2.laserTimer--;
-        if(p2.laserTimer <= 0){
-          p2.laserActive = false;
-          p2.laserTarget = null;
-          p2.laserTargets = null;
-        } else {
-          const px2 = p2.x + p2.w/2, py2 = p2.y + p2.h/2;
-          const dmgPerFrame2 = p2.currentWeapon === 'spreadLaser' ? 7/60 : 5/60;
-          for(let mi=G.mobs.length-1;mi>=0;mi--){
-            const m = G.mobs[mi];
-            const mx = m.x + m.w/2, my = m.y + m.h/2;
-            let onLaser = false;
-            if(p2.currentWeapon === 'spreadLaser' && p2.laserTargets){
-              for(let ti=0;ti<p2.laserTargets.length;ti++){
-                if(pointToLineDist(mx, my, px2, py2, p2.laserTargets[ti].x, p2.laserTargets[ti].y) < 30){
-                  onLaser = true; break;
-                }
-              }
-            } else if(p2.laserTarget){
-              if(pointToLineDist(mx, my, px2, py2, p2.laserTarget.x, p2.laserTarget.y) < 30){
-                onLaser = true;
-              }
-            }
-            if(onLaser){
-              m.hp -= dmgPerFrame2;
-              m.hurtFlash = 3;
-              if(m.hp <= 0){
-                makeCorpse(m);
-                spawnParticles(mx, my, '#888', 8);
-                G.mobs.splice(mi,1);
-                G.killCount++;
-                playSound('kill');
-                if(Math.random()<0.35) p2.gold += 3;
-                updateUI();
-              }
-            }
-          }
-          for(let bi=G.bosses.length-1;bi>=0;bi--){
-            const b = G.bosses[bi];
-            const bx = b.x + b.w/2, by = b.y + b.h/2;
-            let onLaser = false;
-            if(p2.currentWeapon === 'spreadLaser' && p2.laserTargets){
-              for(let ti=0;ti<p2.laserTargets.length;ti++){
-                if(pointToLineDist(bx, by, px2, py2, p2.laserTargets[ti].x, p2.laserTargets[ti].y) < 50){
-                  onLaser = true; break;
-                }
-              }
-            } else if(p2.laserTarget){
-              if(pointToLineDist(bx, by, px2, py2, p2.laserTarget.x, p2.laserTarget.y) < 50){
-                onLaser = true;
-              }
-            }
-            if(onLaser){
-              b.hp -= dmgPerFrame2;
-              b.hurtFlash = 3;
-            }
-          }
-        }
-      }
-
     const p2 = G.player2;
     // 安全检查：防止stun/slip卡住
     if(p2.stunTimer > 300) p2.stunTimer = 0;
     if(p2.slipTimer > 300) p2.slipTimer = 0;
+    // 光线武器持续伤害（2P）
+    if(p2.laserActive && p2.laserTimer > 0){
+      p2.laserTimer--;
+      if(p2.laserTimer <= 0){
+        p2.laserActive = false;
+        p2.laserTarget = null;
+        p2.laserTargets = null;
+      } else {
+        const px2 = p2.x + p2.w/2, py2 = p2.y + p2.h/2;
+        const dmgPerFrame2 = p2.currentWeapon === 'spreadLaser' ? 7/60 : 5/60;
+        for(let mi=G.mobs.length-1;mi>=0;mi--){
+          const m = G.mobs[mi];
+          const mx = m.x + m.w/2, my = m.y + m.h/2;
+          let onLaser = false;
+          if(p2.currentWeapon === 'spreadLaser' && p2.laserTargets){
+            for(let ti=0;ti<p2.laserTargets.length;ti++){
+              if(pointToLineDist(mx, my, px2, py2, p2.laserTargets[ti].x, p2.laserTargets[ti].y) < 30){
+                onLaser = true; break;
+              }
+            }
+          } else if(p2.laserTarget){
+            if(pointToLineDist(mx, my, px2, py2, p2.laserTarget.x, p2.laserTarget.y) < 30){
+              onLaser = true;
+            }
+          }
+          if(onLaser){
+            m.hp -= dmgPerFrame2;
+            m.hurtFlash = 3;
+            if(m.hp <= 0){
+              makeCorpse(m);
+              spawnParticles(mx, my, '#888', 8);
+              G.mobs.splice(mi,1);
+              G.killCount++;
+              playSound('kill');
+              if(Math.random()<0.35) p2.gold += 3;
+              updateUI();
+            }
+          }
+        }
+        for(let bi=G.bosses.length-1;bi>=0;bi--){
+          const b = G.bosses[bi];
+          const bx = b.x + b.w/2, by = b.y + b.h/2;
+          let onLaser = false;
+          if(p2.currentWeapon === 'spreadLaser' && p2.laserTargets){
+            for(let ti=0;ti<p2.laserTargets.length;ti++){
+              if(pointToLineDist(bx, by, px2, py2, p2.laserTargets[ti].x, p2.laserTargets[ti].y) < 50){
+                onLaser = true; break;
+              }
+            }
+          } else if(p2.laserTarget){
+            if(pointToLineDist(bx, by, px2, py2, p2.laserTarget.x, p2.laserTarget.y) < 50){
+              onLaser = true;
+            }
+          }
+          if(onLaser){
+            b.hp -= dmgPerFrame2;
+            b.hurtFlash = 3;
+          }
+        }
+      }
+    }
+
+
     // 2P冲刺
     if(p2.isDashing){
       p2.dashTimer--;
