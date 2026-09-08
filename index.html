@@ -5179,7 +5179,7 @@ function startGame(){
   G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
   G.fireGrounds = [];
   G.miniBossSpawned = false; G.finalBossSpawned = false;
-  G.medUseCount = 0; G.usedCheat = false;
+  G.medUseCount = 0; G.medUseCount2 = 0; G.usedCheat = false;
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
   G.weapons = ['fist']; G.atkCooldown = 0; G.atkCooldown2 = 0; G.shake = 0;
   G._shopOpened = false;
@@ -5243,7 +5243,7 @@ function startCoopGame(){
   G.reviveTimerP1 = 0;
   G.reviveTimerP2 = 0;
   G.cheat = { infHp:false, infDmg:false, mobSea:false, alaskey:false, noSlip:false, dashNoCd:false, infGold:false };
-  G.medUseCount = 0; G.usedCheat = false;
+  G.medUseCount = 0; G.medUseCount2 = 0; G.usedCheat = false;
   G.bossStage = 1; G.bossStageTransition = 0; G.bossRedScreen = false; G.eliteMobSpawnTimer = 0;
   inputState.left=false; inputState.right=false; inputState.up=false; inputState.down=false;
   G.player = createPlayer();
@@ -5294,6 +5294,7 @@ function startCoopGame(){
   document.getElementById('endPanel').style.display = 'none';
   document.getElementById('shopPanel').style.display = 'none';
   closeDialog();
+  updateUI(); // 关键：更新UI，确保血量显示正确（重置为15）
   showToast('👥 双人合作模式开始！1P:WASD+J  2P:方向键+1', 4000);
 }
 
