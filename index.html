@@ -1744,6 +1744,18 @@ function createPlayer(){
   };
 }
 
+
+// 计算点到线段的距离
+function pointToLineDist(px, py, x1, y1, x2, y2){
+  const A = px - x1, B = py - y1, C = x2 - x1, D = y2 - y1;
+  const dot = A*C + B*D;
+  const lenSq = C*C + D*D;
+  let param = lenSq !== 0 ? dot/lenSq : -1;
+  param = Math.max(0, Math.min(1, param));
+  const xx = x1 + param*C, yy = y1 + param*D;
+  return Math.hypot(px-xx, py-yy);
+}
+
 function createPlayer2(){
   const p = createPlayer();
   p.face = '😠';
@@ -2357,6 +2369,71 @@ function update(){
     }
   }
 
+
+    // 光线武器持续伤害（1P）
+    if(p.laserActive && p.laserTimer > 0){
+      p.laserTimer--;
+      if(p.laserTimer <= 0){
+        p.laserActive = false;
+        p.laserTarget = null;
+        p.laserTargets = null;
+      } else {
+        const px = p.x + p.w/2, py = p.y + p.h/2;
+        const dmgPerFrame = p.currentWeapon === 'spreadLaser' ? 7/60 : 5/60;
+        // 检查怪物是否在光线上
+        for(let mi=G.mobs.length-1;mi>=0;mi--){
+          const m = G.mobs[mi];
+          const mx = m.x + m.w/2, my = m.y + m.h/2;
+          let onLaser = false;
+          if(p.currentWeapon === 'spreadLaser' && p.laserTargets){
+            for(let ti=0;ti<p.laserTargets.length;ti++){
+              if(pointToLineDist(mx, my, px, py, p.laserTargets[ti].x, p.laserTargets[ti].y) < 30){
+                onLaser = true; break;
+              }
+            }
+          } else if(p.laserTarget){
+            if(pointToLineDist(mx, my, px, py, p.laserTarget.x, p.laserTarget.y) < 30){
+              onLaser = true;
+            }
+          }
+          if(onLaser){
+            m.hp -= dmgPerFrame;
+            m.hurtFlash = 3;
+            if(m.hp <= 0){
+              makeCorpse(m);
+              spawnParticles(mx, my, '#888', 8);
+              G.mobs.splice(mi,1);
+              G.killCount++;
+              playSound('kill');
+              if(Math.random()<0.35) p.gold += 3;
+              updateUI();
+            }
+          }
+        }
+        // 检查Boss是否在光线上
+        for(let bi=G.bosses.length-1;bi>=0;bi--){
+          const b = G.bosses[bi];
+          const bx = b.x + b.w/2, by = b.y + b.h/2;
+          let onLaser = false;
+          if(p.currentWeapon === 'spreadLaser' && p.laserTargets){
+            for(let ti=0;ti<p.laserTargets.length;ti++){
+              if(pointToLineDist(bx, by, px, py, p.laserTargets[ti].x, p.laserTargets[ti].y) < 50){
+                onLaser = true; break;
+              }
+            }
+          } else if(p.laserTarget){
+            if(pointToLineDist(bx, by, px, py, p.laserTarget.x, p.laserTarget.y) < 50){
+              onLaser = true;
+            }
+          }
+          if(onLaser){
+            b.hp -= dmgPerFrame;
+            b.hurtFlash = 3;
+          }
+        }
+      }
+    }
+
   // 大太阳：状态下降（速度降低，通过在移动时处理）
   // 这里只处理玩家的缓慢掉血（中暑）
   if(G.weather === 'hot' && !G.cheat.infHp){
@@ -2516,6 +2593,69 @@ function update(){
 
   // ===== 双人模式：更新2P玩家 =====
   if(G.isCoop && G.player2 && !G.coopP2Dead){
+
+      // 光线武器持续伤害（2P）
+      if(p2.laserActive && p2.laserTimer > 0){
+        p2.laserTimer--;
+        if(p2.laserTimer <= 0){
+          p2.laserActive = false;
+          p2.laserTarget = null;
+          p2.laserTargets = null;
+        } else {
+          const px2 = p2.x + p2.w/2, py2 = p2.y + p2.h/2;
+          const dmgPerFrame2 = p2.currentWeapon === 'spreadLaser' ? 7/60 : 5/60;
+          for(let mi=G.mobs.length-1;mi>=0;mi--){
+            const m = G.mobs[mi];
+            const mx = m.x + m.w/2, my = m.y + m.h/2;
+            let onLaser = false;
+            if(p2.currentWeapon === 'spreadLaser' && p2.laserTargets){
+              for(let ti=0;ti<p2.laserTargets.length;ti++){
+                if(pointToLineDist(mx, my, px2, py2, p2.laserTargets[ti].x, p2.laserTargets[ti].y) < 30){
+                  onLaser = true; break;
+                }
+              }
+            } else if(p2.laserTarget){
+              if(pointToLineDist(mx, my, px2, py2, p2.laserTarget.x, p2.laserTarget.y) < 30){
+                onLaser = true;
+              }
+            }
+            if(onLaser){
+              m.hp -= dmgPerFrame2;
+              m.hurtFlash = 3;
+              if(m.hp <= 0){
+                makeCorpse(m);
+                spawnParticles(mx, my, '#888', 8);
+                G.mobs.splice(mi,1);
+                G.killCount++;
+                playSound('kill');
+                if(Math.random()<0.35) p2.gold += 3;
+                updateUI();
+              }
+            }
+          }
+          for(let bi=G.bosses.length-1;bi>=0;bi--){
+            const b = G.bosses[bi];
+            const bx = b.x + b.w/2, by = b.y + b.h/2;
+            let onLaser = false;
+            if(p2.currentWeapon === 'spreadLaser' && p2.laserTargets){
+              for(let ti=0;ti<p2.laserTargets.length;ti++){
+                if(pointToLineDist(bx, by, px2, py2, p2.laserTargets[ti].x, p2.laserTargets[ti].y) < 50){
+                  onLaser = true; break;
+                }
+              }
+            } else if(p2.laserTarget){
+              if(pointToLineDist(bx, by, px2, py2, p2.laserTarget.x, p2.laserTarget.y) < 50){
+                onLaser = true;
+              }
+            }
+            if(onLaser){
+              b.hp -= dmgPerFrame2;
+              b.hurtFlash = 3;
+            }
+          }
+        }
+      }
+
     const p2 = G.player2;
     // 安全检查：防止stun/slip卡住
     if(p2.stunTimer > 300) p2.stunTimer = 0;
@@ -3794,6 +3934,39 @@ function render(){
       ctx.fill();
       ctx.globalAlpha = 1;
     });
+
+    // 光线渲染（1P）
+    if(G.player && G.player.laserActive){
+      const px = G.player.x + G.player.w/2, py = G.player.y + G.player.h/2;
+      const isSpread = G.player.currentWeapon === 'spreadLaser';
+      const color = isSpread ? 'rgba(100,255,255,' : 'rgba(255,80,80,';
+      const targets = isSpread ? (G.player.laserTargets || []) : (G.player.laserTarget ? [G.player.laserTarget] : []);
+      for(let ti=0;ti<targets.length;ti++){
+        const t = targets[ti];
+        // 外发光
+        ctx.strokeStyle = color + '0.3)';
+        ctx.lineWidth = 20;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(t.x, t.y);
+        ctx.stroke();
+        // 核心光柱
+        ctx.strokeStyle = color + '0.9)';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(t.x, t.y);
+        ctx.stroke();
+        // 白色核心
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(t.x, t.y);
+        ctx.stroke();
+      }
+    }
+
     G.particles.forEach(pt=>{
       ctx.globalAlpha = clamp(pt.life/20, 0, 1);
       ctx.fillStyle = pt.color;
@@ -3929,6 +4102,35 @@ function render(){
   });
 
   // 粒子
+
+  // 光线渲染（单人模式）
+  if(G.player && G.player.laserActive){
+    const px = G.player.x + G.player.w/2, py = G.player.y + G.player.h/2;
+    const isSpread = G.player.currentWeapon === 'spreadLaser';
+    const color = isSpread ? 'rgba(100,255,255,' : 'rgba(255,80,80,';
+    const targets = isSpread ? (G.player.laserTargets || []) : (G.player.laserTarget ? [G.player.laserTarget] : []);
+    for(let ti=0;ti<targets.length;ti++){
+      const t = targets[ti];
+      ctx.strokeStyle = color + '0.3)';
+      ctx.lineWidth = 20;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(t.x, t.y);
+      ctx.stroke();
+      ctx.strokeStyle = color + '0.9)';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(t.x, t.y);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(t.x, t.y);
+      ctx.stroke();
+    }
+  }
   G.particles.forEach(pt=>{
     ctx.globalAlpha = clamp(pt.life/20, 0, 1);
     ctx.fillStyle = pt.color;
@@ -4394,6 +4596,13 @@ function updateUI(){
     // 2P击杀数（全局合并统计）
     const killText2 = document.getElementById('killText2');
     if(killText2) killText2.textContent = t('kills')+':'+G.killCount;
+
+      // 2P护盾图标
+      if(G.gotShield){
+        const shield2 = document.getElementById('shieldIcon2');
+        if(shield2) shield2.style.display = 'block';
+      }
+
     // 2P手雷按钮
     const grenadeBtn2 = document.getElementById('grenadeBtn2');
     if(grenadeBtn2){
