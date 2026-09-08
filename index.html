@@ -340,6 +340,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <h2 id="endTitle">游戏结束</h2>
     <p id="endStats"></p>
     <button id="restartBtn">重新开始</button>
+    <button id="endMenuBtn" style="margin-left:10px;background:#3498db">返回主菜单</button>
   </div>
 
   <!-- 提示 -->
@@ -1623,11 +1624,13 @@ function renderSaveSlots(mode){
           if(!loadGame(i)){ showToast(t('loadFail')); }
         } else {
           if(confirm(t('confirmOverwrite')+SAVE_NAMES()[i]+t('confirmOverwrite2'))){
-            currentSaveSlot = i; startGame();
+            currentSaveSlot = i;
+            if(mode === 'coop') startCoopGame(); else startGame();
           }
         }
       } else {
-        currentSaveSlot = i; startGame();
+        currentSaveSlot = i;
+        if(mode === 'coop') startCoopGame(); else startGame();
       }
     });
   }
@@ -1645,7 +1648,7 @@ function renderSaveSlots(mode){
           if(!confirm(t('confirmOverwrite')+SAVE_NAMES()[slot]+t('confirmOverwrite2'))) return;
         }
         currentSaveSlot = slot;
-        startGame();
+        if(mode === 'coop') startCoopGame(); else startGame();
       } else if(action === 'delete'){
         if(confirm(t('confirmDelete')+SAVE_NAMES()[slot]+t('confirmDelete2'))){
           clearSave(slot);
@@ -2123,6 +2126,7 @@ function handlePlayerDeath(player, isP2){
     // 确保1P也死亡时游戏结束
     if(G.coopP1Dead){
       G.running = false;
+      G.state = 'gameover';
       gameOver(false);
     }
   } else {
@@ -2134,11 +2138,13 @@ function handlePlayerDeath(player, isP2){
       // 确保2P也死亡时游戏结束
       if(G.coopP2Dead){
         G.running = false;
+        G.state = 'gameover';
         gameOver(false);
       }
     } else {
       makeCorpse(player);
       G.running = false;
+      G.state = 'gameover';
       gameOver(false);
     }
   }
@@ -2656,13 +2662,20 @@ function updateMobs(){
     const cx = m.x+m.w/2, cy = m.y+m.h/2;
     let px = p.x+p.w/2, py = p.y+p.h/2;
     let targetPlayer = p;
-    let d = Math.hypot(px-cx, py-cy);
+    let d = Infinity;
+    // 双人模式：1P死亡后不追击1P
+    const p1Alive = !(G.isCoop && G.coopP1Dead);
+    if(p1Alive){
+      d = Math.hypot(px-cx, py-cy);
+    }
     // 双人模式：比较2P距离，追踪更近的玩家
     if(G.isCoop && G.player2 && !G.coopP2Dead){
       const p2x = G.player2.x+G.player2.w/2, p2y = G.player2.y+G.player2.h/2;
       const d2 = Math.hypot(p2x-cx, p2y-cy);
-      if(d2 < d){ px = p2x; py = p2y; d = d2; targetPlayer = G.player2; }
+      if(!p1Alive || d2 < d){ px = p2x; py = p2y; d = d2; targetPlayer = G.player2; }
     }
+    // 如果两个玩家都死亡了，怪物原地不动
+    if(d === Infinity){ continue; }
 
     // 😎音乐吸引怪物：如果游离乐子人在播放音乐，怪物会被吸引过去
     const wn = G.npcs.wanderer;
@@ -4459,9 +4472,14 @@ function showClearBadge(){
 
 function gameOver(win){
   G.running = false;
+  G.state = 'gameover'; // 关键：设置游戏状态为gameover，停止游戏循环
   stopWandererMusic(); // 停止游离乐子人音乐
-  saveGame(); // 游戏结束时保存进度
-  if(!win){ playVoice('death', 'male'); } // 😡 男声死亡"饿啊～"
+  try {
+    saveGame(); // 游戏结束时保存进度
+  } catch(e) { console.error('保存失败:', e); }
+  try {
+    if(!win){ playVoice('death', 'male'); } // 😡 男声死亡"饿啊～"
+  } catch(e) { console.error('语音失败:', e); }
   const panel = document.getElementById('endPanel');
   document.getElementById('endTitle').textContent = win?t('victoryTitle'):t('defeatTitle');
   
@@ -4491,8 +4509,18 @@ function gameOver(win){
 
 function restart(){
   playSound('click');
-  startGame();
+  if(G.isCoop) startCoopGame(); else startGame();
 }
+// 游戏结束面板返回主菜单
+document.addEventListener('DOMContentLoaded', ()=>{
+  const endMenuBtn = document.getElementById('endMenuBtn');
+  if(endMenuBtn){
+    endMenuBtn.addEventListener('click', ()=>{
+      playSound('click');
+      exitToMenu();
+    });
+  }
+});
 
 // ==================== 输入处理 ====================
 const joy = {active:false, dx:0, dy:0, centerX:0, centerY:0, touchId:null};
@@ -5315,7 +5343,7 @@ document.getElementById('playBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click'); openSaveSelect('new');
 });
 document.getElementById('coopBtn').addEventListener('click', ()=>{
-  initAudio(); playSound('click'); startCoopGame();
+  initAudio(); playSound('click'); openSaveSelect('coop');
 });
 document.getElementById('continueBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click'); openSaveSelect('continue');
