@@ -2958,16 +2958,26 @@ function updateNPCs(){
   const p = G.player;
   // 双人模式：获取最近的玩家（用于NPC交互判定）
   function getNearestPlayer(nx, ny){
-    let best = p, bestD = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:nx,y:ny});
+    // 1P死亡后不被追击
+    let best = null, bestD = Infinity;
+    if(!(G.isCoop && G.coopP1Dead)){
+      best = p;
+      bestD = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:nx,y:ny});
+    }
     if(G.isCoop && G.player2 && !G.coopP2Dead){
       const d2 = dist({x:G.player2.x+G.player2.w/2,y:G.player2.y+G.player2.h/2},{x:nx,y:ny});
       if(d2 < bestD){ best = G.player2; bestD = d2; }
     }
+    // 如果两个玩家都死亡了，返回1P（避免null错误）
+    if(!best) best = p;
     return {player: best, dist: bestD};
   }
   // 检查任意玩家是否在范围内
   function anyPlayerNear(nx, ny, range){
-    if(dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:nx,y:ny}) < range) return true;
+    // 1P死亡后不被检测
+    if(!(G.isCoop && G.coopP1Dead)){
+      if(dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:nx,y:ny}) < range) return true;
+    }
     if(G.isCoop && G.player2 && !G.coopP2Dead){
       if(dist({x:G.player2.x+G.player2.w/2,y:G.player2.y+G.player2.h/2},{x:nx,y:ny}) < range) return true;
     }
@@ -4165,6 +4175,8 @@ function drawBossHpBar(){
 function drawPlayer2(){
   const p = G.player2;
   if(!p) return;
+  // 2P死亡后只显示尸体，不绘制玩家本身
+  if(G.coopP2Dead) return;
   ctx.save();
   ctx.translate(p.x+p.w/2, p.y+p.h/2);
   if((p.stunRotate && p.stunTimer>0) || (p.slipRotate && p.slipTimer>0)){
@@ -4190,6 +4202,8 @@ function drawPlayer2(){
 
 function drawPlayer(){
   const p = G.player;
+  // 双人模式：1P死亡后只显示尸体，不绘制玩家本身
+  if(G.isCoop && G.coopP1Dead) return;
   ctx.save();
   ctx.translate(p.x+p.w/2, p.y+p.h/2);
 
