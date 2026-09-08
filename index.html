@@ -259,6 +259,11 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div id="aimOuter"></div>
     <div id="aimInner"></div>
   </div>
+  <div id="aimJoystick2" style="display:none;">
+    <div id="aimOuter2"></div>
+    <div id="aimInner2"></div>
+  </div>
+
 
   <!-- 技能区 -->
   <div id="skillArea">
@@ -1525,6 +1530,8 @@ function loadGame(slot){
       document.getElementById('coopLabel2').style.display = 'block';
       document.getElementById('topBar2').style.display = 'flex';
       document.getElementById('joystick2').style.display = 'block';
+  const aimJoy2El = document.getElementById('aimJoystick2');
+  if(aimJoy2El) aimJoy2El.style.display = 'block';
       document.getElementById('skillArea2').style.display = 'flex';
       document.getElementById('joystick').style.display = 'block';
       document.getElementById('skillArea').style.display = 'flex';
@@ -1550,6 +1557,8 @@ function loadGame(slot){
       document.getElementById('coopLabel2').style.display = 'none';
       document.getElementById('topBar2').style.display = 'none';
       document.getElementById('joystick2').style.display = 'none';
+  const aimJoy2ElHide = document.getElementById('aimJoystick2');
+  if(aimJoy2ElHide) aimJoy2ElHide.style.display = 'none';
       document.getElementById('skillArea2').style.display = 'none';
       // 1P技能区恢复右下角
       const skillArea = document.getElementById('skillArea');
@@ -2004,22 +2013,11 @@ function player2Attack(){
     if(p.laserActive) return; // 已经在发射光线
     p.laserActive = true;
     p.laserTimer = 180; // 持续3秒
-    // 瞄准最近的怪物
-    let nearest = null, nearestD = Infinity;
+    // 使用瞄准轮盘指向的方向
     const px = p.x+p.w/2, py = p.y+p.h/2;
-    G.mobs.forEach(m=>{
-      const d = dist({x:px,y:py},{x:m.x+m.w/2,y:m.y+m.h/2});
-      if(d < nearestD && d < 400){ nearest = m; nearestD = d; }
-    });
-    G.bosses.forEach(b=>{
-      const d = dist({x:px,y:py},{x:b.x+b.w/2,y:b.y+b.h/2});
-      if(d < nearestD && d < 400){ nearest = b; nearestD = d; }
-    });
-    if(nearest){
-      p.laserTarget = {x: nearest.x+nearest.w/2, y: nearest.y+nearest.h/2};
-    } else {
-      p.laserTarget = {x: px + p.facing*300, y: py};
-    }
+    const aimX = p.aimX || p.facing;
+    const aimY = p.aimY || 0;
+    p.laserTarget = {x: px + aimX*400, y: py + aimY*400};
     playSound('unlock');
     G.atkCooldown2 = 60; // 1秒冷却
   }
@@ -2030,26 +2028,15 @@ function player2Attack(){
     p.laserTimer = 180; // 持续3秒
     p.laserTargets = [];
     const px = p.x+p.w/2, py = p.y+p.h/2;
-    // 找三个最近的目标
-    let targets = [];
-    G.mobs.forEach(m=>{
-      const d = dist({x:px,y:py},{x:m.x+m.w/2,y:m.y+m.h/2});
-      if(d < 400) targets.push({x:m.x+m.w/2, y:m.y+m.h/2, d:d});
-    });
-    G.bosses.forEach(b=>{
-      const d = dist({x:px,y:py},{x:b.x+b.w/2,y:b.y+b.h/2});
-      if(d < 400) targets.push({x:b.x+b.w/2, y:b.y+b.h/2, d:d});
-    });
-    targets.sort((a,b)=>a.d-b.d);
-    for(let i=0;i<Math.min(3,targets.length);i++){
-      p.laserTargets.push({x:targets[i].x, y:targets[i].y});
-    }
-    // 如果目标不足3个，用默认方向补充
-    while(p.laserTargets.length < 3){
-      const angle = (p.laserTargets.length - 1) * 0.3 - 0.3;
+    // 使用瞄准轮盘指向的方向，三条光线扇形展开
+    const aimX = p.aimX || p.facing;
+    const aimY = p.aimY || 0;
+    const baseAngle = Math.atan2(aimY, aimX);
+    for(let i=0;i<3;i++){
+      const angle = baseAngle + (i-1)*0.25; // 扇形展开
       p.laserTargets.push({
-        x: px + Math.cos(angle) * p.facing * 300,
-        y: py + Math.sin(angle) * 300
+        x: px + Math.cos(angle)*400,
+        y: py + Math.sin(angle)*400
       });
     }
     playSound('unlock');
@@ -2685,6 +2672,12 @@ function update(){
         const jx2 = isNaN(joy2.dx)?0:joy2.dx;
         const jy2 = isNaN(joy2.dy)?0:joy2.dy;
         dx2 = jx2; dy2 = jy2;
+      }
+      // 移动时取消光线
+      if((dx2 !== 0 || dy2 !== 0) && p2.laserActive){
+        p2.laserActive = false;
+        p2.laserTarget = null;
+        p2.laserTargets = null;
       }
       const len2 = Math.hypot(dx2,dy2);
       if(len2>0 && !isNaN(len2)){
@@ -3940,7 +3933,7 @@ function render(){
     if(G.player && G.player.laserActive){
       const px = G.player.x + G.player.w/2, py = G.player.y + G.player.h/2;
       const isSpread = G.player.currentWeapon === 'spreadLaser';
-      const color = isSpread ? 'rgba(100,255,255,' : 'rgba(255,80,80,';
+      const color = isSpread ? 'rgba(255,220,100,' : 'rgba(255,200,50,';
       const targets = isSpread ? (G.player.laserTargets || []) : (G.player.laserTarget ? [G.player.laserTarget] : []);
       for(let ti=0;ti<targets.length;ti++){
         const t = targets[ti];
@@ -4108,7 +4101,7 @@ function render(){
   if(G.player && G.player.laserActive){
     const px = G.player.x + G.player.w/2, py = G.player.y + G.player.h/2;
     const isSpread = G.player.currentWeapon === 'spreadLaser';
-    const color = isSpread ? 'rgba(100,255,255,' : 'rgba(255,80,80,';
+    const color = isSpread ? 'rgba(255,220,100,' : 'rgba(255,200,50,';
     const targets = isSpread ? (G.player.laserTargets || []) : (G.player.laserTarget ? [G.player.laserTarget] : []);
     for(let ti=0;ti<targets.length;ti++){
       const t = targets[ti];
@@ -4989,6 +4982,54 @@ aimJoyEl.addEventListener('mousedown', handleAimStart);
 document.addEventListener('mousemove', e=>{if(aimJoy.active)handleAimMove(e)});
 document.addEventListener('mouseup', function(e){ if(aimJoy.active) handleAimEnd(e); });
 
+// ===== 2P瞄准轮盘 =====
+const aimJoy2 = {active:false, dx:0, dy:0, centerX:0, centerY:0};
+const aimJoyEl2 = document.getElementById('aimJoystick2');
+const aimJoyInner2 = document.getElementById('aimInner2');
+function handleAim2Start(e){
+  e.preventDefault();
+  const rect = transformRect(aimJoyEl2.getBoundingClientRect());
+  aimJoy2.active = true;
+  aimJoy2.centerX = rect.left + rect.width/2;
+  aimJoy2.centerY = rect.top + rect.height/2;
+  handleAim2Move(e);
+}
+function handleAim2Move(e){
+  if(!aimJoy2.active) return;
+  e.preventDefault();
+  const tp = getTouchPos(e);
+  if(!tp) return;
+  let dx = tp.x - aimJoy2.centerX;
+  let dy = tp.y - aimJoy2.centerY;
+  const maxR = 35;
+  const len = Math.hypot(dx,dy);
+  if(len > maxR){ dx = dx/len*maxR; dy = dy/len*maxR; }
+  aimJoy2.dx = dx; aimJoy2.dy = dy;
+  aimJoyInner2.style.left = (30+dx)+'px';
+  aimJoyInner2.style.top = (30+dy)+'px';
+  // 更新2P瞄准方向
+  if(G.player2){
+    const alen = Math.hypot(dx,dy);
+    if(alen > 5){
+      G.player2.aimX = dx/alen;
+      G.player2.aimY = dy/alen;
+    }
+  }
+}
+function handleAim2End(e){
+  aimJoy2.active = false;
+  aimJoyInner2.style.left = '30px'; aimJoyInner2.style.top = '30px';
+}
+if(aimJoyEl2){
+  aimJoyEl2.addEventListener('touchstart', handleAim2Start, {passive:false});
+  aimJoyEl2.addEventListener('touchmove', handleAim2Move, {passive:false});
+  aimJoyEl2.addEventListener('touchend', handleAim2End);
+  aimJoyEl2.addEventListener('mousedown', handleAim2Start);
+  document.addEventListener('mousemove', e=>{if(aimJoy2.active)handleAim2Move(e)});
+  document.addEventListener('mouseup', function(e){ if(aimJoy2.active) handleAim2End(e); });
+}
+
+
 // 键盘支持
 // 键盘控制（电脑端）
 function isGameInputBlocked(){
@@ -5545,6 +5586,8 @@ function startCoopGame(){
   // 显示2P UI和摇杆
   document.getElementById('topBar2').style.display = 'flex';
   document.getElementById('joystick2').style.display = 'block';
+  const aimJoy2El = document.getElementById('aimJoystick2');
+  if(aimJoy2El) aimJoy2El.style.display = 'block';
   document.getElementById('skillArea2').style.display = 'flex';
   // 确保1P摇杆显示
   document.getElementById('joystick').style.display = 'block';
@@ -5598,6 +5641,8 @@ function exitToMenu(){
   // 隐藏2P UI和摇杆
   document.getElementById('topBar2').style.display = 'none';
   document.getElementById('joystick2').style.display = 'none';
+  const aimJoy2ElHide = document.getElementById('aimJoystick2');
+  if(aimJoy2ElHide) aimJoy2ElHide.style.display = 'none';
   document.getElementById('skillArea2').style.display = 'none';
   // 恢复1P技能区位置
   const skillArea = document.getElementById('skillArea');
