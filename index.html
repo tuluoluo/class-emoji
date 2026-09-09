@@ -219,6 +219,18 @@ input:checked + .slider:before{transform:translateX(24px)}
     min-width:100vw !important;
     min-height:100dvh !important;
     min-height:100vh !important;
+    left:0 !important;
+    top:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+  }
+  body.coop-active{
+    margin:0 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+    background:#111 !important;
   }
   .coop-mode canvas{
     width:100% !important;
@@ -229,12 +241,12 @@ input:checked + .slider:before{transform:translateX(24px)}
   .coop-mode #joystick{
     left:2vmin !important;
     bottom:2vmin !important;
-    width:14vmin !important;
-    height:14vmin !important;
-    max-width:90px !important;
-    max-height:90px !important;
-    min-width:50px !important;
-    min-height:50px !important;
+    width:13vmin !important;
+    height:13vmin !important;
+    max-width:80px !important;
+    max-height:80px !important;
+    min-width:48px !important;
+    min-height:48px !important;
   }
   .coop-mode #joyOuter{
     width:100% !important;
@@ -265,44 +277,49 @@ input:checked + .slider:before{transform:translateX(24px)}
     top:30% !important;
     left:30% !important;
   }
-  /* 1P技能按钮 */
+  /* 1P技能按钮：横向排列，在摇杆右边 */
   .coop-mode #skillArea{
-    left:18vmin !important;
+    left:17vmin !important;
     bottom:2vmin !important;
     gap:1vmin !important;
     right:auto !important;
-    align-items:flex-start !important;
+    flex-direction:row !important;
+    flex-wrap:wrap !important;
+    align-items:flex-end !important;
+    justify-content:flex-start !important;
+    width:auto !important;
   }
   .coop-mode .skillBtn{
-    width:7vmin !important;
-    height:7vmin !important;
-    max-width:48px !important;
-    max-height:48px !important;
-    min-width:28px !important;
-    min-height:28px !important;
-    font-size:3vmin !important;
-    max-font-size:18px !important;
+    width:5.5vmin !important;
+    height:5.5vmin !important;
+    max-width:44px !important;
+    max-height:44px !important;
+    min-width:26px !important;
+    min-height:26px !important;
+    font-size:2.5vmin !important;
+    max-font-size:16px !important;
   }
   .coop-mode #weaponSwitch{
-    width:10vmin !important;
-    height:5vmin !important;
-    max-width:60px !important;
-    max-height:32px !important;
-    min-width:40px !important;
-    min-height:22px !important;
-    font-size:2vmin !important;
-    max-font-size:11px !important;
+    width:8vmin !important;
+    height:4vmin !important;
+    max-width:52px !important;
+    max-height:28px !important;
+    min-width:36px !important;
+    min-height:20px !important;
+    font-size:1.8vmin !important;
+    max-font-size:10px !important;
+    margin:0 !important;
   }
   /* 2P按钮区域：右下角 */
   .coop-mode #joystick2{
     right:2vmin !important;
     bottom:2vmin !important;
-    width:14vmin !important;
-    height:14vmin !important;
-    max-width:90px !important;
-    max-height:90px !important;
-    min-width:50px !important;
-    min-height:50px !important;
+    width:13vmin !important;
+    height:13vmin !important;
+    max-width:80px !important;
+    max-height:80px !important;
+    min-width:48px !important;
+    min-height:48px !important;
   }
   .coop-mode #joyOuter2{
     width:100% !important;
@@ -333,33 +350,38 @@ input:checked + .slider:before{transform:translateX(24px)}
     top:30% !important;
     left:30% !important;
   }
-  /* 2P技能按钮 */
+  /* 2P技能按钮：横向排列，在摇杆左边 */
   .coop-mode #skillArea2{
-    right:18vmin !important;
+    right:17vmin !important;
     bottom:2vmin !important;
     gap:1vmin !important;
     left:auto !important;
+    flex-direction:row !important;
+    flex-wrap:wrap !important;
     align-items:flex-end !important;
+    justify-content:flex-end !important;
+    width:auto !important;
   }
   .coop-mode .skillBtn2{
-    width:7vmin !important;
-    height:7vmin !important;
-    max-width:48px !important;
-    max-height:48px !important;
-    min-width:28px !important;
-    min-height:28px !important;
-    font-size:3vmin !important;
-    max-font-size:18px !important;
+    width:5.5vmin !important;
+    height:5.5vmin !important;
+    max-width:44px !important;
+    max-height:44px !important;
+    min-width:26px !important;
+    min-height:26px !important;
+    font-size:2.5vmin !important;
+    max-font-size:16px !important;
   }
   .coop-mode #weaponSwitch2{
-    width:10vmin !important;
-    height:5vmin !important;
-    max-width:60px !important;
-    max-height:32px !important;
-    min-width:40px !important;
-    min-height:22px !important;
-    font-size:2vmin !important;
-    max-font-size:11px !important;
+    width:8vmin !important;
+    height:4vmin !important;
+    max-width:52px !important;
+    max-height:28px !important;
+    min-width:36px !important;
+    min-height:20px !important;
+    font-size:1.8vmin !important;
+    max-font-size:10px !important;
+    margin:0 !important;
   }
   /* 顶部状态栏 */
   .coop-mode #topBar{
