@@ -443,10 +443,22 @@ input:checked + .slider:before{transform:translateX(24px)}
   .coop-mode canvas{
     image-rendering:pixelated;
   }
-  /* 瞄准轮盘在手机上隐藏或缩小 */
-  .coop-mode #aimJoystick,
-  .coop-mode #aimJoystick2{
+  /* 瞄准轮盘：1P隐藏（不需要），2P显示（光线武器需要） */
+  .coop-mode #aimJoystick{
     display:none !important;
+  }
+  .coop-mode #aimJoystick2{
+    display:block !important;
+    right:17vmin !important;
+    left:auto !important;
+    bottom:10vmin !important;
+    width:11vmin !important;
+    height:11vmin !important;
+    max-width:70px !important;
+    max-height:70px !important;
+    min-width:45px !important;
+    min-height:45px !important;
+    z-index:16 !important;
   }
   /* 双人模式标签 */
   .coop-label{
