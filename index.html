@@ -198,6 +198,111 @@ input:checked + .slider:before{transform:translateX(24px)}
 #skillRow2{display:flex;gap:8px;align-items:flex-end}
 .skillBtn2{width:56px;height:56px;border-radius:50%;font-size:26px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
 .skillBtn2:active{transform:scale(.9);background:rgba(255,255,255,.9)}
+
+/* 双人模式手机适配 */
+@media (max-width: 768px){
+  #wrap.coop-mode{
+    width:100vw !important;
+    height:100vh !important;
+    max-height:100vh !important;
+    max-width:100vw !important;
+  }
+  /* 1P按钮区域：左下角 */
+  .coop-mode #joystick{
+    left:10px !important;
+    bottom:10px !important;
+    width:80px !important;
+    height:80px !important;
+  }
+  .coop-mode #joyOuter{
+    width:80px !important;
+    height:80px !important;
+  }
+  .coop-mode #joyInner{
+    width:30px !important;
+    height:30px !important;
+    top:25px !important;
+    left:25px !important;
+  }
+  /* 1P瞄准轮盘 */
+  .coop-mode #aimJoystick{
+    right:52% !important;
+    bottom:10px !important;
+    width:70px !important;
+    height:70px !important;
+  }
+  .coop-mode #aimOuter{
+    width:70px !important;
+    height:70px !important;
+  }
+  .coop-mode #aimInner{
+    width:25px !important;
+    height:25px !important;
+    top:22px !important;
+    left:22px !important;
+  }
+  /* 1P技能按钮 */
+  .coop-mode #skillArea{
+    left:100px !important;
+    bottom:10px !important;
+    gap:4px !important;
+  }
+  .coop-mode .skillBtn{
+    width:36px !important;
+    height:36px !important;
+    font-size:16px !important;
+  }
+  /* 2P按钮区域：右下角 */
+  .coop-mode #joystick2{
+    right:10px !important;
+    bottom:10px !important;
+    width:80px !important;
+    height:80px !important;
+  }
+  /* 2P瞄准轮盘 */
+  .coop-mode #aimJoystick2{
+    left:52% !important;
+    bottom:10px !important;
+    width:70px !important;
+    height:70px !important;
+  }
+  .coop-mode #aimOuter2{
+    width:70px !important;
+    height:70px !important;
+  }
+  .coop-mode #aimInner2{
+    width:25px !important;
+    height:25px !important;
+    top:22px !important;
+    left:22px !important;
+  }
+  /* 2P技能按钮 */
+  .coop-mode #skillArea2{
+    right:100px !important;
+    bottom:10px !important;
+    gap:4px !important;
+  }
+  /* 顶部状态栏 */
+  .coop-mode #topBar{
+    padding:4px 8px !important;
+    gap:4px !important;
+  }
+  .coop-mode #hpBarBg{
+    width:100px !important;
+    height:16px !important;
+  }
+  .coop-mode #hpText{
+    font-size:10px !important;
+  }
+  .coop-mode #infoLine{
+    font-size:10px !important;
+    gap:6px !important;
+  }
+  /* 小地图缩小 */
+  .coop-mode canvas{
+    image-rendering:pixelated;
+  }
+}
 </style>
 </head>
 <body>
@@ -2357,70 +2462,6 @@ function update(){
   }
 
 
-    // 光线武器持续伤害（1P）
-    if(p.laserActive && p.laserTimer > 0){
-      p.laserTimer--;
-      if(p.laserTimer <= 0){
-        p.laserActive = false;
-        p.laserTarget = null;
-        p.laserTargets = null;
-      } else {
-        const px = p.x + p.w/2, py = p.y + p.h/2;
-        const dmgPerFrame = p.currentWeapon === 'spreadLaser' ? 7/60 : 5/60;
-        // 检查怪物是否在光线上
-        for(let mi=G.mobs.length-1;mi>=0;mi--){
-          const m = G.mobs[mi];
-          const mx = m.x + m.w/2, my = m.y + m.h/2;
-          let onLaser = false;
-          if(p.currentWeapon === 'spreadLaser' && p.laserTargets){
-            for(let ti=0;ti<p.laserTargets.length;ti++){
-              if(pointToLineDist(mx, my, px, py, p.laserTargets[ti].x, p.laserTargets[ti].y) < 30){
-                onLaser = true; break;
-              }
-            }
-          } else if(p.laserTarget){
-            if(pointToLineDist(mx, my, px, py, p.laserTarget.x, p.laserTarget.y) < 30){
-              onLaser = true;
-            }
-          }
-          if(onLaser){
-            m.hp -= dmgPerFrame;
-            m.hurtFlash = 3;
-            if(m.hp <= 0){
-              makeCorpse(m);
-              spawnParticles(mx, my, '#888', 8);
-              G.mobs.splice(mi,1);
-              G.killCount++;
-              playSound('kill');
-              if(Math.random()<0.35) p.gold += 3;
-              updateUI();
-            }
-          }
-        }
-        // 检查Boss是否在光线上
-        for(let bi=G.bosses.length-1;bi>=0;bi--){
-          const b = G.bosses[bi];
-          const bx = b.x + b.w/2, by = b.y + b.h/2;
-          let onLaser = false;
-          if(p.currentWeapon === 'spreadLaser' && p.laserTargets){
-            for(let ti=0;ti<p.laserTargets.length;ti++){
-              if(pointToLineDist(bx, by, px, py, p.laserTargets[ti].x, p.laserTargets[ti].y) < 50){
-                onLaser = true; break;
-              }
-            }
-          } else if(p.laserTarget){
-            if(pointToLineDist(bx, by, px, py, p.laserTarget.x, p.laserTarget.y) < 50){
-              onLaser = true;
-            }
-          }
-          if(onLaser){
-            b.hp -= dmgPerFrame;
-            b.hurtFlash = 3;
-          }
-        }
-      }
-    }
-
   // 大太阳：状态下降（速度降低，通过在移动时处理）
   // 这里只处理玩家的缓慢掉血（中暑）
   if(G.weather === 'hot' && !G.cheat.infHp){
@@ -3929,38 +3970,6 @@ function render(){
       ctx.globalAlpha = 1;
     });
 
-    // 光线渲染（1P）
-    if(G.player && G.player.laserActive){
-      const px = G.player.x + G.player.w/2, py = G.player.y + G.player.h/2;
-      const isSpread = G.player.currentWeapon === 'spreadLaser';
-      const color = isSpread ? 'rgba(255,220,100,' : 'rgba(255,200,50,';
-      const targets = isSpread ? (G.player.laserTargets || []) : (G.player.laserTarget ? [G.player.laserTarget] : []);
-      for(let ti=0;ti<targets.length;ti++){
-        const t = targets[ti];
-        // 外发光
-        ctx.strokeStyle = color + '0.3)';
-        ctx.lineWidth = 20;
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(t.x, t.y);
-        ctx.stroke();
-        // 核心光柱
-        ctx.strokeStyle = color + '0.9)';
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(t.x, t.y);
-        ctx.stroke();
-        // 白色核心
-        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(t.x, t.y);
-        ctx.stroke();
-      }
-    }
-
     G.particles.forEach(pt=>{
       ctx.globalAlpha = clamp(pt.life/20, 0, 1);
       ctx.fillStyle = pt.color;
@@ -4019,7 +4028,39 @@ function render(){
         ctx.fillStyle = pt.color;
         ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
       });
-      ctx.globalAlpha = 1;
+      
+      // 光线渲染（2P）
+      if(G.player2 && G.player2.laserActive){
+        const px2 = G.player2.x + G.player2.w/2, py2 = G.player2.y + G.player2.h/2;
+        const isSpread2 = G.player2.currentWeapon === 'spreadLaser';
+        const color2 = isSpread2 ? 'rgba(255,220,100,' : 'rgba(255,200,50,';
+        const targets2 = isSpread2 ? (G.player2.laserTargets || []) : (G.player2.laserTarget ? [G.player2.laserTarget] : []);
+        for(let ti=0;ti<targets2.length;ti++){
+          const t = targets2[ti];
+          // 外发光
+          ctx.strokeStyle = color2 + '0.3)';
+          ctx.lineWidth = 20;
+          ctx.beginPath();
+          ctx.moveTo(px2, py2);
+          ctx.lineTo(t.x, t.y);
+          ctx.stroke();
+          // 核心光柱
+          ctx.strokeStyle = color2 + '0.9)';
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.moveTo(px2, py2);
+          ctx.lineTo(t.x, t.y);
+          ctx.stroke();
+          // 白色核心
+          ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(px2, py2);
+          ctx.lineTo(t.x, t.y);
+          ctx.stroke();
+        }
+      }
+ctx.globalAlpha = 1;
       ctx.restore();
       if(!G.day){
         ctx.fillStyle = 'rgba(10,10,60,0.35)';
@@ -4097,34 +4138,6 @@ function render(){
 
   // 粒子
 
-  // 光线渲染（单人模式）
-  if(G.player && G.player.laserActive){
-    const px = G.player.x + G.player.w/2, py = G.player.y + G.player.h/2;
-    const isSpread = G.player.currentWeapon === 'spreadLaser';
-    const color = isSpread ? 'rgba(255,220,100,' : 'rgba(255,200,50,';
-    const targets = isSpread ? (G.player.laserTargets || []) : (G.player.laserTarget ? [G.player.laserTarget] : []);
-    for(let ti=0;ti<targets.length;ti++){
-      const t = targets[ti];
-      ctx.strokeStyle = color + '0.3)';
-      ctx.lineWidth = 20;
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.lineTo(t.x, t.y);
-      ctx.stroke();
-      ctx.strokeStyle = color + '0.9)';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.lineTo(t.x, t.y);
-      ctx.stroke();
-      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.lineTo(t.x, t.y);
-      ctx.stroke();
-    }
-  }
   G.particles.forEach(pt=>{
     ctx.globalAlpha = clamp(pt.life/20, 0, 1);
     ctx.fillStyle = pt.color;
@@ -5541,6 +5554,7 @@ function startGame(){
 }
 
 function startCoopGame(){
+  document.getElementById('wrap').classList.add('coop-mode');
   applyLanguage();
   initAudio();
   G.state = 'playing';
@@ -5632,6 +5646,7 @@ function startCoopGame(){
 function exitToMenu(){
   G.state = 'menu';
   G.isCoop = false;
+  document.getElementById('wrap').classList.remove('coop-mode');
   stopWandererMusic(); // 停止游离乐子人音乐
   showClearBadge(); // 显示通关标识
   // 隐藏分屏元素
