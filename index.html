@@ -201,173 +201,218 @@ input:checked + .slider:before{transform:translateX(24px)}
 
 /* 双人模式手机适配 */
 @media (max-width: 768px){
-  /* 让游戏占满整个屏幕，消除黑边 */
+  /* 让游戏占满整个屏幕，消除黑边，使用dvh适应手机浏览器地址栏 */
   html,body{
     margin:0;
     padding:0;
     overflow:hidden;
     background:#111;
+    height:100%;
   }
   #wrap.coop-mode{
     width:100vw !important;
-    height:100vh !important;
+    height:100dvh !important;
+    height:100vh !important; /* 降级 */
+    max-height:100dvh !important;
     max-height:100vh !important;
     max-width:100vw !important;
     min-width:100vw !important;
+    min-height:100dvh !important;
     min-height:100vh !important;
   }
   .coop-mode canvas{
     width:100% !important;
     height:100% !important;
   }
+  /* 使用vmin作为相对单位，适应不同屏幕尺寸 */
   /* 1P按钮区域：左下角 */
   .coop-mode #joystick{
-    left:8px !important;
-    bottom:8px !important;
-    width:70px !important;
-    height:70px !important;
+    left:2vmin !important;
+    bottom:2vmin !important;
+    width:14vmin !important;
+    height:14vmin !important;
+    max-width:90px !important;
+    max-height:90px !important;
+    min-width:50px !important;
+    min-height:50px !important;
   }
   .coop-mode #joyOuter{
-    width:70px !important;
-    height:70px !important;
+    width:100% !important;
+    height:100% !important;
   }
   .coop-mode #joyInner{
-    width:26px !important;
-    height:26px !important;
-    top:22px !important;
-    left:22px !important;
+    width:40% !important;
+    height:40% !important;
+    top:30% !important;
+    left:30% !important;
   }
   /* 1P瞄准轮盘 */
   .coop-mode #aimJoystick{
     right:52% !important;
-    bottom:10px !important;
-    width:70px !important;
-    height:70px !important;
+    bottom:2vmin !important;
+    width:12vmin !important;
+    height:12vmin !important;
+    max-width:80px !important;
+    max-height:80px !important;
   }
   .coop-mode #aimOuter{
-    width:70px !important;
-    height:70px !important;
+    width:100% !important;
+    height:100% !important;
   }
   .coop-mode #aimInner{
-    width:25px !important;
-    height:25px !important;
-    top:22px !important;
-    left:22px !important;
+    width:40% !important;
+    height:40% !important;
+    top:30% !important;
+    left:30% !important;
   }
   /* 1P技能按钮 */
   .coop-mode #skillArea{
-    left:85px !important;
-    bottom:8px !important;
-    gap:3px !important;
+    left:18vmin !important;
+    bottom:2vmin !important;
+    gap:1vmin !important;
     right:auto !important;
     align-items:flex-start !important;
   }
   .coop-mode .skillBtn{
-    width:32px !important;
-    height:32px !important;
-    font-size:14px !important;
+    width:7vmin !important;
+    height:7vmin !important;
+    max-width:48px !important;
+    max-height:48px !important;
+    min-width:28px !important;
+    min-height:28px !important;
+    font-size:3vmin !important;
+    max-font-size:18px !important;
   }
   .coop-mode #weaponSwitch{
-    width:50px !important;
-    height:28px !important;
-    font-size:10px !important;
+    width:10vmin !important;
+    height:5vmin !important;
+    max-width:60px !important;
+    max-height:32px !important;
+    min-width:40px !important;
+    min-height:22px !important;
+    font-size:2vmin !important;
+    max-font-size:11px !important;
   }
   /* 2P按钮区域：右下角 */
   .coop-mode #joystick2{
-    right:8px !important;
-    bottom:8px !important;
-    width:70px !important;
-    height:70px !important;
+    right:2vmin !important;
+    bottom:2vmin !important;
+    width:14vmin !important;
+    height:14vmin !important;
+    max-width:90px !important;
+    max-height:90px !important;
+    min-width:50px !important;
+    min-height:50px !important;
   }
   .coop-mode #joyOuter2{
-    width:70px !important;
-    height:70px !important;
+    width:100% !important;
+    height:100% !important;
   }
   .coop-mode #joyInner2{
-    width:26px !important;
-    height:26px !important;
-    top:22px !important;
-    left:22px !important;
+    width:40% !important;
+    height:40% !important;
+    top:30% !important;
+    left:30% !important;
   }
   /* 2P瞄准轮盘 */
   .coop-mode #aimJoystick2{
     left:52% !important;
-    bottom:10px !important;
-    width:70px !important;
-    height:70px !important;
+    bottom:2vmin !important;
+    width:12vmin !important;
+    height:12vmin !important;
+    max-width:80px !important;
+    max-height:80px !important;
   }
   .coop-mode #aimOuter2{
-    width:70px !important;
-    height:70px !important;
+    width:100% !important;
+    height:100% !important;
   }
   .coop-mode #aimInner2{
-    width:25px !important;
-    height:25px !important;
-    top:22px !important;
-    left:22px !important;
+    width:40% !important;
+    height:40% !important;
+    top:30% !important;
+    left:30% !important;
   }
   /* 2P技能按钮 */
   .coop-mode #skillArea2{
-    right:85px !important;
-    bottom:8px !important;
-    gap:3px !important;
+    right:18vmin !important;
+    bottom:2vmin !important;
+    gap:1vmin !important;
     left:auto !important;
     align-items:flex-end !important;
   }
   .coop-mode .skillBtn2{
-    width:32px !important;
-    height:32px !important;
-    font-size:14px !important;
+    width:7vmin !important;
+    height:7vmin !important;
+    max-width:48px !important;
+    max-height:48px !important;
+    min-width:28px !important;
+    min-height:28px !important;
+    font-size:3vmin !important;
+    max-font-size:18px !important;
   }
   .coop-mode #weaponSwitch2{
-    width:50px !important;
-    height:28px !important;
-    font-size:10px !important;
+    width:10vmin !important;
+    height:5vmin !important;
+    max-width:60px !important;
+    max-height:32px !important;
+    min-width:40px !important;
+    min-height:22px !important;
+    font-size:2vmin !important;
+    max-font-size:11px !important;
   }
   /* 顶部状态栏 */
   .coop-mode #topBar{
-    padding:4px 8px !important;
-    gap:4px !important;
-    left:8px !important;
+    padding:1vmin 2vmin !important;
+    gap:1vmin !important;
+    left:2vmin !important;
     right:auto !important;
-    width:calc(50% - 16px) !important;
+    width:calc(50% - 4vmin) !important;
     max-width:300px !important;
   }
   .coop-mode #hpBarBg{
     width:100% !important;
     max-width:150px !important;
-    height:14px !important;
+    height:3vmin !important;
+    max-height:18px !important;
+    min-height:10px !important;
   }
   .coop-mode #hpText{
-    font-size:10px !important;
+    font-size:2.5vmin !important;
+    max-font-size:13px !important;
   }
   .coop-mode #infoLine{
-    font-size:10px !important;
-    gap:6px !important;
+    font-size:2.5vmin !important;
+    max-font-size:13px !important;
+    gap:2vmin !important;
     flex-wrap:nowrap !important;
     white-space:nowrap !important;
     overflow:hidden !important;
   }
   /* 2P顶部状态栏 */
   .coop-mode #topBar2{
-    padding:4px 8px !important;
-    gap:4px !important;
-    right:8px !important;
+    padding:1vmin 2vmin !important;
+    gap:1vmin !important;
+    right:2vmin !important;
     left:auto !important;
-    width:calc(50% - 16px) !important;
+    width:calc(50% - 4vmin) !important;
     max-width:300px !important;
   }
   .coop-mode #hpBarBg2{
     width:100% !important;
     max-width:150px !important;
-    height:14px !important;
+    height:3vmin !important;
+    max-height:18px !important;
+    min-height:10px !important;
   }
   .coop-mode #hpText2{
-    font-size:10px !important;
+    font-size:2.5vmin !important;
+    max-font-size:13px !important;
   }
   .coop-mode #infoLine2{
-    font-size:10px !important;
-    gap:6px !important;
+    font-size:2.5vmin !important;
+    max-font-size:13px !important;
+    gap:2vmin !important;
     flex-wrap:nowrap !important;
     white-space:nowrap !important;
     overflow:hidden !important;
@@ -380,6 +425,11 @@ input:checked + .slider:before{transform:translateX(24px)}
   .coop-mode #aimJoystick,
   .coop-mode #aimJoystick2{
     display:none !important;
+  }
+  /* 双人模式标签 */
+  .coop-label{
+    font-size:3vmin !important;
+    max-font-size:16px !important;
   }
 }
 </style>
