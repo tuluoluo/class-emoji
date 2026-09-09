@@ -1875,9 +1875,12 @@ function createPlayer2(){
   p.face = '😠';
   p.x = WORLD_W/2 + 100; // 稍微错开
   p.weapons = ['fist']; // 2P独立武器列表
+  p.weapon = 'fist'; // 当前武器
+  p.currentWeapon = 'fist'; // 当前武器（光线用）
   p.laserActive = false; // 光线是否激活
   p.laserTimer = 0; // 光线持续时间
   p.laserTarget = null; // 光线目标点
+  p.laserTargets = null; // 散射光线目标点数组
   return p;
 }
 
@@ -5001,6 +5004,8 @@ const aimJoyEl2 = document.getElementById('aimJoystick2');
 const aimJoyInner2 = document.getElementById('aimInner2');
 function handleAim2Start(e){
   e.preventDefault();
+  const touch = e.touches ? e.touches[0] : e;
+  if(!touch || isNaN(touch.clientX)) return;
   const rect = transformRect(aimJoyEl2.getBoundingClientRect());
   aimJoy2.active = true;
   aimJoy2.centerX = rect.left + rect.width/2;
@@ -5010,28 +5015,34 @@ function handleAim2Start(e){
 function handleAim2Move(e){
   if(!aimJoy2.active) return;
   e.preventDefault();
-  const tp = getTouchPos(e);
-  if(!tp) return;
+  const touch = e.touches ? e.touches[0] : e;
+  if(!touch || isNaN(touch.clientX) || isNaN(touch.clientY)) return;
+  const tp = transformTouchPoint(touch.clientX, touch.clientY);
   let dx = tp.x - aimJoy2.centerX;
   let dy = tp.y - aimJoy2.centerY;
+  if(isNaN(dx)||isNaN(dy)){ dx=0; dy=0; }
   const maxR = 35;
   const len = Math.hypot(dx,dy);
-  if(len > maxR){ dx = dx/len*maxR; dy = dy/len*maxR; }
+  if(len > maxR && len>0){ dx = dx/len*maxR; dy = dy/len*maxR; }
   aimJoy2.dx = dx; aimJoy2.dy = dy;
-  aimJoyInner2.style.left = (30+dx)+'px';
-  aimJoyInner2.style.top = (30+dy)+'px';
+  if(aimJoyInner2){
+    aimJoyInner2.style.left = (30+dx)+'px';
+    aimJoyInner2.style.top = (30+dy)+'px';
+  }
   // 更新2P瞄准方向
   if(G.player2){
     const alen = Math.hypot(dx,dy);
     if(alen > 5){
-      G.player2.aimX = dx/alen;
-      G.player2.aimY = dy/alen;
+      G.player2.aimX = dx/maxR;
+      G.player2.aimY = dy/maxR;
     }
   }
 }
 function handleAim2End(e){
   aimJoy2.active = false;
-  aimJoyInner2.style.left = '30px'; aimJoyInner2.style.top = '30px';
+  if(aimJoyInner2){
+    aimJoyInner2.style.left = '30px'; aimJoyInner2.style.top = '30px';
+  }
 }
 if(aimJoyEl2){
   aimJoyEl2.addEventListener('touchstart', handleAim2Start, {passive:false});
@@ -5524,6 +5535,9 @@ function startGame(){
   G.medUseCount = 0; G.medUseCount2 = 0; G.usedCheat = false;
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
   G.weapons = ['fist']; G.atkCooldown = 0; G.atkCooldown2 = 0; G.shake = 0;
+  // 重置光线状态
+  if(G.player){ G.player.laserActive = false; G.player.laserTimer = 0; G.player.laserTarget = null; G.player.laserTargets = null; }
+  if(G.player2){ G.player2.laserActive = false; G.player2.laserTimer = 0; G.player2.laserTarget = null; G.player2.laserTargets = null; }
   G._shopOpened = false;
   G.paused = false; // 确保新游戏不暂停
   G.nightGraceTimer = 0;
@@ -5566,6 +5580,9 @@ function startCoopGame(){
   G.miniBossSpawned = false; G.finalBossSpawned = false;
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
   G.weapons = ['fist']; G.atkCooldown = 0; G.atkCooldown2 = 0; G.shake = 0;
+  // 重置光线状态
+  if(G.player){ G.player.laserActive = false; G.player.laserTimer = 0; G.player.laserTarget = null; G.player.laserTargets = null; }
+  if(G.player2){ G.player2.laserActive = false; G.player2.laserTimer = 0; G.player2.laserTarget = null; G.player2.laserTargets = null; }
   G._shopOpened = false;
   G.paused = false;
   G.nightGraceTimer = 0;
