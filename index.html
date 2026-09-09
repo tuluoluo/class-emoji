@@ -179,18 +179,18 @@ input:checked + .slider:before{transform:translateX(24px)}
   height: 100% !important;
 }
 /* 双人模式2P UI */
-#topBar2{position:absolute;top:8px;right:80px;width:180px;display:flex;flex-direction:column;gap:4px;z-index:20;pointer-events:none}
+#topBar2{position:absolute;top:8px;right:8px;left:auto;width:calc(50% - 16px);max-width:300px;display:flex;flex-direction:column;gap:4px;z-index:20;pointer-events:none}
 #hpArea2{display:flex;flex-direction:column;gap:4px}
-#hpBarBg2{width:200px;height:22px;background:#333;border:2px solid #000;border-radius:4px;overflow:hidden}
+#hpBarBg2{width:100%;max-width:200px;height:22px;background:#333;border:2px solid #000;border-radius:4px;overflow:hidden}
 #hpBar2{height:100%;background:linear-gradient(to bottom,#ff6b6b,#c0392b);transition:width .2s;width:100%}
 #hpText2{font-size:13px;color:#fff;text-shadow:1px 1px 2px #000;font-weight:bold}
-#infoLine2{font-size:13px;color:#fff;text-shadow:1px 1px 2px #000;font-weight:bold;display:flex;gap:12px}
+#infoLine2{font-size:13px;color:#fff;text-shadow:1px 1px 2px #000;font-weight:bold;display:flex;gap:8px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden}
 /* 2P虚拟摇杆 - 右下角 */
 #joystick2{position:absolute;right:30px;bottom:30px;width:130px;height:130px;z-index:15;pointer-events:auto;display:none}
 #joyOuter2{position:absolute;top:0;left:0;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.25);border:4px solid rgba(0,0,0,.4)}
 #joyInner2{position:absolute;top:45px;left:45px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:3px solid rgba(0,0,0,.5)}
 /* 2P技能区 - 右半屏左下角 */
-#skillArea2{position:absolute;right:150px;left:auto;bottom:25px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:15;display:none}
+#skillArea2{position:absolute;right:110px;left:auto;bottom:25px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:15;display:none}
 #skillArea2 #weaponSwitch2{width:56px;height:34px;border-radius:17px;background:rgba(255,255,255,.7);border:2px solid #333;font-size:11px;font-weight:bold;pointer-events:auto;margin-bottom:4px}
 #skillRow2{display:flex;align-items:center;gap:6px}
 .skillBtn2{width:48px;height:48px;border-radius:50%;font-size:22px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
@@ -201,28 +201,41 @@ input:checked + .slider:before{transform:translateX(24px)}
 
 /* 双人模式手机适配 */
 @media (max-width: 768px){
+  /* 让游戏占满整个屏幕，消除黑边 */
+  html,body{
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    background:#111;
+  }
   #wrap.coop-mode{
     width:100vw !important;
     height:100vh !important;
     max-height:100vh !important;
     max-width:100vw !important;
+    min-width:100vw !important;
+    min-height:100vh !important;
+  }
+  .coop-mode canvas{
+    width:100% !important;
+    height:100% !important;
   }
   /* 1P按钮区域：左下角 */
   .coop-mode #joystick{
-    left:10px !important;
-    bottom:10px !important;
-    width:80px !important;
-    height:80px !important;
+    left:8px !important;
+    bottom:8px !important;
+    width:70px !important;
+    height:70px !important;
   }
   .coop-mode #joyOuter{
-    width:80px !important;
-    height:80px !important;
+    width:70px !important;
+    height:70px !important;
   }
   .coop-mode #joyInner{
-    width:30px !important;
-    height:30px !important;
-    top:25px !important;
-    left:25px !important;
+    width:26px !important;
+    height:26px !important;
+    top:22px !important;
+    left:22px !important;
   }
   /* 1P瞄准轮盘 */
   .coop-mode #aimJoystick{
@@ -243,21 +256,38 @@ input:checked + .slider:before{transform:translateX(24px)}
   }
   /* 1P技能按钮 */
   .coop-mode #skillArea{
-    left:100px !important;
-    bottom:10px !important;
-    gap:4px !important;
+    left:85px !important;
+    bottom:8px !important;
+    gap:3px !important;
+    right:auto !important;
+    align-items:flex-start !important;
   }
   .coop-mode .skillBtn{
-    width:36px !important;
-    height:36px !important;
-    font-size:16px !important;
+    width:32px !important;
+    height:32px !important;
+    font-size:14px !important;
+  }
+  .coop-mode #weaponSwitch{
+    width:50px !important;
+    height:28px !important;
+    font-size:10px !important;
   }
   /* 2P按钮区域：右下角 */
   .coop-mode #joystick2{
-    right:10px !important;
-    bottom:10px !important;
-    width:80px !important;
-    height:80px !important;
+    right:8px !important;
+    bottom:8px !important;
+    width:70px !important;
+    height:70px !important;
+  }
+  .coop-mode #joyOuter2{
+    width:70px !important;
+    height:70px !important;
+  }
+  .coop-mode #joyInner2{
+    width:26px !important;
+    height:26px !important;
+    top:22px !important;
+    left:22px !important;
   }
   /* 2P瞄准轮盘 */
   .coop-mode #aimJoystick2{
@@ -278,18 +308,35 @@ input:checked + .slider:before{transform:translateX(24px)}
   }
   /* 2P技能按钮 */
   .coop-mode #skillArea2{
-    right:100px !important;
-    bottom:10px !important;
-    gap:4px !important;
+    right:85px !important;
+    bottom:8px !important;
+    gap:3px !important;
+    left:auto !important;
+    align-items:flex-end !important;
+  }
+  .coop-mode .skillBtn2{
+    width:32px !important;
+    height:32px !important;
+    font-size:14px !important;
+  }
+  .coop-mode #weaponSwitch2{
+    width:50px !important;
+    height:28px !important;
+    font-size:10px !important;
   }
   /* 顶部状态栏 */
   .coop-mode #topBar{
     padding:4px 8px !important;
     gap:4px !important;
+    left:8px !important;
+    right:auto !important;
+    width:calc(50% - 16px) !important;
+    max-width:300px !important;
   }
   .coop-mode #hpBarBg{
-    width:100px !important;
-    height:16px !important;
+    width:100% !important;
+    max-width:150px !important;
+    height:14px !important;
   }
   .coop-mode #hpText{
     font-size:10px !important;
@@ -297,10 +344,42 @@ input:checked + .slider:before{transform:translateX(24px)}
   .coop-mode #infoLine{
     font-size:10px !important;
     gap:6px !important;
+    flex-wrap:nowrap !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+  }
+  /* 2P顶部状态栏 */
+  .coop-mode #topBar2{
+    padding:4px 8px !important;
+    gap:4px !important;
+    right:8px !important;
+    left:auto !important;
+    width:calc(50% - 16px) !important;
+    max-width:300px !important;
+  }
+  .coop-mode #hpBarBg2{
+    width:100% !important;
+    max-width:150px !important;
+    height:14px !important;
+  }
+  .coop-mode #hpText2{
+    font-size:10px !important;
+  }
+  .coop-mode #infoLine2{
+    font-size:10px !important;
+    gap:6px !important;
+    flex-wrap:nowrap !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
   }
   /* 小地图缩小 */
   .coop-mode canvas{
     image-rendering:pixelated;
+  }
+  /* 瞄准轮盘在手机上隐藏或缩小 */
+  .coop-mode #aimJoystick,
+  .coop-mode #aimJoystick2{
+    display:none !important;
   }
 }
 </style>
@@ -5633,20 +5712,12 @@ function startCoopGame(){
   // 确保1P摇杆显示
   document.getElementById('joystick').style.display = 'block';
   document.getElementById('skillArea').style.display = 'flex';
-  // 1P技能区移到左半屏，摇杆右边
+  // 1P技能区和摇杆位置由CSS .coop-mode 控制，不在这里设置内联样式
+  // 确保1P技能区和摇杆显示
   const skillArea = document.getElementById('skillArea');
-  if(skillArea){
-    skillArea.style.right = 'auto';
-    skillArea.style.left = '170px';
-    skillArea.style.bottom = '25px';
-    skillArea.style.alignItems = 'flex-start';
-  }
-  // 1P摇杆保持左下角
+  if(skillArea) skillArea.style.display = 'flex';
   const joystick = document.getElementById('joystick');
-  if(joystick){
-    joystick.style.left = '30px';
-    joystick.style.right = 'auto';
-  }
+  if(joystick) joystick.style.display = 'block';
   // 确保1P的挖掘、切换武器、手雷按钮在双人模式下显示
   const weaponSwitch = document.getElementById('weaponSwitch');
   if(weaponSwitch) weaponSwitch.style.display = '';
@@ -5667,7 +5738,10 @@ function startCoopGame(){
   document.getElementById('shopPanel').style.display = 'none';
   closeDialog();
   updateUI(); // 关键：更新UI，确保血量显示正确（重置为15）
-  showToast('👥 双人合作模式开始！1P:WASD+J  2P:方向键+1', 4000);
+  // 延迟一帧显示提示，避免初始化卡顿
+  requestAnimationFrame(() => {
+    showToast('👥 双人合作模式开始！1P:WASD+J  2P:方向键+1', 4000);
+  });
 }
 
 function exitToMenu(){
