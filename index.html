@@ -2119,8 +2119,10 @@ function player2Attack(){
   else if(w==='laser'){
     // 光线武器：发出一道光柱，持续射击，每秒5点伤害
     if(p.laserActive) return; // 已经在发射光线
+    p.currentWeapon = 'laser'; // 设置当前武器类型
     p.laserActive = true;
     p.laserTimer = 180; // 持续3秒
+    p.laserTargets = null; // 清除散射光线目标
     // 使用瞄准轮盘指向的方向
     const px = p.x+p.w/2, py = p.y+p.h/2;
     const aimX = p.aimX || p.facing;
@@ -2132,8 +2134,10 @@ function player2Attack(){
   else if(w==='spreadLaser'){
     // 散射光线：一次性发出三条光线，射三个点，每秒7点伤害
     if(p.laserActive) return;
+    p.currentWeapon = 'spreadLaser'; // 设置当前武器类型
     p.laserActive = true;
     p.laserTimer = 180; // 持续3秒
+    p.laserTarget = null; // 清除普通光线目标
     p.laserTargets = [];
     const px = p.x+p.w/2, py = p.y+p.h/2;
     // 使用瞄准轮盘指向的方向，三条光线扇形展开
@@ -2199,6 +2203,12 @@ function player2SwitchWeapon(){
   if(idx < 0) idx = 0;
   idx = (idx + 1) % list.length;
   p.weapon = list[idx];
+  p.currentWeapon = list[idx]; // 同步更新currentWeapon
+  // 切换武器时取消正在发射的光线
+  p.laserActive = false;
+  p.laserTimer = 0;
+  p.laserTarget = null;
+  p.laserTargets = null;
   playSound('switch');
   updateUI();
   updateAimJoystick();
