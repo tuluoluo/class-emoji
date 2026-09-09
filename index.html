@@ -443,15 +443,15 @@ input:checked + .slider:before{transform:translateX(24px)}
   .coop-mode canvas{
     image-rendering:pixelated;
   }
-  /* 瞄准轮盘：1P隐藏（不需要），2P显示（光线武器需要） */
+  /* 瞄准轮盘：1P隐藏（不需要），2P显示（光线武器需要），放在摇杆上方 */
   .coop-mode #aimJoystick{
     display:none !important;
   }
   .coop-mode #aimJoystick2{
     display:block !important;
-    right:17vmin !important;
+    right:2vmin !important;
     left:auto !important;
-    bottom:10vmin !important;
+    bottom:17vmin !important;
     width:11vmin !important;
     height:11vmin !important;
     max-width:70px !important;
