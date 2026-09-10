@@ -199,8 +199,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 .skillBtn2{width:56px;height:56px;border-radius:50%;font-size:26px;background:rgba(255,255,255,.7);border:3px solid #333;display:flex;align-items:center;justify-content:center;pointer-events:auto;transition:transform .1s}
 .skillBtn2:active{transform:scale(.9);background:rgba(255,255,255,.9)}
 
-/* 双人模式手机适配 */
-@media (max-width: 768px){
+/* 双人模式手机适配（所有屏幕尺寸生效，因为手机横屏宽度通常大于768px） */
   /* 让游戏占满整个屏幕，消除黑边，使用dvh适应手机浏览器地址栏 */
   html,body{
     margin:0;
@@ -483,7 +482,6 @@ input:checked + .slider:before{transform:translateX(24px)}
     font-size:3vmin !important;
     max-font-size:16px !important;
   }
-}
 </style>
 </head>
 <body>
