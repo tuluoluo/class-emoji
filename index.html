@@ -1790,6 +1790,8 @@ function loadGame(slot){
       document.getElementById('skillArea2').style.display = 'flex';
       document.getElementById('joystick').style.display = 'block';
       document.getElementById('skillArea').style.display = 'flex';
+      // 关键：添加.coop-mode类到#wrap元素，让所有双人模式CSS规则生效
+      document.getElementById('wrap').classList.add('coop-mode');
       // 1P技能区和摇杆位置由CSS .coop-mode 控制，清除固定像素内联样式
       const skillArea = document.getElementById('skillArea');
       if(skillArea){ skillArea.style.right = ''; skillArea.style.left = ''; skillArea.style.bottom = ''; skillArea.style.alignItems = ''; skillArea.style.flexDirection = ''; }
@@ -1821,8 +1823,8 @@ function loadGame(slot){
       document.getElementById('coopLabel2').style.display = 'none';
       document.getElementById('topBar2').style.display = 'none';
       document.getElementById('joystick2').style.display = 'none';
-  const aimJoy2ElHide = document.getElementById('aimJoystick2');
-  if(aimJoy2ElHide) aimJoy2ElHide.style.display = 'none';
+      const aimJoy2ElHide = document.getElementById('aimJoystick2');
+      if(aimJoy2ElHide) aimJoy2ElHide.style.display = 'none';
       document.getElementById('skillArea2').style.display = 'none';
       // 1P技能区恢复右下角
       const skillArea = document.getElementById('skillArea');
@@ -5853,6 +5855,9 @@ function exitToMenu(){
   document.getElementById('joystick2').style.display = 'none';
   const aimJoy2ElHide = document.getElementById('aimJoystick2');
   if(aimJoy2ElHide) aimJoy2ElHide.style.display = 'none';
+  // 隐藏1P瞄准轮盘
+  const aimJoyElHide = document.getElementById('aimJoystick');
+  if(aimJoyElHide) aimJoyElHide.style.display = 'none';
   document.getElementById('skillArea2').style.display = 'none';
   // 恢复1P技能区位置
   const skillArea = document.getElementById('skillArea');
