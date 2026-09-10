@@ -1821,16 +1821,16 @@ function loadGame(slot){
       document.getElementById('skillArea2').style.display = 'flex';
       document.getElementById('joystick').style.display = 'block';
       document.getElementById('skillArea').style.display = 'flex';
-      // 1P技能区移到左半屏
+      // 1P技能区和摇杆位置由CSS .coop-mode 控制，清除固定像素内联样式
       const skillArea = document.getElementById('skillArea');
-      if(skillArea){ skillArea.style.right = 'auto'; skillArea.style.left = '150px'; skillArea.style.bottom = '25px'; skillArea.style.alignItems = 'flex-start'; }
+      if(skillArea){ skillArea.style.right = ''; skillArea.style.left = ''; skillArea.style.bottom = ''; skillArea.style.alignItems = ''; skillArea.style.flexDirection = ''; }
       const joystick = document.getElementById('joystick');
-      if(joystick){ joystick.style.left = '30px'; joystick.style.bottom = '30px'; }
-      // 2P技能区移到右半屏
+      if(joystick){ joystick.style.left = ''; joystick.style.bottom = ''; joystick.style.width = ''; joystick.style.height = ''; }
+      // 2P技能区和摇杆位置由CSS .coop-mode 控制，清除固定像素内联样式
       const skillArea2 = document.getElementById('skillArea2');
-      if(skillArea2){ skillArea2.style.left = 'auto'; skillArea2.style.right = '150px'; skillArea2.style.bottom = '25px'; skillArea2.style.alignItems = 'flex-end'; }
+      if(skillArea2){ skillArea2.style.left = ''; skillArea2.style.right = ''; skillArea2.style.bottom = ''; skillArea2.style.alignItems = ''; skillArea2.style.flexDirection = ''; }
       const joystick2 = document.getElementById('joystick2');
-      if(joystick2){ joystick2.style.right = '30px'; joystick2.style.bottom = '30px'; }
+      if(joystick2){ joystick2.style.right = ''; joystick2.style.bottom = ''; joystick2.style.width = ''; joystick2.style.height = ''; }
       // 隐藏2P手雷按钮（初始没有）
       const grenadeBtn2 = document.getElementById('grenadeBtn2');
       if(grenadeBtn2) grenadeBtn2.style.display = (G.player2.grenade > 0) ? 'flex' : 'none';
@@ -5827,9 +5827,9 @@ function startCoopGame(){
   if(digBtn) digBtn.style.display = '';
   const grenadeBtn = document.getElementById('grenadeBtn');
   if(grenadeBtn) grenadeBtn.style.display = '';
-  // 隐藏单人模式的瞄准轮盘（双人模式暂不支持）
+  // 显示1P和2P的瞄准轮盘（双人模式都需要）
   const aimJoy = document.getElementById('aimJoystick');
-  if(aimJoy) aimJoy.style.display = 'none';
+  if(aimJoy) aimJoy.style.display = '';
   // 隐藏索要按钮和对话按钮（双人模式暂不支持）
   const askBtn = document.getElementById('askBtn');
   if(askBtn) askBtn.style.display = 'none';
