@@ -528,6 +528,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="cheatRow"><button id="prankBleed" style="flex:1;padding:6px;font-size:12px;cursor:pointer">🩸 让对方持续流血</button></div>
     <div class="cheatRow"><button id="prankTeleport" style="flex:1;padding:6px;font-size:12px;cursor:pointer">🌀 把对方随机传送</button></div>
     <div class="cheatRow"><button id="prankWeak" style="flex:1;padding:6px;font-size:12px;cursor:pointer">🐢 对方变弱10秒</button></div>
+    <div class="cheatRow"><button id="prankRevive" style="flex:1;padding:6px;font-size:12px;cursor:pointer;background:#90ee90;border-color:#228b22;color:#228b22">❤️ 复活对方</button></div>
   </div>
 
   <!-- 虚拟摇杆 -->
@@ -5408,9 +5409,12 @@ document.getElementById('weaponSwitch').addEventListener('click', switchWeapon);
 // 桂面板
 document.getElementById('guiBtn').addEventListener('click', ()=>{
   if(G.isCoop){
-    // 双人模式：1P打开整蛊面板，整蛊2P
+    // 双人模式：1P打开整蛊面板，整蛊2P，面板在左半屏
     G.prankOpener = 1;
-    document.getElementById('prankPanel').style.display = 'block';
+    const panel = document.getElementById('prankPanel');
+    panel.style.left = '10px';
+    panel.style.right = 'auto';
+    panel.style.display = 'block';
     document.getElementById('cheatPanel').style.display = 'none';
   } else {
     // 单人模式：显示作弊面板
@@ -5420,9 +5424,12 @@ document.getElementById('guiBtn').addEventListener('click', ()=>{
 // 2P蛊按钮
 document.getElementById('guiBtn2').addEventListener('click', ()=>{
   if(G.isCoop){
-    // 2P打开整蛊面板，整蛊1P
+    // 2P打开整蛊面板，整蛊1P，面板在右半屏
     G.prankOpener = 2;
-    document.getElementById('prankPanel').style.display = 'block';
+    const panel = document.getElementById('prankPanel');
+    panel.style.right = '10px';
+    panel.style.left = 'auto';
+    panel.style.display = 'block';
     document.getElementById('cheatPanel').style.display = 'none';
   }
 });
@@ -5545,6 +5552,26 @@ document.getElementById('prankWeak').addEventListener('click', ()=>{
     target.weakTimer = 600; // 10秒
     playSound('hurt');
     showToast('🐢 ' + label + ' 被整蛊变弱了！');
+  }
+  document.getElementById('prankPanel').style.display = 'none';
+});
+// 复活对方
+document.getElementById('prankRevive').addEventListener('click', ()=>{
+  const target = getPrankTarget();
+  const label = getPrankTargetLabel();
+  if(target){
+    // 只有对方死亡时才能复活
+    if((G.prankOpener === 1 && G.coopP2Dead) || (G.prankOpener === 2 && G.coopP1Dead)){
+      target.hp = Math.floor(target.maxHp / 2); // 半血复活
+      target.invincible = 180; // 3秒无敌
+      if(G.prankOpener === 1) G.coopP2Dead = false;
+      else G.coopP1Dead = false;
+      playSound('heal');
+      showToast('❤️ ' + label + ' 被整蛊复活了！（半血+3秒无敌）');
+      updateUI();
+    } else {
+      showToast('⚠️ ' + label + ' 还活着，不需要复活！');
+    }
   }
   document.getElementById('prankPanel').style.display = 'none';
 });
