@@ -399,6 +399,15 @@ input:checked + .slider:before{transform:translateX(24px)}
     max-font-size:20px !important;
     margin:0 !important;
   }
+  /* 蛊按钮：1P在左半屏右上角，2P在右半屏左上角 */
+  .coop-mode #guiBtn{
+    right:calc(50% + 10px) !important;
+    left:auto !important;
+  }
+  .coop-mode #guiBtn2{
+    left:calc(50% + 10px) !important;
+    right:auto !important;
+  }
   /* 顶部状态栏 */
   .coop-mode #topBar{
     padding:1vmin 2vmin !important;
@@ -556,7 +565,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn" id="atkBtn">👊</button>
       <button class="skillBtn" id="grenadeBtn">💣</button>
       <button class="skillBtn" id="dashBtn">💨</button>
-      <button class="skillBtn" id="reviveBtn" style="display:none;background:#ff69b4">💖</button>
+      <button class="skillBtn" id="reviveBtn" style="display:none;background:#ff69b4">💉</button>
     </div>
   </div>
 
@@ -587,7 +596,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn2" id="atkBtn2">👊</button>
       <button class="skillBtn2" id="grenadeBtn2">💣</button>
       <button class="skillBtn2" id="dashBtn2">💨</button>
-      <button class="skillBtn2" id="reviveBtn2" style="display:none;background:#ff69b4">💖</button>
+      <button class="skillBtn2" id="reviveBtn2" style="display:none;background:#ff69b4">💉</button>
     </div>
   </div>
 
@@ -615,7 +624,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="shopItem"><span id="shopGrenadeText">💣 手雷×3 (范围)</span><button id="buyGrenade">40金</button></div>
     <div class="shopItem"><span id="shopBandageText">🩹 绷带 (回5血+止血)</span><button id="buyBandage">30金</button></div>
     <div class="shopItem"><span id="shopMedkitText">💊 医疗包 (回满血+止血)</span><button id="buyMedkit">80金</button></div>
-    <div class="shopItem"><span id="shopReviveText">💖 救助器 (复活队友，7秒)</span><button id="buyRevive">100金</button></div>
+    <div class="shopItem"><span id="shopReviveText">💉 救助器 (复活队友，7秒)</span><button id="buyRevive">100金</button></div>
     </div>
     <div class="shopFooter">
     <button id="merchantTalkBtn" style="width:100%;margin-bottom:8px;padding:8px;background:#9b59b6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">💬 聊聊</button>
@@ -4702,8 +4711,14 @@ function drawPlayer2(){
   ctx.textBaseline = 'middle';
   ctx.fillText(p.face, 0, 0);
   if(p.attackAnim>0 && (p.weapon==='fist'||p.weapon==='knife')){
+    ctx.save();
+    ctx.translate(p.facing*p.w*0.7, 0);
+    if(p.facing < 0) ctx.scale(-1, 1);
     ctx.font = (p.w*0.7)+'px serif';
-    ctx.fillText(p.weapon==='knife'?'🔪':'💥', p.facing*p.w*0.7, 0);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(p.weapon==='knife'?'🔪':'💥', 0, 0);
+    ctx.restore();
   }
   ctx.restore();
 }
@@ -4749,8 +4764,14 @@ function drawPlayer(){
 
   // 攻击特效
   if(p.attackAnim>0 && (p.weapon==='fist'||p.weapon==='knife')){
+    ctx.save();
+    ctx.translate(p.facing*p.w*0.7, 0);
+    if(p.facing < 0) ctx.scale(-1, 1);
     ctx.font = (p.w*0.7)+'px serif';
-    ctx.fillText(p.weapon==='knife'?'🔪':'💥', p.facing*p.w*0.7, 0);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(p.weapon==='knife'?'🔪':'💥', 0, 0);
+    ctx.restore();
   }
 
   ctx.restore();
@@ -4832,7 +4853,7 @@ function updateUI(){
     if(reviveBtn){
       const canRevive = G.coopP2Dead && (p.reviveKit || 0) > 0 && !G.revivingP2;
       reviveBtn.style.display = canRevive ? 'flex' : 'none';
-      if(canRevive) reviveBtn.textContent = '💖'+(p.reviveKit || 0);
+      if(canRevive) reviveBtn.textContent = '💉'+(p.reviveKit || 0);
       if(G.revivingP2 && G.reviveTimerP2 > 0){
         reviveBtn.style.display = 'flex';
         reviveBtn.textContent = '⏳'+Math.ceil(G.reviveTimerP2/60);
@@ -4846,7 +4867,7 @@ function updateUI(){
     if(reviveBtn2){
       const canRevive2 = G.coopP1Dead && (p2.reviveKit || 0) > 0 && !G.revivingP1;
       reviveBtn2.style.display = canRevive2 ? 'flex' : 'none';
-      if(canRevive2) reviveBtn2.textContent = '💖'+(p2.reviveKit || 0);
+      if(canRevive2) reviveBtn2.textContent = '💉'+(p2.reviveKit || 0);
       if(G.revivingP1 && G.reviveTimerP1 > 0){
         reviveBtn2.style.display = 'flex';
         reviveBtn2.textContent = '⏳'+Math.ceil(G.reviveTimerP1/60);
@@ -5714,7 +5735,7 @@ document.getElementById('buyRevive').addEventListener('click', ()=>{
     if(!G.cheat.infGold) buyer.gold-=100;
     buyer.reviveKit = (buyer.reviveKit || 0) + 1;
     playSound('pickup');
-    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '💖 购买了救助器！');
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '💉 购买了救助器！');
     updateUI();
     saveGame();
   } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
