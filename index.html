@@ -360,7 +360,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     max-height:104px !important;
     min-width:60px !important;
     min-height:60px !important;
-    z-index:16 !important;
+    z-index:60 !important;
   }
   .coop-mode #aimOuter2{
     width:100% !important;
@@ -5464,22 +5464,25 @@ function switchWeapon(){
   showToast((G.isCoop ? '1P ' : '') + t('switchWeapon')+G.player.weapon);
 }
 function updateAimJoystick(){
-  // 1P瞄准轮盘：只有枪/火焰弹/蓄力火焰弹时显示
+  // 1P瞄准轮盘：枪/火焰弹/蓄力火焰弹/光线/散射光线时显示
   const aim = document.getElementById('aimJoystick');
   if(aim){
-    if(G.player && (G.player.weapon === 'gun' || G.player.weapon === 'fire' || G.player.weapon === 'chargeFire')){
-      aim.style.display = 'block';
+    if(G.player && (G.player.weapon === 'gun' || G.player.weapon === 'fire' || G.player.weapon === 'chargeFire' || G.player.weapon === 'laser' || G.player.weapon === 'spreadLaser')){
+      aim.style.setProperty('display', 'block', 'important');
+      aim.style.setProperty('z-index', '60', 'important');
     } else {
-      aim.style.display = 'none';
+      aim.style.setProperty('display', 'none', 'important');
     }
   }
-  // 2P瞄准轮盘：只有光线/散射光线时显示
+  // 2P瞄准轮盘：枪/火焰弹/蓄力火焰弹/光线/散射光线时显示
   const aim2 = document.getElementById('aimJoystick2');
   if(aim2 && G.isCoop && G.player2){
-    if(G.player2.weapon === 'laser' || G.player2.weapon === 'spreadLaser'){
-      aim2.style.display = 'block';
+    const w2 = G.player2.weapon;
+    if(w2 === 'gun' || w2 === 'fire' || w2 === 'chargeFire' || w2 === 'laser' || w2 === 'spreadLaser'){
+      aim2.style.setProperty('display', 'block', 'important');
+      aim2.style.setProperty('z-index', '60', 'important');
     } else {
-      aim2.style.display = 'none';
+      aim2.style.setProperty('display', 'none', 'important');
     }
   }
 }
