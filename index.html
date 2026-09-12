@@ -598,6 +598,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn" id="atkBtn">👊</button>
       <button class="skillBtn" id="grenadeBtn">💣</button>
       <button class="skillBtn" id="dashBtn">💨</button>
+      <button class="skillBtn" id="nitroBtn" style="display:none;background:#ff4500">🚀</button>
       <button class="skillBtn" id="carBtn" style="display:none;background:#ff6347">🚗</button>
       <button class="skillBtn" id="reviveBtn" style="display:none;background:#ff69b4">💉</button>
     </div>
@@ -630,6 +631,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn2" id="atkBtn2">👊</button>
       <button class="skillBtn2" id="grenadeBtn2">💣</button>
       <button class="skillBtn2" id="dashBtn2">💨</button>
+      <button class="skillBtn2" id="nitroBtn2" style="display:none;background:#ff4500">🚀</button>
       <button class="skillBtn2" id="carBtn2" style="display:none;background:#ff6347">🚗</button>
       <button class="skillBtn2" id="reviveBtn2" style="display:none;background:#ff69b4">💉</button>
     </div>
@@ -827,6 +829,9 @@ const G = {
   carOwned: false, // 是否拥有车
   playerInCar: false, // 1P是否在车里
   player2InCar: false, // 2P是否在车里
+  carNitroActive: false, // 氮气加速是否激活
+  carNitroTimer: 0, // 氮气加速剩余时间（帧）
+  carNitroCooldown: 0, // 氮气加速冷却时间（帧）
 };
 
 // ==================== 声音系统 ====================
@@ -4970,6 +4975,42 @@ function updateUI(){
   // 攻击按钮图标
   const atkIcons = {fist:'👊',knife:'🔪',fire:'🔥',chargeFire:'💥',gun:'🔫'};
   document.getElementById('atkBtn').textContent = atkIcons[p.weapon]||'👊';
+  
+  // 氮气按钮：只有在车里时显示
+  const nitroBtn = document.getElementById('nitroBtn');
+  if(nitroBtn){
+    const inCar = G.playerInCar || G.player2InCar;
+    nitroBtn.style.display = inCar ? 'flex' : 'none';
+    if(inCar){
+      if(G.carNitroActive){
+        nitroBtn.textContent = '🔥'+Math.ceil(G.carNitroTimer/60);
+        nitroBtn.disabled = true;
+      } else if(G.carNitroCooldown > 0){
+        nitroBtn.textContent = '⏳'+Math.ceil(G.carNitroCooldown/60);
+        nitroBtn.disabled = true;
+      } else {
+        nitroBtn.textContent = '🚀';
+        nitroBtn.disabled = false;
+      }
+    }
+  }
+  const nitroBtn2 = document.getElementById('nitroBtn2');
+  if(nitroBtn2){
+    const inCar = G.playerInCar || G.player2InCar;
+    nitroBtn2.style.display = inCar ? 'flex' : 'none';
+    if(inCar){
+      if(G.carNitroActive){
+        nitroBtn2.textContent = '🔥'+Math.ceil(G.carNitroTimer/60);
+        nitroBtn2.disabled = true;
+      } else if(G.carNitroCooldown > 0){
+        nitroBtn2.textContent = '⏳'+Math.ceil(G.carNitroCooldown/60);
+        nitroBtn2.disabled = true;
+      } else {
+        nitroBtn2.textContent = '🚀';
+        nitroBtn2.disabled = false;
+      }
+    }
+  }
 }
 
 // ==================== 游戏结束 ====================
@@ -5394,22 +5435,30 @@ window.addEventListener('keydown', function(e){
   else if(key==='l'||key==='L'){ throwGrenade(); }
   else if(key==='q'||key==='Q'){ switchWeapon(); }
   else if(key==='e'||key==='E'){ toggleCar(1); }
-  else if(key==='Shift'){ e.preventDefault(); playerDash(); }
+  else if(key==='Shift'){ 
+    e.preventDefault(); 
+    if(G.playerInCar){ activateCarNitro(); }
+    else { playerDash(); }
+  }
   // 2P操作键（数字键2-5，仅双人模式）
   if(G.isCoop){
     if(key==='2'||key==='Numpad2'){ e.preventDefault();
-      // 2P冲刺
-      const p2 = G.player2;
-      if(p2 && G.dashCooldown2 <= 0 && !p2.isDashing && p2.stunTimer<=0 && p2.slipTimer<=0){
-        let dx=0, dy=0;
-        if(inputState2.left) dx -= 1;
-        if(inputState2.right) dx += 1;
-        if(inputState2.up) dy -= 1;
-        if(inputState2.down) dy += 1;
-        if(dx===0 && dy===0 && joy2.active){ dx=joy2.dx||0; dy=joy2.dy||0; }
-        if(dx===0 && dy===0){ dx = p2.facing; dy = 0; }
-        const len = Math.hypot(dx,dy);
-        if(len>0){ dx/=len; dy/=len; p2.dashDir={x:dx,y:dy}; p2.isDashing=true; p2.dashTimer=12; p2.invincible=15; if(!G.cheat.dashNoCd) G.dashCooldown2=G.dashCooldownMax; playSound('dash'); spawnParticles(p2.x+p2.w/2,p2.y+p2.h/2,'#88ccff',10); }
+      // 2P在车里时触发氮气加速，否则冲刺
+      if(G.player2InCar){
+        activateCarNitro();
+      } else {
+        const p2 = G.player2;
+        if(p2 && G.dashCooldown2 <= 0 && !p2.isDashing && p2.stunTimer<=0 && p2.slipTimer<=0){
+          let dx=0, dy=0;
+          if(inputState2.left) dx -= 1;
+          if(inputState2.right) dx += 1;
+          if(inputState2.up) dy -= 1;
+          if(inputState2.down) dy += 1;
+          if(dx===0 && dy===0 && joy2.active){ dx=joy2.dx||0; dy=joy2.dy||0; }
+          if(dx===0 && dy===0){ dx = p2.facing; dy = 0; }
+          const len = Math.hypot(dx,dy);
+          if(len>0){ dx/=len; dy/=len; p2.dashDir={x:dx,y:dy}; p2.isDashing=true; p2.dashTimer=12; p2.invincible=15; if(!G.cheat.dashNoCd) G.dashCooldown2=G.dashCooldownMax; playSound('dash'); spawnParticles(p2.x+p2.w/2,p2.y+p2.h/2,'#88ccff',10); }
+        }
       }
     }
     else if(key==='3'||key==='Numpad3'){ player2Dig(); }
@@ -5460,6 +5509,8 @@ document.getElementById('grenadeBtn').addEventListener('click', throwGrenade);
 document.getElementById('dashBtn').addEventListener('click', playerDash);
 document.getElementById('carBtn').addEventListener('click', ()=>toggleCar(1));
 document.getElementById('carBtn2').addEventListener('click', ()=>toggleCar(2));
+document.getElementById('nitroBtn').addEventListener('click', activateCarNitro);
+document.getElementById('nitroBtn2').addEventListener('click', activateCarNitro);
 
 // 武器切换
 function switchWeapon(){
@@ -5888,9 +5939,58 @@ function toggleCar(playerNum){
   }
 }
 
+// 氮气加速
+function activateCarNitro(){
+  if(!G.carOwned || !G.car) return;
+  // 必须有人在车里才能用氮气
+  if(!G.playerInCar && !G.player2InCar){
+    showToast('必须在车里才能使用氮气加速！');
+    return;
+  }
+  // 冷却中
+  if(G.carNitroCooldown > 0){
+    showToast('氮气加速冷却中：' + Math.ceil(G.carNitroCooldown/60) + '秒');
+    return;
+  }
+  // 已经在氮气加速中
+  if(G.carNitroActive){
+    return;
+  }
+  // 激活氮气加速
+  G.carNitroActive = true;
+  G.carNitroTimer = 180; // 持续3秒
+  G.carNitroCooldown = 600; // 冷却10秒
+  G.car.maxSpeed = 13; // 速度翻倍
+  playSound('unlock');
+  showToast('🚀 氮气加速激活！');
+  // 屏幕震动
+  G.shake = 10;
+}
+
 function updateCar(){
   if(!G.carOwned || !G.car) return;
   const car = G.car;
+  
+  // 氮气加速更新
+  if(G.carNitroActive){
+    G.carNitroTimer--;
+    if(G.carNitroTimer <= 0){
+      G.carNitroActive = false;
+      car.maxSpeed = 6.5; // 恢复正常速度
+      showToast('氮气加速结束');
+    }
+    // 车尾喷火特效
+    if(Math.random() < 0.5){
+      const fireX = car.facing > 0 ? car.x : car.x + car.w;
+      const fireY = car.y + car.h/2;
+      spawnParticles(fireX, fireY, '#ff6600', 3);
+      spawnParticles(fireX, fireY, '#ffcc00', 2);
+    }
+  }
+  // 冷却更新
+  if(G.carNitroCooldown > 0){
+    G.carNitroCooldown--;
+  }
   
   // 确定谁在驾驶（1P优先，2P其次）
   let driver = null;
@@ -6049,6 +6149,40 @@ function drawCar(){
   ctx.fillRect(car.x + car.w - 4, car.y + 8, 4, 8);
   ctx.fillStyle = car.facing < 0 ? '#f1c40f' : '#7f8c8d';
   ctx.fillRect(car.x, car.y + 8, 4, 8);
+  
+  // 氮气加速特效：车尾喷火
+  if(G.carNitroActive){
+    const exhaustX = car.facing > 0 ? car.x : car.x + car.w;
+    const exhaustY = car.y + car.h/2;
+    // 外层火焰（橙色）
+    ctx.fillStyle = 'rgba(255, 100, 0, 0.8)';
+    ctx.beginPath();
+    const flameLen = 20 + Math.random() * 15;
+    if(car.facing > 0){
+      ctx.moveTo(exhaustX, exhaustY - 8);
+      ctx.lineTo(exhaustX - flameLen, exhaustY);
+      ctx.lineTo(exhaustX, exhaustY + 8);
+    } else {
+      ctx.moveTo(exhaustX, exhaustY - 8);
+      ctx.lineTo(exhaustX + flameLen, exhaustY);
+      ctx.lineTo(exhaustX, exhaustY + 8);
+    }
+    ctx.fill();
+    // 内层火焰（黄色）
+    ctx.fillStyle = 'rgba(255, 220, 0, 0.9)';
+    ctx.beginPath();
+    const innerFlameLen = flameLen * 0.6;
+    if(car.facing > 0){
+      ctx.moveTo(exhaustX, exhaustY - 4);
+      ctx.lineTo(exhaustX - innerFlameLen, exhaustY);
+      ctx.lineTo(exhaustX, exhaustY + 4);
+    } else {
+      ctx.moveTo(exhaustX, exhaustY - 4);
+      ctx.lineTo(exhaustX + innerFlameLen, exhaustY);
+      ctx.lineTo(exhaustX, exhaustY + 4);
+    }
+    ctx.fill();
+  }
   ctx.restore();
 }
 
