@@ -289,38 +289,44 @@ input:checked + .slider:before{transform:translateX(24px)}
     top:30% !important;
     left:30% !important;
   }
-  /* 1P技能按钮：横向排列，在摇杆右边 */
+  /* 1P技能按钮：纵向排列，在摇杆右边，避免超出半屏 */
   .coop-mode #skillArea{
-    left:24vmin !important;
+    left:22vmin !important;
     bottom:2vmin !important;
-    gap:2vmin !important;
+    gap:1.5vmin !important;
     right:auto !important;
-    flex-direction:row !important;
-    flex-wrap:wrap !important;
-    align-items:flex-end !important;
-    justify-content:flex-start !important;
+    flex-direction:column !important;
+    flex-wrap:nowrap !important;
+    align-items:flex-start !important;
+    justify-content:flex-end !important;
     width:auto !important;
   }
   .coop-mode .skillBtn{
-    width:11vmin !important;
-    height:11vmin !important;
-    max-width:80px !important;
-    max-height:80px !important;
-    min-width:48px !important;
-    min-height:48px !important;
-    font-size:5vmin !important;
-    max-font-size:32px !important;
+    width:10vmin !important;
+    height:10vmin !important;
+    max-width:72px !important;
+    max-height:72px !important;
+    min-width:44px !important;
+    min-height:44px !important;
+    font-size:4.5vmin !important;
+    max-font-size:28px !important;
   }
   .coop-mode #weaponSwitch{
-    width:14vmin !important;
-    height:7vmin !important;
-    max-width:96px !important;
-    max-height:48px !important;
-    min-width:60px !important;
-    min-height:32px !important;
-    font-size:3.2vmin !important;
-    max-font-size:20px !important;
+    width:12vmin !important;
+    height:6vmin !important;
+    max-width:80px !important;
+    max-height:44px !important;
+    min-width:56px !important;
+    min-height:30px !important;
+    font-size:2.8vmin !important;
+    max-font-size:18px !important;
     margin:0 !important;
+  }
+  .coop-mode #skillRow{
+    gap:1.5vmin !important;
+  }
+  .coop-mode #skillRow2{
+    gap:1.5vmin !important;
   }
   /* 2P按钮区域：右下角 */
   .coop-mode #joystick2{
@@ -366,37 +372,37 @@ input:checked + .slider:before{transform:translateX(24px)}
     top:30% !important;
     left:30% !important;
   }
-  /* 2P技能按钮：横向排列，在摇杆左边 */
+  /* 2P技能按钮：纵向排列，在摇杆左边，避免超出半屏 */
   .coop-mode #skillArea2{
-    right:24vmin !important;
+    right:22vmin !important;
     bottom:2vmin !important;
-    gap:2vmin !important;
+    gap:1.5vmin !important;
     left:auto !important;
-    flex-direction:row !important;
-    flex-wrap:wrap !important;
+    flex-direction:column !important;
+    flex-wrap:nowrap !important;
     align-items:flex-end !important;
     justify-content:flex-end !important;
     width:auto !important;
   }
   .coop-mode .skillBtn2{
-    width:11vmin !important;
-    height:11vmin !important;
-    max-width:80px !important;
-    max-height:80px !important;
-    min-width:48px !important;
-    min-height:48px !important;
-    font-size:5vmin !important;
-    max-font-size:32px !important;
+    width:10vmin !important;
+    height:10vmin !important;
+    max-width:72px !important;
+    max-height:72px !important;
+    min-width:44px !important;
+    min-height:44px !important;
+    font-size:4.5vmin !important;
+    max-font-size:28px !important;
   }
   .coop-mode #weaponSwitch2{
-    width:14vmin !important;
-    height:7vmin !important;
-    max-width:96px !important;
-    max-height:48px !important;
-    min-width:60px !important;
-    min-height:32px !important;
-    font-size:3.2vmin !important;
-    max-font-size:20px !important;
+    width:12vmin !important;
+    height:6vmin !important;
+    max-width:80px !important;
+    max-height:44px !important;
+    min-width:56px !important;
+    min-height:30px !important;
+    font-size:2.8vmin !important;
+    max-font-size:18px !important;
     margin:0 !important;
   }
   /* 蛊按钮：1P在左半屏右上角，2P在右半屏左上角 */
@@ -407,6 +413,28 @@ input:checked + .slider:before{transform:translateX(24px)}
   .coop-mode #guiBtn2{
     left:calc(50% + 10px) !important;
     right:auto !important;
+  }
+  /* 商店面板：双人模式下适配半屏，提高z-index避免被分屏线遮挡 */
+  .coop-mode #shopPanel{
+    width:260px !important;
+    max-height:75vh !important;
+    z-index:60 !important;
+    padding:12px !important;
+  }
+  .coop-mode #shopPanel h3{
+    font-size:16px !important;
+    margin-bottom:8px !important;
+  }
+  .coop-mode .shopItem{
+    margin:6px 0 !important;
+    padding:6px !important;
+  }
+  .coop-mode .shopItem span{
+    font-size:12px !important;
+  }
+  .coop-mode .shopItem button{
+    padding:4px 8px !important;
+    font-size:12px !important;
   }
   /* 顶部状态栏 */
   .coop-mode #topBar{
@@ -625,6 +653,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="shopItem"><span id="shopBandageText">🩹 绷带 (回5血+止血)</span><button id="buyBandage">30金</button></div>
     <div class="shopItem"><span id="shopMedkitText">💊 医疗包 (回满血+止血)</span><button id="buyMedkit">80金</button></div>
     <div class="shopItem"><span id="shopReviveText">💉 救助器 (复活队友，7秒)</span><button id="buyRevive">100金</button></div>
+    <div class="shopItem"><span id="shopCarText">🚗 越野车 (撞怪秒杀+速度快+可撞树)</span><button id="buyCar">500金</button></div>
     </div>
     <div class="shopFooter">
     <button id="merchantTalkBtn" style="width:100%;margin-bottom:8px;padding:8px;background:#9b59b6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">💬 聊聊</button>
@@ -786,6 +815,11 @@ const G = {
   isDashing: false,
   dashTimer: 0,
   dashDir: {x:0, y:0},
+  // 载具系统
+  car: null, // 车的实体 {x,y,w,h,speed,facing,hp}
+  carOwned: false, // 是否拥有车
+  playerInCar: false, // 1P是否在车里
+  player2InCar: false, // 2P是否在车里
 };
 
 // ==================== 声音系统 ====================
@@ -1829,6 +1863,8 @@ function loadGame(slot){
       document.getElementById('skillArea').style.display = 'flex';
       // 关键：添加.coop-mode类到#wrap元素，让所有双人模式CSS规则生效
       document.getElementById('wrap').classList.add('coop-mode');
+      // 关键：添加coop-mode类后立即重新计算canvas尺寸，确保内部分辨率与显示尺寸一致
+      resize();
       // 1P技能区和摇杆位置由CSS .coop-mode 控制，清除固定像素内联样式
       const skillArea = document.getElementById('skillArea');
       if(skillArea){ skillArea.style.right = ''; skillArea.style.left = ''; skillArea.style.bottom = ''; skillArea.style.alignItems = ''; skillArea.style.flexDirection = ''; }
@@ -2259,6 +2295,7 @@ function playerDash(){
 function playerAttack(){
   const p = G.player;
   if(G.atkCooldown>0||p.stunTimer>0) return;
+  if(G.playerInCar){ return; } // 在车里不能攻击
   playSound('attack');
   const w = p.weapon;
   p.attackAnim = 12;
@@ -2480,6 +2517,7 @@ function spawnParticles(x,y,color,n){
 function playerDig(){
   const p = G.player;
   if(p.stunTimer>0) return;
+  if(G.playerInCar){ return; } // 在车里不能挖掘（撞树即可）
   for(let i=G.woods.length-1;i>=0;i--){
     const wood = G.woods[i];
     if(dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:wood.x+wood.w/2,y:wood.y+wood.h/2}) < 95){
@@ -3014,6 +3052,8 @@ function update(){
   updateBosses();
   // 更新NPC
   updateNPCs();
+  // 更新载具
+  updateCar();
   // 更新投射物
   updateProjectiles();
   // 更新地面火焰
@@ -3040,6 +3080,8 @@ function update(){
   if(G.isCoop && G.player2 && G.player2.hp<=0 && !G.cheat.infHp && !G.coopP2Dead){
     handlePlayerDeath(G.player2, true);
   }
+  // 每帧更新瞄准轮盘显示（确保武器变化后及时显示/隐藏）
+  updateAimJoystick();
 }
 
 function checkUnlocks(){
@@ -4167,6 +4209,7 @@ function render(){
     if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
     G.mobs.forEach(m=>drawEntity(m, true));
     G.bosses.forEach(b=>drawBoss(b));
+    drawCar();
     if(G.player) drawPlayer();
     if(G.player2 && !G.coopP2Dead) drawPlayer2();
     G.projectiles.forEach(pr=>drawProjectile(pr));
@@ -4221,6 +4264,7 @@ function render(){
       if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
       G.mobs.forEach(m=>drawEntity(m, true));
       G.bosses.forEach(b=>drawBoss(b));
+      drawCar();
       if(G.player) drawPlayer();
       if(G.player2 && !G.coopP2Dead) drawPlayer2();
       G.projectiles.forEach(pr=>drawProjectile(pr));
@@ -4319,6 +4363,9 @@ ctx.globalAlpha = 1;
 
   // Boss
   G.bosses.forEach(b=>drawBoss(b));
+
+  // 载具
+  drawCar();
 
   // 玩家
   if(G.player) drawPlayer();
@@ -5331,6 +5378,7 @@ window.addEventListener('keydown', function(e){
   else if(key==='k'||key==='K'){ playerDig(); }
   else if(key==='l'||key==='L'){ throwGrenade(); }
   else if(key==='q'||key==='Q'){ switchWeapon(); }
+  else if(key==='e'||key==='E'){ toggleCar(1); }
   else if(key==='Shift'){ e.preventDefault(); playerDash(); }
   // 2P操作键（数字键2-5，仅双人模式）
   if(G.isCoop){
@@ -5352,6 +5400,7 @@ window.addEventListener('keydown', function(e){
     else if(key==='3'||key==='Numpad3'){ player2Dig(); }
     else if(key==='4'||key==='Numpad4'){ player2Grenade(); }
     else if(key==='5'||key==='Numpad5'){ player2SwitchWeapon(); }
+    else if(key==='6'||key==='Numpad6'){ toggleCar(2); }
   }
 });
 window.addEventListener('keyup', function(e){
@@ -5740,11 +5789,230 @@ document.getElementById('buyRevive').addEventListener('click', ()=>{
     saveGame();
   } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
 });
+// 购买越野车
+document.getElementById('buyCar').addEventListener('click', ()=>{
+  const buyer = getShopBuyer();
+  if(G.carOwned){
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '🚗 已经有车了！');
+    return;
+  }
+  if(G.cheat.infGold || buyer.gold>=500){
+    if(!G.cheat.infGold) buyer.gold-=500;
+    G.carOwned = true;
+    // 在玩家附近生成车
+    const spawnX = clamp(buyer.x + 80, 20, WORLD_W-80);
+    const spawnY = clamp(buyer.y, 20, WORLD_H-60);
+    G.car = {x:spawnX, y:spawnY, w:60, h:40, speed:0, maxSpeed:6.5, facing:1, hp:100, vx:0, vy:0};
+    playSound('unlock');
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '🚗 购买了越野车！按E上车/下车');
+    updateUI();
+    saveGame();
+  } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
+});
 document.getElementById('closeShop').addEventListener('click', ()=>{
   document.getElementById('shopPanel').style.display='none';
   G._shopOpened = false;
   G.shopCloseCooldown = 120; // 2秒内不自动打开
 });
+
+// ==================== 载具系统 ====================
+function toggleCar(playerNum){
+  if(!G.carOwned || !G.car) return;
+  const p = playerNum === 2 ? G.player2 : G.player;
+  if(!p) return;
+  const inCar = playerNum === 2 ? G.player2InCar : G.playerInCar;
+  
+  if(inCar){
+    // 下车
+    if(playerNum === 2) G.player2InCar = false;
+    else G.playerInCar = false;
+    // 玩家出现在车旁边
+    p.x = G.car.x + (playerNum === 2 ? -50 : 70);
+    p.y = G.car.y;
+    p.invincible = 30; // 下车后短暂无敌
+    showToast((playerNum === 2 ? '2P ' : '1P ') + '下车了');
+    playSound('pickup');
+  } else {
+    // 上车：检查是否靠近车
+    const carCx = G.car.x + G.car.w/2;
+    const carCy = G.car.y + G.car.h/2;
+    const pCx = p.x + p.w/2;
+    const pCy = p.y + p.h/2;
+    const dist = Math.hypot(carCx - pCx, carCy - pCy);
+    if(dist < 80){
+      if(playerNum === 2) G.player2InCar = true;
+      else G.playerInCar = true;
+      showToast((playerNum === 2 ? '2P ' : '1P ') + '上车了！WASD/方向键驾驶，撞击秒杀怪物');
+      playSound('unlock');
+    } else {
+      showToast((playerNum === 2 ? '2P ' : '1P ') + '离车太远，无法上车');
+    }
+  }
+}
+
+function updateCar(){
+  if(!G.carOwned || !G.car) return;
+  const car = G.car;
+  
+  // 确定谁在驾驶（1P优先，2P其次）
+  let driver = null;
+  let driverNum = 0;
+  if(G.playerInCar && G.player){
+    driver = G.player;
+    driverNum = 1;
+  } else if(G.player2InCar && G.player2){
+    driver = G.player2;
+    driverNum = 2;
+  }
+  
+  if(driver){
+    // 获取驾驶输入
+    let dx = 0, dy = 0;
+    if(driverNum === 1){
+      if(inputState.left) dx -= 1;
+      if(inputState.right) dx += 1;
+      if(inputState.up) dy -= 1;
+      if(inputState.down) dy += 1;
+      // 移动端摇杆
+      if(dx===0 && dy===0 && joy.active){ dx = joy.dx||0; dy = joy.dy||0; }
+    } else {
+      if(inputState2.left) dx -= 1;
+      if(inputState2.right) dx += 1;
+      if(inputState2.up) dy -= 1;
+      if(inputState2.down) dy += 1;
+      if(dx===0 && dy===0 && joy2.active){ dx = joy2.dx||0; dy = joy2.dy||0; }
+    }
+    
+    // 加速和方向
+    if(dx !== 0 || dy !== 0){
+      const len = Math.hypot(dx, dy);
+      dx /= len; dy /= len;
+      car.vx += dx * 0.5;
+      car.vy += dy * 0.5;
+      car.facing = dx >= 0 ? 1 : -1;
+    }
+    // 摩擦力减速
+    car.vx *= 0.92;
+    car.vy *= 0.92;
+    // 限制最大速度
+    const speed = Math.hypot(car.vx, car.vy);
+    if(speed > car.maxSpeed){
+      car.vx = car.vx / speed * car.maxSpeed;
+      car.vy = car.vy / speed * car.maxSpeed;
+    }
+  } else {
+    // 没人驾驶，车慢慢停下
+    car.vx *= 0.9;
+    car.vy *= 0.9;
+  }
+  
+  // 移动车
+  car.x += car.vx;
+  car.y += car.vy;
+  // 边界限制
+  car.x = clamp(car.x, 0, WORLD_W - car.w);
+  car.y = clamp(car.y, 0, WORLD_H - car.h);
+  
+  // 玩家位置跟车同步
+  if(G.playerInCar && G.player){
+    G.player.x = car.x + 10;
+    G.player.y = car.y - 5;
+  }
+  if(G.player2InCar && G.player2){
+    G.player2.x = car.x + 30;
+    G.player2.y = car.y - 5;
+  }
+  
+  // 碰撞检测：撞怪物秒杀
+  const carBox = {x:car.x, y:car.y, w:car.w, h:car.h};
+  for(let i = G.mobs.length-1; i >= 0; i--){
+    const m = G.mobs[i];
+    if(rectOverlap(carBox, m)){
+      // 秒杀怪物
+      makeCorpse(m);
+      spawnParticles(m.x+m.w/2, m.y+m.h/2, '#ff4444', 12);
+      G.mobs.splice(i, 1);
+      G.killCount++;
+      playSound('kill');
+      // 35%掉金币
+      if(Math.random() < 0.35){
+        if(driverNum === 2 && G.player2) G.player2.gold += 3;
+        else if(G.player) G.player.gold += 3;
+      }
+      // 车稍微减速
+      car.vx *= 0.7;
+      car.vy *= 0.7;
+    }
+  }
+  
+  // 碰撞检测：撞树挖树（获得5金币）
+  for(let i = G.woods.length-1; i >= 0; i--){
+    const w = G.woods[i];
+    if(rectOverlap(carBox, w)){
+      // 挖掉树
+      spawnParticles(w.x+w.w/2, w.y+w.h/2, '#8B4513', 10);
+      G.woods.splice(i, 1);
+      if(driverNum === 2 && G.player2) G.player2.gold += 5;
+      else if(G.player) G.player.gold += 5;
+      showToast((driverNum === 2 ? '2P ' : '1P ') + '撞树获得5金币！');
+      playSound('pickup');
+      // 车稍微减速
+      car.vx *= 0.8;
+      car.vy *= 0.8;
+    }
+  }
+  
+  // 碰撞检测：撞Boss（造成高伤害但不秒杀）
+  G.bosses.forEach(b=>{
+    if(rectOverlap(carBox, b)){
+      b.hp -= 10;
+      b.hurtFlash = 10;
+      spawnParticles(b.x+b.w/2, b.y+b.h/2, '#ff8800', 8);
+      car.vx *= 0.5;
+      car.vy *= 0.5;
+      G.shake = 8;
+    }
+  });
+  
+  // 碰撞检测：撞NPC（不伤害作者NPC，其他NPC击退）
+  Object.values(G.npcs).forEach(npc=>{
+    if(npc && !npc.dead && npc.face !== '🤬' && rectOverlap(carBox, npc)){
+      npc.x += car.vx * 3;
+      npc.y += car.vy * 3;
+      npc.x = clamp(npc.x, 0, WORLD_W - npc.w);
+      npc.y = clamp(npc.y, 0, WORLD_H - npc.h);
+    }
+  });
+}
+
+function drawCar(){
+  if(!G.carOwned || !G.car) return;
+  const car = G.car;
+  ctx.save();
+  // 车的主体
+  ctx.fillStyle = '#e74c3c';
+  ctx.fillRect(car.x, car.y, car.w, car.h);
+  // 车顶
+  ctx.fillStyle = '#c0392b';
+  ctx.fillRect(car.x + 10, car.y - 12, car.w - 20, 15);
+  // 车窗
+  ctx.fillStyle = '#85c1e9';
+  ctx.fillRect(car.x + 14, car.y - 9, car.w - 28, 9);
+  // 车轮
+  ctx.fillStyle = '#2c3e50';
+  ctx.beginPath();
+  ctx.arc(car.x + 12, car.y + car.h, 8, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(car.x + car.w - 12, car.y + car.h, 8, 0, Math.PI*2);
+  ctx.fill();
+  // 车灯
+  ctx.fillStyle = car.facing > 0 ? '#f1c40f' : '#7f8c8d';
+  ctx.fillRect(car.x + car.w - 4, car.y + 8, 4, 8);
+  ctx.fillStyle = car.facing < 0 ? '#f1c40f' : '#7f8c8d';
+  ctx.fillRect(car.x, car.y + 8, 4, 8);
+  ctx.restore();
+}
 
 // 对话系统事件
 document.getElementById('talkBtn').addEventListener('click', ()=>{
@@ -5972,6 +6240,8 @@ function startGame(){
 
 function startCoopGame(){
   document.getElementById('wrap').classList.add('coop-mode');
+  // 关键：添加coop-mode类后立即重新计算canvas尺寸，确保内部分辨率与显示尺寸一致，避免角色比例拉伸
+  resize();
   applyLanguage();
   initAudio();
   G.state = 'playing';
@@ -6061,6 +6331,8 @@ function exitToMenu(){
   G.state = 'menu';
   G.isCoop = false;
   document.getElementById('wrap').classList.remove('coop-mode');
+  // 关键：移除coop-mode类后立即重新计算canvas尺寸，确保单人模式下角色比例正常
+  resize();
   stopWandererMusic(); // 停止游离乐子人音乐
   showClearBadge(); // 显示通关标识
   // 隐藏分屏元素
