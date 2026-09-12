@@ -53,6 +53,10 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;image
 #aimJoystick{position:absolute;right:40px;bottom:130px;width:100px;height:100px;z-index:15;pointer-events:auto}
 #aimOuter{position:absolute;top:0;left:0;width:100px;height:100px;border-radius:50%;background:rgba(255,200,0,.2);border:4px solid rgba(255,150,0,.5)}
 #aimInner{position:absolute;top:30px;left:30px;width:40px;height:40px;border-radius:50%;background:rgba(255,200,0,.7);border:3px solid rgba(200,100,0,.8)}
+/* 2P瞄准轮盘基础样式 */
+#aimJoystick2{position:absolute;right:40px;bottom:130px;width:100px;height:100px;z-index:15;pointer-events:auto;display:none}
+#aimOuter2{position:absolute;top:0;left:0;width:100px;height:100px;border-radius:50%;background:rgba(255,200,0,.2);border:4px solid rgba(255,150,0,.5)}
+#aimInner2{position:absolute;top:30px;left:30px;width:40px;height:40px;border-radius:50%;background:rgba(255,200,0,.7);border:3px solid rgba(200,100,0,.8)}
 
 /* 右下角技能按钮 */
 #skillArea{position:absolute;right:25px;bottom:25px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:15}
@@ -594,6 +598,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn" id="atkBtn">👊</button>
       <button class="skillBtn" id="grenadeBtn">💣</button>
       <button class="skillBtn" id="dashBtn">💨</button>
+      <button class="skillBtn" id="carBtn" style="display:none;background:#ff6347">🚗</button>
       <button class="skillBtn" id="reviveBtn" style="display:none;background:#ff69b4">💉</button>
     </div>
   </div>
@@ -625,6 +630,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn2" id="atkBtn2">👊</button>
       <button class="skillBtn2" id="grenadeBtn2">💣</button>
       <button class="skillBtn2" id="dashBtn2">💨</button>
+      <button class="skillBtn2" id="carBtn2" style="display:none;background:#ff6347">🚗</button>
       <button class="skillBtn2" id="reviveBtn2" style="display:none;background:#ff69b4">💉</button>
     </div>
   </div>
@@ -5452,6 +5458,13 @@ document.getElementById('atkBtn').addEventListener('mouseleave', ()=>clearInterv
 document.getElementById('digBtn').addEventListener('click', playerDig);
 document.getElementById('grenadeBtn').addEventListener('click', throwGrenade);
 document.getElementById('dashBtn').addEventListener('click', playerDash);
+document.getElementById('carBtn').addEventListener('click', ()=>toggleCar(1));
+
+// 2P技能按钮
+document.getElementById('digBtn2').addEventListener('click', player2Dig);
+document.getElementById('grenadeBtn2').addEventListener('click', player2Grenade);
+document.getElementById('dashBtn2').addEventListener('click', player2Dash);
+document.getElementById('carBtn2').addEventListener('click', ()=>toggleCar(2));
 
 // 武器切换
 function switchWeapon(){
@@ -5830,6 +5843,11 @@ document.getElementById('buyCar').addEventListener('click', ()=>{
     G.car = {x:spawnX, y:spawnY, w:60, h:40, speed:0, maxSpeed:6.5, facing:1, hp:100, vx:0, vy:0};
     playSound('unlock');
     showToast((G.isCoop ? G.shopOpener + ' ' : '') + '🚗 购买了越野车！按E上车/下车');
+    // 显示上车按钮
+    const carBtn = document.getElementById('carBtn');
+    if(carBtn) carBtn.style.display = 'flex';
+    const carBtn2 = document.getElementById('carBtn2');
+    if(carBtn2) carBtn2.style.display = 'flex';
     updateUI();
     saveGame();
   } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
@@ -6254,6 +6272,13 @@ function startGame(){
   createWoods();
   updateUI();
   updateAimJoystick();
+  // 显示上车按钮（如果已经有车了）
+  if(G.carOwned){
+    const carBtn = document.getElementById('carBtn');
+    if(carBtn) carBtn.style.display = 'flex';
+    const carBtn2 = document.getElementById('carBtn2');
+    if(carBtn2) carBtn2.style.display = 'flex';
+  }
   document.getElementById('mainMenu').style.display = 'none';
   document.getElementById('saveSelectPanel').style.display = 'none';
   document.getElementById('endPanel').style.display = 'none';
@@ -6319,6 +6344,13 @@ function startCoopGame(){
   // 显示2P蛊按钮
   const guiBtn2 = document.getElementById('guiBtn2');
   if(guiBtn2) guiBtn2.style.display = 'flex';
+  // 显示上车按钮（如果已经有车了）
+  if(G.carOwned){
+    const carBtn = document.getElementById('carBtn');
+    if(carBtn) carBtn.style.display = 'flex';
+    const carBtn2 = document.getElementById('carBtn2');
+    if(carBtn2) carBtn2.style.display = 'flex';
+  }
   // 确保1P摇杆显示
   document.getElementById('joystick').style.display = 'block';
   document.getElementById('skillArea').style.display = 'flex';
