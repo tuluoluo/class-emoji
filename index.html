@@ -829,6 +829,7 @@ const G = {
   carOwned: false, // 是否拥有车
   playerInCar: false, // 1P是否在车里
   player2InCar: false, // 2P是否在车里
+  carDriver: 0, // 谁在驾驶：0=没人，1=1P，2=2P
   carNitroActive: false, // 氮气加速是否激活
   carNitroTimer: 0, // 氮气加速剩余时间（帧）
   carNitroCooldown: 0, // 氮气加速冷却时间（帧）
@@ -5437,7 +5438,7 @@ window.addEventListener('keydown', function(e){
   else if(key==='e'||key==='E'){ toggleCar(1); }
   else if(key==='Shift'){ 
     e.preventDefault(); 
-    if(G.playerInCar){ activateCarNitro(); }
+    if(G.playerInCar){ activateCarNitro(1); }
     else { playerDash(); }
   }
   // 2P操作键（数字键2-5，仅双人模式）
@@ -5445,7 +5446,7 @@ window.addEventListener('keydown', function(e){
     if(key==='2'||key==='Numpad2'){ e.preventDefault();
       // 2P在车里时触发氮气加速，否则冲刺
       if(G.player2InCar){
-        activateCarNitro();
+        activateCarNitro(2);
       } else {
         const p2 = G.player2;
         if(p2 && G.dashCooldown2 <= 0 && !p2.isDashing && p2.stunTimer<=0 && p2.slipTimer<=0){
@@ -5509,8 +5510,8 @@ document.getElementById('grenadeBtn').addEventListener('click', throwGrenade);
 document.getElementById('dashBtn').addEventListener('click', playerDash);
 document.getElementById('carBtn').addEventListener('click', ()=>toggleCar(1));
 document.getElementById('carBtn2').addEventListener('click', ()=>toggleCar(2));
-document.getElementById('nitroBtn').addEventListener('click', activateCarNitro);
-document.getElementById('nitroBtn2').addEventListener('click', activateCarNitro);
+document.getElementById('nitroBtn').addEventListener('click', ()=>activateCarNitro(1));
+document.getElementById('nitroBtn2').addEventListener('click', ()=>activateCarNitro(2));
 
 // 武器切换
 function switchWeapon(){
@@ -5910,16 +5911,32 @@ function toggleCar(playerNum){
   const p = playerNum === 2 ? G.player2 : G.player;
   if(!p) return;
   const inCar = playerNum === 2 ? G.player2InCar : G.playerInCar;
+  const playerLabel = playerNum === 2 ? '2P ' : '1P ';
   
   if(inCar){
     // 下车
     if(playerNum === 2) G.player2InCar = false;
     else G.playerInCar = false;
+    
+    // 如果是驾驶员下车，乘客自动接管驾驶
+    if(G.carDriver === playerNum){
+      const otherPlayer = playerNum === 2 ? 1 : 2;
+      const otherInCar = otherPlayer === 2 ? G.player2InCar : G.playerInCar;
+      if(otherInCar){
+        G.carDriver = otherPlayer;
+        showToast(playerLabel + '下车了，' + (otherPlayer === 2 ? '2P' : '1P') + '接管驾驶！');
+      } else {
+        G.carDriver = 0;
+        showToast(playerLabel + '下车了');
+      }
+    } else {
+      showToast(playerLabel + '下车了');
+    }
+    
     // 玩家出现在车旁边
     p.x = G.car.x + (playerNum === 2 ? -50 : 70);
     p.y = G.car.y;
     p.invincible = 30; // 下车后短暂无敌
-    showToast((playerNum === 2 ? '2P ' : '1P ') + '下车了');
     playSound('pickup');
   } else {
     // 上车：检查是否靠近车
@@ -5929,19 +5946,37 @@ function toggleCar(playerNum){
     const pCy = p.y + p.h/2;
     const dist = Math.hypot(carCx - pCx, carCy - pCy);
     if(dist < 80){
+      // 检查车是否已满
+      if(G.playerInCar && G.player2InCar){
+        showToast(playerLabel + '车已满，无法上车！');
+        return;
+      }
+      // 上车
       if(playerNum === 2) G.player2InCar = true;
       else G.playerInCar = true;
-      showToast((playerNum === 2 ? '2P ' : '1P ') + '上车了！WASD/方向键驾驶，撞击秒杀怪物');
+      
+      // 分配座位：没人驾驶就当驾驶员，否则当乘客
+      if(G.carDriver === 0){
+        G.carDriver = playerNum;
+        showToast(playerLabel + '上车了，开始驾驶！WASD/方向键控制，撞击秒杀怪物');
+      } else {
+        showToast(playerLabel + '上车了，坐在乘客位');
+      }
       playSound('unlock');
     } else {
-      showToast((playerNum === 2 ? '2P ' : '1P ') + '离车太远，无法上车');
+      showToast(playerLabel + '离车太远，无法上车');
     }
   }
 }
 
 // 氮气加速
-function activateCarNitro(){
+function activateCarNitro(playerNum){
   if(!G.carOwned || !G.car) return;
+  // 必须是驾驶员才能用氮气
+  if(playerNum && G.carDriver !== playerNum){
+    showToast((playerNum === 2 ? '2P ' : '1P ') + '只有驾驶员才能使用氮气加速！');
+    return;
+  }
   // 必须有人在车里才能用氮气
   if(!G.playerInCar && !G.player2InCar){
     showToast('必须在车里才能使用氮气加速！');
@@ -5962,7 +5997,8 @@ function activateCarNitro(){
   G.carNitroCooldown = 600; // 冷却10秒
   G.car.maxSpeed = 13; // 速度翻倍
   playSound('unlock');
-  showToast('🚀 氮气加速激活！');
+  const driverLabel = G.carDriver === 2 ? '2P ' : '1P ';
+  showToast(driverLabel + '🚀 氮气加速激活！');
   // 屏幕震动
   G.shake = 10;
 }
@@ -5992,13 +6028,13 @@ function updateCar(){
     G.carNitroCooldown--;
   }
   
-  // 确定谁在驾驶（1P优先，2P其次）
+  // 确定谁在驾驶（根据carDriver字段）
   let driver = null;
   let driverNum = 0;
-  if(G.playerInCar && G.player){
+  if(G.carDriver === 1 && G.playerInCar && G.player){
     driver = G.player;
     driverNum = 1;
-  } else if(G.player2InCar && G.player2){
+  } else if(G.carDriver === 2 && G.player2InCar && G.player2){
     driver = G.player2;
     driverNum = 2;
   }
@@ -6182,6 +6218,19 @@ function drawCar(){
       ctx.lineTo(exhaustX, exhaustY + 4);
     }
     ctx.fill();
+  }
+  
+  // 驾驶员标签：在车上方显示谁在驾驶
+  if(G.carDriver > 0 && (G.playerInCar || G.player2InCar)){
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    const labelText = G.carDriver === 1 ? '1P驾驶' : '2P驾驶';
+    ctx.font = 'bold 14px Microsoft YaHei, sans-serif';
+    const textWidth = ctx.measureText(labelText).width;
+    ctx.fillRect(car.x + car.w/2 - textWidth/2 - 8, car.y - 32, textWidth + 16, 22);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.fillText(labelText, car.x + car.w/2, car.y - 16);
+    ctx.textAlign = 'left';
   }
   ctx.restore();
 }
