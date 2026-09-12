@@ -26,9 +26,9 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;image
 #infoLine{font-size:13px;color:#fff;text-shadow:1px 1px 2px #000;font-weight:bold;display:flex;gap:12px}
 
 /* 蛊按钮 - 右上角血条下 */
-#guiBtn{position:absolute;top:34px;right:10px;width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid #333;font-size:16px;font-weight:bold;z-index:25;pointer-events:auto;display:flex;align-items:center;justify-content:center}
+#guiBtn{position:absolute;top:34px;right:10px;width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid #333;font-size:16px;font-weight:bold;z-index:60;pointer-events:auto;display:flex;align-items:center;justify-content:center}
 /* 2P蛊按钮 - 左上角血条下（双人模式） */
-#guiBtn2{position:absolute;top:34px;left:10px;width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid #333;font-size:16px;font-weight:bold;z-index:25;pointer-events:auto;display:flex;align-items:center;justify-content:center;display:none}
+#guiBtn2{position:absolute;top:34px;left:10px;width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid #333;font-size:16px;font-weight:bold;z-index:60;pointer-events:auto;display:flex;align-items:center;justify-content:center;display:none}
 
 /* 作弊面板 */
 #cheatPanel{position:absolute;top:50px;right:10px;width:240px;background:#f5f5f5;border:3px solid #222;border-radius:8px;padding:12px;z-index:30;display:none;pointer-events:auto;box-shadow:4px 4px 0 rgba(0,0,0,.3)}
@@ -565,6 +565,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="cheatRow"><button id="prankBleed" style="flex:1;padding:6px;font-size:12px;cursor:pointer">🩸 让对方持续流血</button></div>
     <div class="cheatRow"><button id="prankTeleport" style="flex:1;padding:6px;font-size:12px;cursor:pointer">🌀 把对方随机传送</button></div>
     <div class="cheatRow"><button id="prankWeak" style="flex:1;padding:6px;font-size:12px;cursor:pointer">🐢 对方变弱10秒</button></div>
+    <div class="cheatRow"><button id="prankGold" style="flex:1;padding:6px;font-size:12px;cursor:pointer;background:#ffd700;border-color:#daa520;color:#8b6914">💰 对方获得无限金币</button></div>
     <div class="cheatRow"><button id="prankRevive" style="flex:1;padding:6px;font-size:12px;cursor:pointer;background:#90ee90;border-color:#228b22;color:#228b22">❤️ 复活对方</button></div>
   </div>
 
@@ -4753,6 +4754,14 @@ function drawPlayer2(){
     ctx.fillStyle = 'rgba(255,0,0,0.4)';
     ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
   }
+  // 盾牌光环
+  if(G.gotShield){
+    ctx.strokeStyle = 'rgba(100,200,255,0.6)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, p.w*0.7, 0, Math.PI*2);
+    ctx.stroke();
+  }
   ctx.font = p.w + 'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -5622,6 +5631,19 @@ document.getElementById('prankWeak').addEventListener('click', ()=>{
     target.weakTimer = 600; // 10秒
     playSound('hurt');
     showToast('🐢 ' + label + ' 被整蛊变弱了！');
+  }
+  document.getElementById('prankPanel').style.display = 'none';
+});
+// 对方获得无限金币
+document.getElementById('prankGold').addEventListener('click', ()=>{
+  const target = getPrankTarget();
+  const label = getPrankTargetLabel();
+  if(target){
+    target.gold = 99999; // 直接给大量金币，相当于无限金币
+    target.infGold = true; // 标记无限金币，购买时不扣钱
+    playSound('pickup');
+    showToast('💰 ' + label + ' 被整蛊获得无限金币！');
+    updateUI();
   }
   document.getElementById('prankPanel').style.display = 'none';
 });
