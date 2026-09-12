@@ -794,6 +794,7 @@ const G = {
   authorNPCImgs: {left: null, right: null}, // 作者NPC左右行走帧图片
   authorNPCInteractCooldown: 0, // 作者NPC交互冷却
   killedByAuthor: false, // 是否被作者NPC杀死
+  deathCause: '', // 死亡原因：''普通/'lightning'雷劈/'bleeding'流血/'prank'整蛊/'author'作者
   projectiles: [],
   fireGrounds: [], // 地面火焰
   corpses: [],
@@ -2361,6 +2362,7 @@ function playerAttack(){
       p.hp = 0;
       p.dead = true;
       G.killedByAuthor = true; // 标记被作者杀死
+      G.deathCause = 'author';
       showToast('你被未知杀死了');
       playSound('death');
       return;
@@ -2415,6 +2417,7 @@ function player2Attack(){
       p.hp = 0;
       p.dead = true;
       G.killedByAuthor = true; // 标记被作者杀死
+      G.deathCause = 'author';
       showToast('2P 你被未知杀死了');
       playSound('death');
       return;
@@ -2634,11 +2637,31 @@ function playerDig(){
 // ==================== 更新逻辑 ====================
 // 统一处理玩家死亡
 function handlePlayerDeath(player, isP2){
+  // 根据死亡原因显示不同的抽象提示
+  let deathMsg = '';
+  const playerLabel = isP2 ? '2P ' : '1P ';
+  switch(G.deathCause){
+    case 'lightning':
+      deathMsg = playerLabel + '老天不公啊！';
+      break;
+    case 'bleeding':
+      deathMsg = playerLabel + '不知道为什么就倒下了...';
+      break;
+    case 'prank':
+      deathMsg = '�ז�' + playerLabel + '�זז�';
+      break;
+    case 'author':
+      deathMsg = playerLabel + '你被未知杀死了';
+      break;
+    default:
+      deathMsg = playerLabel + '倒下了！';
+  }
+  
   if(isP2){
     if(G.coopP2Dead) return; // 防止重复处理
     G.coopP2Dead = true;
     makeCorpse(player);
-    showToast('2P 倒下了！');
+    showToast(deathMsg);
     // 确保1P也死亡时游戏结束
     if(G.coopP1Dead){
       G.running = false;
@@ -2650,7 +2673,7 @@ function handlePlayerDeath(player, isP2){
       if(G.coopP1Dead) return; // 防止重复处理
       G.coopP1Dead = true;
       makeCorpse(player);
-      showToast('1P 倒下了！');
+      showToast(deathMsg);
       // 确保2P也死亡时游戏结束
       if(G.coopP2Dead){
         G.running = false;
@@ -2664,6 +2687,8 @@ function handlePlayerDeath(player, isP2){
       gameOver(false);
     }
   }
+  // 重置死亡原因
+  G.deathCause = '';
 }
 
 function update(){
@@ -2773,7 +2798,7 @@ function update(){
         p.invincible = 60;
         spawnParticles(p.x+p.w/2, p.y+p.h/2, '#ffff00', 15);
         showToast(t('lightningHit'));
-        if(p.hp <= 0){ handlePlayerDeath(p, false); }
+        if(p.hp <= 0){ G.deathCause = 'lightning'; handlePlayerDeath(p, false); }
       }
       // 2. 劈小怪（不能是boss）
       for(let mi=G.mobs.length-1;mi>=0;mi--){
@@ -3096,9 +3121,10 @@ function update(){
         p2.bleedTimer = 0;
         p2.hp -= 1;
         if(p2.hp<=0){
+          G.deathCause = 'bleeding';
           G.coopP2Dead = true;
           makeCorpse(p2);
-          showToast('2P 倒下了！');
+          showToast('2P 不知道为什么就倒下了...');
           // 检查是否两人都死亡
           if(G.coopP1Dead){
             G.running = false;
@@ -3126,10 +3152,11 @@ function update(){
       playSound('hurt');
       updateUI();
       if(p.hp<=0){
+        G.deathCause = 'bleeding';
         if(G.isCoop){
           G.coopP1Dead = true;
           makeCorpse(p);
-          showToast('1P 倒下了！');
+          showToast('1P 不知道为什么就倒下了...');
           if(G.coopP2Dead) gameOver(false);
         } else {
           makeCorpse(p);
@@ -5291,7 +5318,23 @@ function gameOver(win){
     statsHtml += '</div>';
     statsHtml += t('beatFinalBoss');
   } else {
-    statsHtml += t('defeatedByMob');
+    // 根据死亡原因显示不同的抽象提示
+    let deathReason = t('defeatedByMob');
+    switch(G.deathCause){
+      case 'lightning':
+        deathReason = '老天不公啊！';
+        break;
+      case 'bleeding':
+        deathReason = '不知道为什么就没了...';
+        break;
+      case 'prank':
+        deathReason = '�זז�ז�';
+        break;
+      case 'author':
+        deathReason = '你被未知杀死了';
+        break;
+    }
+    statsHtml += deathReason;
   }
   statsHtml += '<br><span style="font-size:12px;color:#aaa">'+t('autoSaved')+'</span>';
   document.getElementById('endStats').innerHTML = statsHtml;
@@ -5759,10 +5802,11 @@ document.getElementById('prankKill').addEventListener('click', ()=>{
   const label = getPrankTargetLabel();
   if(target){
     target.hp = 0;
+    G.deathCause = 'prank';
     if(G.prankOpener === 1) G.coopP2Dead = true;
     else G.coopP1Dead = true;
     playSound('hurt');
-    showToast('🃏 ' + label + ' 被整蛊杀死了！');
+    showToast('�ז�' + label + '�זז�');
     updateUI();
   }
   document.getElementById('prankPanel').style.display = 'none';
@@ -6714,6 +6758,7 @@ function startGame(){
   G.fireGrounds = [];
   G.miniBossSpawned = false; G.finalBossSpawned = false;
   G.medUseCount = 0; G.medUseCount2 = 0; G.usedCheat = false;
+  G.killedByAuthor = false; G.deathCause = '';
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
   G.weapons = ['fist']; G.atkCooldown = 0; G.atkCooldown2 = 0; G.shake = 0;
   // 重置光线状态
@@ -6768,6 +6813,7 @@ function startCoopGame(){
   G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
   G.fireGrounds = [];
   G.miniBossSpawned = false; G.finalBossSpawned = false;
+  G.killedByAuthor = false; G.deathCause = '';
   G.gotShield = false; G.gotFire = false; G.gotChargeFire = false;
   G.weapons = ['fist']; G.atkCooldown = 0; G.atkCooldown2 = 0; G.shake = 0;
   // 重置光线状态
