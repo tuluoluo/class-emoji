@@ -141,7 +141,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 
 /* 对话按钮 */
 #talkBtn{position:absolute;padding:7px 14px;background:#9b59b6;color:#fff;border:2px solid #333;border-radius:6px;font-size:13px;font-weight:bold;z-index:20;display:none;pointer-events:auto}
-#authorBtn{position:absolute;padding:7px 14px;background:#2ecc71;color:#fff;border:2px solid #333;border-radius:6px;font-size:13px;font-weight:bold;z-index:20;display:none;pointer-events:auto}
+#authorBtn{position:absolute;padding:7px 14px;background:#2ecc71;color:#fff;border:2px solid #333;border-radius:6px;font-size:13px;font-weight:bold;z-index:60;display:none;pointer-events:auto;cursor:pointer}
 
 /* 对话框 */
 #dialogBox{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);width:min(600px,90%);background:rgba(20,20,30,.92);border:3px solid #f1c40f;border-radius:12px;padding:14px;z-index:60;display:none;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,.5)}
@@ -2433,10 +2433,10 @@ function playerAttack(){
   // 检测是否攻击到作者NPC（无敌反击）
   if(G.authorNPC && !G.authorNPC.dead){
     const an = G.authorNPC;
-    const range = 70;
+    const range = 90; // 增加范围，确保能命中60x60的作者NPC
     const ax = p.x + (p.facing>0? p.w : -range);
-    const ay = p.y - 5;
-    const hitBox = {x:ax, y:ay, w:range, h:p.h+10};
+    const ay = p.y - 10;
+    const hitBox = {x:ax, y:ay, w:range, h:p.h+20};
     if(rectOverlap(hitBox, an)){
       // 攻击到作者NPC，作者无敌，反而秒杀玩家
       an.hurtFlash = 10;
@@ -2488,10 +2488,10 @@ function player2Attack(){
   // 检测是否攻击到作者NPC（无敌反击）
   if(G.authorNPC && !G.authorNPC.dead){
     const an = G.authorNPC;
-    const range = 70;
+    const range = 90; // 增加范围，确保能命中60x60的作者NPC
     const ax = p.x + (p.facing>0? p.w : -range);
-    const ay = p.y - 5;
-    const hitBox = {x:ax, y:ay, w:range, h:p.h+10};
+    const ay = p.y - 10;
+    const hitBox = {x:ax, y:ay, w:range, h:p.h+20};
     if(rectOverlap(hitBox, an)){
       // 攻击到作者NPC，作者无敌，反而秒杀玩家
       an.hurtFlash = 10;
@@ -4103,9 +4103,17 @@ function updateNPCs(){
         if(d < 100 && d < nearDist){ nearDist = d; nearPlayer = G.player2; }
       }
       
-      if(nearPlayer && an.interactCooldown <= 0){
-        // 显示按钮，位置在作者NPC上方
+      if(nearPlayer){
+        // 显示按钮，位置在作者NPC上方（冷却中也显示，方便玩家看到）
         authorBtn.style.display = 'block';
+        // 冷却中按钮变灰
+        if(an.interactCooldown > 0){
+          authorBtn.style.opacity = '0.5';
+          authorBtn.textContent = '✨ ' + Math.ceil(an.interactCooldown/60) + 's';
+        } else {
+          authorBtn.style.opacity = '1';
+          authorBtn.textContent = '✨ 作者';
+        }
         // 计算按钮位置（根据最近玩家所在的视口）
         const rect = wrap.getBoundingClientRect();
         const scaleX = rect.width / W;
@@ -4118,8 +4126,8 @@ function updateNPCs(){
             btnCamY = camera2.y;
           }
         }
-        const screenX = (an.x + an.w/2 - btnCamX) * scaleX + rect.left;
-        const screenY = (an.y - 40 - btnCamY) * scaleY + rect.top;
+        const screenX = (an.x + an.w/2 - btnCamX) * scaleX;
+        const screenY = (an.y - 40 - btnCamY) * scaleY;
         authorBtn.style.left = (screenX - 40) + 'px';
         authorBtn.style.top = screenY + 'px';
         // 保存最近玩家引用，供点击时使用
@@ -4191,6 +4199,33 @@ function updateProjectiles(){
         G.npcs.trouble.chasing = false;
         G.npcs.trouble.fleeTimer = 90;
         hit = true;
+      }
+      // 远程打作者NPC：作者无敌，反而秒杀攻击的玩家
+      if(G.authorNPC && !G.authorNPC.dead && rectOverlap(box, G.authorNPC)){
+        G.authorNPC.hurtFlash = 10;
+        playSound('hurt');
+        // 判断是哪个玩家发射的投射物（双人模式下判断哪个玩家离作者NPC更近）
+        let targetPlayer = p;
+        let targetLabel = '';
+        if(G.isCoop && G.player2 && !G.player2.dead){
+          const dist1 = Math.hypot(p.x - G.authorNPC.x, p.y - G.authorNPC.y);
+          const dist2 = Math.hypot(G.player2.x - G.authorNPC.x, G.player2.y - G.authorNPC.y);
+          if(dist2 < dist1){
+            targetPlayer = G.player2;
+            targetLabel = '2P ';
+          } else {
+            targetLabel = '1P ';
+          }
+        }
+        // 秒杀对应的玩家
+        targetPlayer.hp = 0;
+        targetPlayer.dead = true;
+        G.killedByAuthor = true;
+        G.deathCause = 'author';
+        showToast(targetLabel + '你被未知杀死了');
+        playSound('death');
+        G.projectiles.splice(i,1);
+        continue;
       }
       // 远程也能打😊
       if(G.npcs.robot && !G.npcs.robot.dead && rectOverlap(box,G.npcs.robot)){
@@ -6567,7 +6602,10 @@ function drawAuthorNPC(){
 // 作者NPC交互功能
 function authorInteract(){
   if(!G.authorNPC || G.authorNPC.dead) return;
-  if(G.authorNPC.interactCooldown > 0) return;
+  if(G.authorNPC.interactCooldown > 0){
+    showToast('作者冷却中，还需 ' + Math.ceil(G.authorNPC.interactCooldown/60) + ' 秒');
+    return;
+  }
   
   const btn = document.getElementById('authorBtn');
   const player = btn && btn._nearPlayer ? btn._nearPlayer : G.player;
@@ -6654,6 +6692,10 @@ document.getElementById('talkBtn').addEventListener('click', ()=>{
 });
 // 作者NPC交互按钮
 document.getElementById('authorBtn').addEventListener('click', ()=>{
+  authorInteract();
+});
+document.getElementById('authorBtn').addEventListener('touchstart', function(e){
+  e.preventDefault();
   authorInteract();
 });
 document.getElementById('merchantTalkBtn').addEventListener('click', ()=>{
