@@ -1763,6 +1763,15 @@ function saveGame(slot){
     savedAt: Date.now(),
     slotName: SAVE_NAMES()[targetSlot],
     isCoop: G.isCoop || false,
+    // 载具状态
+    carOwned: G.carOwned || false,
+    car: G.car ? {...G.car} : null,
+    playerInCar: G.playerInCar || false,
+    player2InCar: G.player2InCar || false,
+    carDriver: G.carDriver || 0,
+    carNitroActive: G.carNitroActive || false,
+    carNitroTimer: G.carNitroTimer || 0,
+    carNitroCooldown: G.carNitroCooldown || 0,
   };
   // 双人模式：保存2P状态
   if(G.isCoop && G.player2){
@@ -1838,6 +1847,15 @@ function loadGame(slot){
     G.weapons = d.weapons && d.weapons.length > 0 ? [...d.weapons] : ['fist'];
     G.atkCooldown = 0; G.shake = 0; G._shopOpened = false;
     G.nightGraceTimer = 0;
+    // 重置载具状态
+    G.carOwned = false;
+    G.car = null;
+    G.playerInCar = false;
+    G.player2InCar = false;
+    G.carDriver = 0;
+    G.carNitroActive = false;
+    G.carNitroTimer = 0;
+    G.carNitroCooldown = 0;
     // 重置天气系统
     G.weather = 'sunny';
     G.weatherTimer = 0;
@@ -1932,10 +1950,62 @@ function loadGame(slot){
       // 1P技能区恢复右下角
       const skillArea = document.getElementById('skillArea');
       if(skillArea){ skillArea.style.left = 'auto'; skillArea.style.right = '25px'; skillArea.style.bottom = '25px'; skillArea.style.alignItems = 'flex-end'; }
+      // 关键：移除.coop-mode类，恢复单人模式CSS
+      document.getElementById('wrap').classList.remove('coop-mode');
+      // 关键：移除coop-mode类后立即重新计算canvas尺寸，确保内部分辨率与显示尺寸一致
+      resize();
+    }
+    // 读取载具状态
+    if(d.carOwned){
+      G.carOwned = true;
+      if(d.car){
+        G.car = {...d.car};
+        // 确保车的必要字段存在
+        if(!G.car.maxSpeed) G.car.maxSpeed = 6.5;
+        if(!G.car.vx) G.car.vx = 0;
+        if(!G.car.vy) G.car.vy = 0;
+        if(!G.car.facing) G.car.facing = 1;
+      } else {
+        // 存档中有车但是车对象丢失，重新创建一辆车在玩家附近
+        const spawnX = clamp(G.player.x + 100, 50, WORLD_W - 110);
+        const spawnY = clamp(G.player.y, 50, WORLD_H - 50);
+        G.car = {x:spawnX, y:spawnY, w:60, h:40, speed:0, maxSpeed:6.5, facing:1, hp:100, vx:0, vy:0};
+      }
+      G.playerInCar = d.playerInCar || false;
+      G.player2InCar = d.player2InCar || false;
+      G.carDriver = d.carDriver || 0;
+      G.carNitroActive = d.carNitroActive || false;
+      G.carNitroTimer = d.carNitroTimer || 0;
+      G.carNitroCooldown = d.carNitroCooldown || 0;
+      // 如果氮气加速已结束，恢复正常速度
+      if(!G.carNitroActive && G.car) G.car.maxSpeed = 6.5;
     }
     // 重建NPC和树木
     createNPCs();
     createWoods();
+    // 处理载具相关UI
+    const carBtn = document.getElementById('carBtn');
+    const carBtn2 = document.getElementById('carBtn2');
+    const nitroBtn = document.getElementById('nitroBtn');
+    const nitroBtn2 = document.getElementById('nitroBtn2');
+    if(G.carOwned){
+      if(carBtn) carBtn.style.display = 'flex';
+      if(carBtn2 && G.isCoop) carBtn2.style.display = 'flex';
+      if(nitroBtn) nitroBtn.style.display = 'flex';
+      if(nitroBtn2 && G.isCoop) nitroBtn2.style.display = 'flex';
+    } else {
+      if(carBtn) carBtn.style.display = 'none';
+      if(carBtn2) carBtn2.style.display = 'none';
+      if(nitroBtn) nitroBtn.style.display = 'none';
+      if(nitroBtn2) nitroBtn2.style.display = 'none';
+    }
+    // 处理2P蛊按钮和整蛊面板
+    const guiBtn2 = document.getElementById('guiBtn2');
+    if(guiBtn2) guiBtn2.style.display = G.isCoop ? 'flex' : 'none';
+    document.getElementById('prankPanel').style.display = 'none';
+    // 处理1P蛊按钮文字
+    const guiBtn1 = document.getElementById('guiBtn');
+    if(guiBtn1) guiBtn1.textContent = G.isCoop ? '蛊' : '桂';
     updateUI();
     updateAimJoystick();
     document.getElementById('mainMenu').style.display = 'none';
