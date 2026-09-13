@@ -925,6 +925,12 @@ const LANGS = {
     r40:'🌤️ 新增天气系统：晴天/阴天/下雨/打雷/大太阳',
     r41:'🌧️ 下雨地面湿滑，玩家/NPC/怪物都会摔倒（旋转90度2秒）',
     r42:'⛈️ 打雷会劈死附近生物，大太阳会减速和中暑掉血',
+    r43:'🚗 新增越野车载具系统，500金币购买，撞怪秒杀，撞树直接挖掉',
+    r44:'🚀 新增氮气加速，Shift/数字2触发，速度翻倍持续3秒，10秒冷却',
+    r45:'💺 新增车的座位系统，第一个上车当驾驶员，第二个当乘客，驾驶员下车乘客自动接管',
+    r46:'👤 新增作者NPC，无敌，靠近可交互（秒杀怪物/给提示/给金币/回血），打他会被反杀',
+    r47:'💀 死亡提示抽象化：被雷劈=老天不公，流血=不知道为什么，整蛊=乱码，作者=你被未知杀死了',
+    r48:'📂 修复读取存档卡住，载具状态完整保存和读取，单人存档自动移除双人模式CSS',
     // 规则面板详细内容
     r1:'左下摇杆移动，右下按钮攻击/挖掘/手雷', r2:'方向键移动，J攻击，K挖掘，L手雷，Q切武器',
     r3:'右下橙色瞄准轮盘，左手移动右手瞄准，可边跑边打',
@@ -1023,6 +1029,12 @@ const LANGS = {
         r31:'kills, ranged 6 dmg', r32:'kills, ranged 8 dmg', r33:'kills, multi-phase, with 👾 army',
         r34:'Boss spawns with 👾 army and continuous spawns', r35:'8-language support (switch in Settings)',
         r36:'Fireball/Charge Fireball use aim joystick', r37:'Aim joystick repositioned and resized',
+        r43:'🚗 New vehicle system: buy car for 500g, ram kills mobs instantly, crashes trees',
+        r44:'🚀 New nitro boost: Shift/Numpad2, double speed for 3s, 10s cooldown',
+        r45:'💺 New car seat system: first player to enter is driver, second is passenger, passenger takes over if driver exits',
+        r46:'👤 New Author NPC: invincible, interact nearby (kill mobs/give tips/give gold/heal), attacking him gets you killed',
+        r47:'💀 Abstract death messages: lightning=unfair fate, bleeding=unknown reason, prank=garbled text, author=killed by unknown',
+        r48:'📂 Fixed save loading freeze, vehicle state fully saved/loaded, single-player save auto-removes coop CSS',
         save1:'Save 1', save2:'Save 2', save3:'Save 3',
         loadBtn:'▶ Load', deleteBtn:'🗑 Delete', newGameBtn:'🆕 New Game',
         emptySave:'Empty Save', emptySaveDesc:'This save slot is empty',
@@ -1436,11 +1448,12 @@ function buildRulesContent(){
     '<p>• 💥: 70 '+t('r32')+'</p>'+
     '<p>• 😈: 120 '+t('r33')+'</p>'+
     '<p><b>'+t('rUpdate')+'</b></p>'+
-    '<p>• '+t('r38')+'</p>'+
-    '<p>• '+t('r39')+'</p>'+
-    '<p>• '+t('r40')+'</p>'+
-    '<p>• '+t('r41')+'</p>'+
-    '<p>• '+t('r42')+'</p>';
+    '<p>• '+t('r43')+'</p>'+
+    '<p>• '+t('r44')+'</p>'+
+    '<p>• '+t('r45')+'</p>'+
+    '<p>• '+t('r46')+'</p>'+
+    '<p>• '+t('r47')+'</p>'+
+    '<p>• '+t('r48')+'</p>';
 }
 
 function setLanguage(lang){
