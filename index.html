@@ -538,7 +538,7 @@ input:checked + .slider:before{transform:translateX(24px)}
   </div>
 
   <!-- 蛊按钮 -->
-  <button id="guiBtn">蛊</button>
+  <button id="guiBtn">桂</button>
   <!-- 2P蛊按钮（双人模式显示） -->
   <button id="guiBtn2" style="display:none">蛊</button>
   <!-- 设置按钮 -->
@@ -6857,6 +6857,9 @@ function startCoopGame(){
   // 显示2P蛊按钮
   const guiBtn2 = document.getElementById('guiBtn2');
   if(guiBtn2) guiBtn2.style.display = 'flex';
+  // 双人模式：1P蛊按钮文字改成"蛊"
+  const guiBtn1 = document.getElementById('guiBtn');
+  if(guiBtn1) guiBtn1.textContent = '蛊';
   // 显示上车按钮（如果已经有车了）
   if(G.carOwned){
     const carBtn = document.getElementById('carBtn');
@@ -6918,6 +6921,9 @@ function exitToMenu(){
   const guiBtn2Hide = document.getElementById('guiBtn2');
   if(guiBtn2Hide) guiBtn2Hide.style.display = 'none';
   document.getElementById('prankPanel').style.display = 'none';
+  // 退出双人模式：1P蛊按钮文字改回"桂"
+  const guiBtn1Hide = document.getElementById('guiBtn');
+  if(guiBtn1Hide) guiBtn1Hide.textContent = '桂';
   // 隐藏1P瞄准轮盘
   const aimJoyElHide = document.getElementById('aimJoystick');
   if(aimJoyElHide) aimJoyElHide.style.display = 'none';
