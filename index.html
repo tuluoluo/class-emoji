@@ -141,7 +141,9 @@ input:checked + .slider:before{transform:translateX(24px)}
 
 /* 对话按钮 */
 #talkBtn{position:absolute;padding:7px 14px;background:#9b59b6;color:#fff;border:2px solid #333;border-radius:6px;font-size:13px;font-weight:bold;z-index:20;display:none;pointer-events:auto}
-#authorBtn{position:absolute;padding:7px 14px;background:#2ecc71;color:#fff;border:2px solid #333;border-radius:6px;font-size:13px;font-weight:bold;z-index:60;display:none;pointer-events:auto;cursor:pointer}
+#authorPanel{position:absolute;width:140px;background:#fff;border:3px solid #2ecc71;border-radius:8px;padding:10px;z-index:60;display:none;pointer-events:auto;box-shadow:4px 4px 0 rgba(0,0,0,.3)}
+#authorPanel button{transition:transform 0.1s}
+#authorPanel button:active{transform:scale(0.95)}
 
 /* 对话框 */
 #dialogBox{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);width:min(600px,90%);background:rgba(20,20,30,.92);border:3px solid #f1c40f;border-radius:12px;padding:14px;z-index:60;display:none;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,.5)}
@@ -642,8 +644,15 @@ input:checked + .slider:before{transform:translateX(24px)}
   <button id="askBtn">索要金币</button>
   <!-- 对话按钮 -->
   <button id="talkBtn">💬 对话</button>
-  <!-- 作者NPC交互按钮 -->
-  <button id="authorBtn">✨ 作者</button>
+  <!-- 作者NPC交互面板 -->
+  <div id="authorPanel">
+    <div style="text-align:center;font-weight:bold;margin-bottom:8px;color:#2ecc71">👤 作者</div>
+    <button id="authorKillBtn" style="width:100%;padding:6px;margin:3px 0;background:#e74c3c;color:#fff;border:2px solid #333;border-radius:4px;font-size:12px;font-weight:bold;cursor:pointer">💀 秒杀怪物</button>
+    <button id="authorTipBtn" style="width:100%;padding:6px;margin:3px 0;background:#3498db;color:#fff;border:2px solid #333;border-radius:4px;font-size:12px;font-weight:bold;cursor:pointer">💡 游戏提示</button>
+    <button id="authorGoldBtn" style="width:100%;padding:6px;margin:3px 0;background:#f1c40f;color:#333;border:2px solid #333;border-radius:4px;font-size:12px;font-weight:bold;cursor:pointer">💰 给金币</button>
+    <button id="authorHealBtn" style="width:100%;padding:6px;margin:3px 0;background:#2ecc71;color:#fff;border:2px solid #333;border-radius:4px;font-size:12px;font-weight:bold;cursor:pointer">❤️ 恢复血量</button>
+    <button id="authorMobBtn" style="width:100%;padding:6px;margin:3px 0;background:#9b59b6;color:#fff;border:2px solid #333;border-radius:4px;font-size:12px;font-weight:bold;cursor:pointer">👾 召唤怪物</button>
+  </div>
 
   <!-- 对话框 -->
   <div id="dialogBox">
@@ -4088,33 +4097,31 @@ function updateNPCs(){
     // 受伤闪烁（虽然无敌，但显示被攻击的反馈）
     if(an.hurtFlash > 0) an.hurtFlash--;
     
-    // 交互按钮显示/隐藏
-    const authorBtn = document.getElementById('authorBtn');
-    if(authorBtn){
+    // 交互面板显示/隐藏
+    const authorPanel = document.getElementById('authorPanel');
+    if(authorPanel){
       // 检查是否有玩家靠近
       let nearPlayer = null;
       let nearDist = Infinity;
       if(G.player && !G.player.dead){
         const d = Math.hypot(an.x+an.w/2 - G.player.x-G.player.w/2, an.y+an.h/2 - G.player.y-G.player.h/2);
-        if(d < 100 && d < nearDist){ nearDist = d; nearPlayer = G.player; }
+        if(d < 120 && d < nearDist){ nearDist = d; nearPlayer = G.player; }
       }
       if(G.player2 && !G.player2.dead){
         const d = Math.hypot(an.x+an.w/2 - G.player2.x-G.player2.w/2, an.y+an.h/2 - G.player2.y-G.player2.h/2);
-        if(d < 100 && d < nearDist){ nearDist = d; nearPlayer = G.player2; }
+        if(d < 120 && d < nearDist){ nearDist = d; nearPlayer = G.player2; }
       }
       
       if(nearPlayer){
-        // 显示按钮，位置在作者NPC上方（冷却中也显示，方便玩家看到）
-        authorBtn.style.display = 'block';
-        // 冷却中按钮变灰
+        // 显示面板，位置在作者NPC上方
+        authorPanel.style.display = 'block';
+        // 冷却中面板变灰
         if(an.interactCooldown > 0){
-          authorBtn.style.opacity = '0.5';
-          authorBtn.textContent = '✨ ' + Math.ceil(an.interactCooldown/60) + 's';
+          authorPanel.style.opacity = '0.5';
         } else {
-          authorBtn.style.opacity = '1';
-          authorBtn.textContent = '✨ 作者';
+          authorPanel.style.opacity = '1';
         }
-        // 计算按钮位置（根据最近玩家所在的视口）
+        // 计算面板位置（根据最近玩家所在的视口）
         const rect = wrap.getBoundingClientRect();
         const scaleX = rect.width / W;
         const scaleY = rect.height / H;
@@ -4127,14 +4134,14 @@ function updateNPCs(){
           }
         }
         const screenX = (an.x + an.w/2 - btnCamX) * scaleX;
-        const screenY = (an.y - 40 - btnCamY) * scaleY;
-        authorBtn.style.left = (screenX - 40) + 'px';
-        authorBtn.style.top = screenY + 'px';
+        const screenY = (an.y - 220 - btnCamY) * scaleY;
+        authorPanel.style.left = (screenX - 70) + 'px';
+        authorPanel.style.top = Math.max(10, screenY) + 'px';
         // 保存最近玩家引用，供点击时使用
-        authorBtn._nearPlayer = nearPlayer;
+        authorPanel._nearPlayer = nearPlayer;
       } else {
-        authorBtn.style.display = 'none';
-        authorBtn._nearPlayer = null;
+        authorPanel.style.display = 'none';
+        authorPanel._nearPlayer = null;
       }
     }
   }
@@ -6599,90 +6606,118 @@ function drawAuthorNPC(){
   ctx.restore();
 }
 
-// 作者NPC交互功能
-function authorInteract(){
-  if(!G.authorNPC || G.authorNPC.dead) return;
+// 作者NPC交互：获取最近玩家
+function getAuthorNearPlayer(){
+  const panel = document.getElementById('authorPanel');
+  if(panel && panel._nearPlayer) return panel._nearPlayer;
+  return G.player;
+}
+
+// 作者NPC交互：检查冷却
+function authorCheckCooldown(){
+  if(!G.authorNPC || G.authorNPC.dead) return false;
   if(G.authorNPC.interactCooldown > 0){
     showToast('作者冷却中，还需 ' + Math.ceil(G.authorNPC.interactCooldown/60) + ' 秒');
-    return;
+    return false;
   }
-  
-  const btn = document.getElementById('authorBtn');
-  const player = btn && btn._nearPlayer ? btn._nearPlayer : G.player;
+  return true;
+}
+
+// 作者NPC交互：设置冷却
+function authorSetCooldown(){
+  if(G.authorNPC) G.authorNPC.interactCooldown = 600; // 10秒
+}
+
+// 功能1：秒杀所有怪物
+function authorKillMobs(){
+  if(!authorCheckCooldown()) return;
+  const player = getAuthorNearPlayer();
   if(!player) return;
-  
-  // 确定是1P还是2P
   const playerLabel = player === G.player2 ? '2P ' : '1P ';
-  
-  // 随机选择交互效果
-  const effect = rand(0, 4);
-  switch(effect){
-    case 0:
-      // 秒杀所有怪物
-      showToast(playerLabel + '作者帮你秒杀了所有怪物！');
-      for(let i = G.mobs.length-1; i >= 0; i--){
-        const m = G.mobs[i];
-        makeCorpse(m);
-        spawnParticles(m.x+m.w/2, m.y+m.h/2, '#ff0000', 15);
-        G.mobs.splice(i, 1);
-        G.killCount++;
-      }
-      playSound('kill');
-      G.shake = 15;
-      break;
-    case 1:
-      // 给玩家游戏提示
-      const tips = [
-        '提示：10杀获得盾牌，30杀打小Boss，50杀获得火焰弹！',
-        '提示：70杀获得蓄力火焰弹，120杀打最终Boss！',
-        '提示：下雨地面会滑，小心摔倒！打雷会劈死人！',
-        '提示：大太阳会让状态下降，晴天和阴天没效果！',
-        '提示：车可以撞怪物秒杀，还能挖树！500金币购买！',
-        '提示：氮气加速可以让车速度翻倍，持续3秒！',
-        '提示：双人模式下，第一个上车的是驾驶员！',
-        '提示：靠近😊可以索要金币，靠近😎会播放音乐！',
-        '提示：受伤后会流血，每5秒流失1点血量！',
-        '提示：商店可以买医疗包、绷带、救助器等道具！',
-      ];
-      const tip = tips[Math.floor(Math.random() * tips.length)];
-      showToast('💡 ' + tip);
-      playSound('unlock');
-      break;
-    case 2:
-      // 给玩家金币
-      const gold = rand(50, 200);
-      player.gold += gold;
-      showToast(playerLabel + '作者给了你 ' + gold + ' 金币！');
-      playSound('pickup');
-      spawnParticles(player.x+player.w/2, player.y+player.h/2, '#ffd700', 10);
-      break;
-    case 3:
-      // 恢复玩家血量
-      const heal = rand(20, 50);
-      player.hp = Math.min(player.maxHp, player.hp + heal);
-      showToast(playerLabel + '作者恢复了你 ' + heal + ' 点血量！');
-      playSound('heal');
-      spawnParticles(player.x+player.w/2, player.y+player.h/2, '#00ff00', 10);
-      break;
-    case 4:
-      // 整蛊：召唤一些怪物
-      showToast(playerLabel + '作者开玩笑，召唤了一群怪物！');
-      for(let i = 0; i < 5; i++){
-        const mx = clamp(player.x + rand(-200, 200), 50, WORLD_W-50);
-        const my = clamp(player.y + rand(-200, 200), 50, WORLD_H-50);
-        G.mobs.push({
-          x:mx, y:my, w:44, h:44,
-          hp:3, maxHp:3, face:'👾', speed:1.5,
-          atkCd:0, hurtFlash:0, knockback:{x:0,y:0},
-          slipTimer:0, slipRotate:false,
-        });
-      }
-      playSound('hurt');
-      break;
+  showToast(playerLabel + '作者帮你秒杀了所有怪物！');
+  for(let i = G.mobs.length-1; i >= 0; i--){
+    const m = G.mobs[i];
+    makeCorpse(m);
+    spawnParticles(m.x+m.w/2, m.y+m.h/2, '#ff0000', 15);
+    G.mobs.splice(i, 1);
+    G.killCount++;
   }
-  
-  // 设置交互冷却（10秒）
-  G.authorNPC.interactCooldown = 600;
+  playSound('kill');
+  G.shake = 15;
+  authorSetCooldown();
+}
+
+// 功能2：给游戏提示
+function authorGiveTip(){
+  if(!authorCheckCooldown()) return;
+  const tips = [
+    '提示：10杀获得盾牌，30杀打小Boss，50杀获得火焰弹！',
+    '提示：70杀获得蓄力火焰弹，120杀打最终Boss！',
+    '提示：下雨地面会滑，小心摔倒！打雷会劈死人！',
+    '提示：大太阳会让状态下降，晴天和阴天没效果！',
+    '提示：车可以撞怪物秒杀，还能挖树！500金币购买！',
+    '提示：氮气加速可以让车速度翻倍，持续3秒！',
+    '提示：双人模式下，第一个上车的是驾驶员！',
+    '提示：靠近😊可以索要金币，靠近😎会播放音乐！',
+    '提示：受伤后会流血，每5秒流失1点血量！',
+    '提示：商店可以买医疗包、绷带、救助器等道具！',
+    '提示：作者NPC是无敌的，打他会被反杀！',
+    '提示：双人模式下可以用整蛊功能整蛊对方！',
+  ];
+  const tip = tips[Math.floor(Math.random() * tips.length)];
+  showToast('💡 ' + tip);
+  playSound('unlock');
+  authorSetCooldown();
+}
+
+// 功能3：给金币
+function authorGiveGold(){
+  if(!authorCheckCooldown()) return;
+  const player = getAuthorNearPlayer();
+  if(!player) return;
+  const playerLabel = player === G.player2 ? '2P ' : '1P ';
+  const gold = rand(50, 200);
+  player.gold += gold;
+  showToast(playerLabel + '作者给了你 ' + gold + ' 金币！');
+  playSound('pickup');
+  spawnParticles(player.x+player.w/2, player.y+player.h/2, '#ffd700', 10);
+  authorSetCooldown();
+}
+
+// 功能4：恢复血量
+function authorHealPlayer(){
+  if(!authorCheckCooldown()) return;
+  const player = getAuthorNearPlayer();
+  if(!player) return;
+  const playerLabel = player === G.player2 ? '2P ' : '1P ';
+  const heal = rand(20, 50);
+  player.hp = Math.min(player.maxHp, player.hp + heal);
+  player.bleeding = false; // 顺便止血
+  showToast(playerLabel + '作者恢复了你 ' + heal + ' 点血量！');
+  playSound('heal');
+  spawnParticles(player.x+player.w/2, player.y+player.h/2, '#00ff00', 10);
+  authorSetCooldown();
+}
+
+// 功能5：召唤怪物（整蛊）
+function authorSpawnMobs(){
+  if(!authorCheckCooldown()) return;
+  const player = getAuthorNearPlayer();
+  if(!player) return;
+  const playerLabel = player === G.player2 ? '2P ' : '1P ';
+  showToast(playerLabel + '作者开玩笑，召唤了一群怪物！');
+  for(let i = 0; i < 5; i++){
+    const mx = clamp(player.x + rand(-200, 200), 50, WORLD_W-50);
+    const my = clamp(player.y + rand(-200, 200), 50, WORLD_H-50);
+    G.mobs.push({
+      x:mx, y:my, w:44, h:44,
+      hp:3, maxHp:3, face:'👾', speed:1.5,
+      atkCd:0, hurtFlash:0, knockback:{x:0,y:0},
+      slipTimer:0, slipRotate:false,
+    });
+  }
+  playSound('hurt');
+  authorSetCooldown();
 }
 
 // 对话系统事件
@@ -6690,14 +6725,17 @@ document.getElementById('talkBtn').addEventListener('click', ()=>{
   const btn = document.getElementById('talkBtn');
   if(btn._target) openDialog(btn._target);
 });
-// 作者NPC交互按钮
-document.getElementById('authorBtn').addEventListener('click', ()=>{
-  authorInteract();
-});
-document.getElementById('authorBtn').addEventListener('touchstart', function(e){
-  e.preventDefault();
-  authorInteract();
-});
+// 作者NPC功能按钮点击事件
+document.getElementById('authorKillBtn').addEventListener('click', ()=>{ authorKillMobs(); });
+document.getElementById('authorKillBtn').addEventListener('touchstart', function(e){ e.preventDefault(); authorKillMobs(); });
+document.getElementById('authorTipBtn').addEventListener('click', ()=>{ authorGiveTip(); });
+document.getElementById('authorTipBtn').addEventListener('touchstart', function(e){ e.preventDefault(); authorGiveTip(); });
+document.getElementById('authorGoldBtn').addEventListener('click', ()=>{ authorGiveGold(); });
+document.getElementById('authorGoldBtn').addEventListener('touchstart', function(e){ e.preventDefault(); authorGiveGold(); });
+document.getElementById('authorHealBtn').addEventListener('click', ()=>{ authorHealPlayer(); });
+document.getElementById('authorHealBtn').addEventListener('touchstart', function(e){ e.preventDefault(); authorHealPlayer(); });
+document.getElementById('authorMobBtn').addEventListener('click', ()=>{ authorSpawnMobs(); });
+document.getElementById('authorMobBtn').addEventListener('touchstart', function(e){ e.preventDefault(); authorSpawnMobs(); });
 document.getElementById('merchantTalkBtn').addEventListener('click', ()=>{
   openDialog('merchant');
 });
