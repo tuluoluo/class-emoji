@@ -2562,12 +2562,38 @@ function createCityElements(){
   });
 }
 
+// 城市地图：检测与高楼大厦的碰撞，返回true表示碰撞
+function checkBuildingCollision(entity){
+  if(G.currentMap !== 'city') return false;
+  for(let i = 0; i < G.cityBuildings.length; i++){
+    const b = G.cityBuildings[i];
+    if(rectOverlap(entity, b)){
+      return true;
+    }
+  }
+  return false;
+}
+
+// 城市地图：处理实体与高楼大厦的碰撞（滑动碰撞，分别检测x和y）
+function handleBuildingCollision(entity, oldX, oldY){
+  if(G.currentMap !== 'city') return;
+  // 先尝试x方向
+  const testX = {x: entity.x, y: oldY, w: entity.w, h: entity.h};
+  if(checkBuildingCollision(testX)){
+    entity.x = oldX; // x方向碰撞，回退x
+  }
+  // 再尝试y方向
+  const testY = {x: entity.x, y: entity.y, w: entity.w, h: entity.h};
+  if(checkBuildingCollision(testY)){
+    entity.y = oldY; // y方向碰撞，回退y
+  }
+}
+
 function createWoods(){
   G.woods = [];
   for(let i=0;i<60;i++){
     G.woods.push({
-      x:rand(60,WORLD_W-60), y:rand(60,WORLD_H-60), w:54, h:72,
-      hp:3, face:'🌳',
+      x:rand(60,WORLD_W-60), y:rand(60,WORLD_H-60), w:54, h:72,      hp:3, face:'🌳',
     });
   }
 }
@@ -3247,8 +3273,11 @@ function update(){
       if(G.cheat.alaskey) spd *= 0.7;
       // 大太阳：速度降低20%
       if(G.weather === 'hot') spd *= 0.8;
+      const oldX = p.x, oldY = p.y;
       p.x += dx*spd;
       p.y += dy*spd;
+      // 高楼大厦碰撞检测
+      handleBuildingCollision(p, oldX, oldY);
       if(Math.abs(dx)>0.1) p.facing = dx>0?1:-1;
 
       // 下雨/打雷：有概率打滑摔倒
@@ -3419,8 +3448,11 @@ function update(){
         dx2/=len2; dy2/=len2;
         let spd2 = p2.speed;
         if(G.weather === 'hot') spd2 *= 0.8;
+        const oldX2 = p2.x, oldY2 = p2.y;
         p2.x += dx2*spd2;
         p2.y += dy2*spd2;
+        // 高楼大厦碰撞检测
+        handleBuildingCollision(p2, oldX2, oldY2);
         if(Math.abs(dx2)>0.1) p2.facing = dx2>0?1:-1;
         // 2P打滑
         if((G.weather === 'rain' || G.weather === 'thunder') && p2.slipTimer <= 0 && !G.cheat.noSlip){
