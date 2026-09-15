@@ -2626,12 +2626,22 @@ function createBanks(){
 function createBankGuards(){
   G.bankGuards = [];
   G.banks.forEach(bank=>{
-    // 每个银行有2-3个守卫
+    // 每个银行有2-3个守卫，在银行内部或门口巡逻
     const guardCount = rand(2, 3);
     for(let i = 0; i < guardCount; i++){
+      // 守卫在银行内部或门口
+      const inBank = Math.random() < 0.6;
+      let gx, gy;
+      if(inBank){
+        gx = bank.x + rand(20, bank.w - 50);
+        gy = bank.y + rand(20, bank.h - 50);
+      } else {
+        gx = bank.x + rand(10, bank.w - 50);
+        gy = bank.y + bank.h + rand(5, 30);
+      }
       G.bankGuards.push({
-        x: bank.x + rand(10, bank.w - 50),
-        y: bank.y + bank.h + rand(10, 40),
+        x: gx,
+        y: gy,
         w: 44, h: 44,
         hp: 15,
         maxHp: 15,
@@ -2928,6 +2938,57 @@ function updatePoliceOfficers(){
     // 边界限制
     officer.x = clamp(officer.x, 0, WORLD_W - officer.w);
     officer.y = clamp(officer.y, 0, WORLD_H - officer.h);
+  });
+}
+
+// 更新金币（拾取逻辑）
+function updateCoins(){
+  if(G.coins.length === 0) return;
+  for(let i = G.coins.length-1; i >= 0; i--){
+    const coin = G.coins[i];
+    // 1P拾取
+    if(G.player && !G.player.dead){
+      const dx = G.player.x + G.player.w/2 - coin.x;
+      const dy = G.player.y + G.player.h/2 - coin.y;
+      if(Math.hypot(dx, dy) < 40){
+        G.player.gold += coin.value;
+        spawnParticles(coin.x, coin.y, '#ffd700', 8);
+        playSound('pickup');
+        showToast('1P 拾取' + coin.value + '金币！');
+        G.coins.splice(i, 1);
+        updateUI();
+        continue;
+      }
+    }
+    // 2P拾取
+    if(G.isCoop && G.player2 && !G.coopP2Dead){
+      const dx = G.player2.x + G.player2.w/2 - coin.x;
+      const dy = G.player2.y + G.player2.h/2 - coin.y;
+      if(Math.hypot(dx, dy) < 40){
+        G.player2.gold += coin.value;
+        spawnParticles(coin.x, coin.y, '#ffd700', 8);
+        playSound('pickup');
+        showToast('2P 拾取' + coin.value + '金币！');
+        G.coins.splice(i, 1);
+        updateUI();
+        continue;
+      }
+    }
+  }
+}
+
+// 渲染金币
+function drawCoins(){
+  G.coins.forEach(coin=>{
+    ctx.save();
+    // 金币发光效果
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 10;
+    ctx.font = '24px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('💰', coin.x, coin.y);
+    ctx.restore();
   });
 }
 
@@ -3915,6 +3976,8 @@ function update(){
   if(G.currentMap === 'city') updatePoliceCars();
   // 更新警察（城市地图）
   if(G.currentMap === 'city') updatePoliceOfficers();
+  // 更新金币拾取
+  updateCoins();
   // 更新载具
   updateCar();
   // 更新投射物
@@ -5262,6 +5325,7 @@ function render(){
     if(G.player2 && !G.coopP2Dead) drawPlayer2();
     if(G.currentMap === 'city') drawCityElements(true); // 汽车（在玩家上面）
     if(G.currentMap === 'city') drawPoliceCars(); // 警车（在玩家上面）
+    drawCoins(); // 金币（在玩家上面）
     G.projectiles.forEach(pr=>drawProjectile(pr));
     G.fireGrounds.forEach(fg=>{
       const alpha = fg.life < 60 ? fg.life/60 : 1;
@@ -5326,6 +5390,7 @@ function render(){
       if(G.player2 && !G.coopP2Dead) drawPlayer2();
       if(G.currentMap === 'city') drawCityElements(true); // 汽车（在玩家上面）
       if(G.currentMap === 'city') drawPoliceCars(); // 警车（在玩家上面）
+      drawCoins(); // 金币（在玩家上面）
       drawCar();
       if(G.player) drawPlayer();
       if(G.player2 && !G.coopP2Dead) drawPlayer2();
@@ -5440,6 +5505,7 @@ ctx.globalAlpha = 1;
   if(G.player) drawPlayer();
   if(G.currentMap === 'city') drawCityElements(true); // 汽车（在玩家上面）
   if(G.currentMap === 'city') drawPoliceCars(); // 警车（在玩家上面）
+  drawCoins(); // 金币（在玩家上面）
 
   // 投射物
   G.projectiles.forEach(pr=>drawProjectile(pr));
@@ -5814,6 +5880,42 @@ function drawCityElements(onlyCars){
 function drawBanks(){
   if(G.currentMap !== 'city') return;
   G.banks.forEach(bank=>{
+    // 银行内部地板（大理石纹理，玩家可以走进去）
+    ctx.fillStyle = '#e8e8e8';
+    ctx.fillRect(bank.x + 5, bank.y + 5, bank.w - 10, bank.h - 10);
+    // 大理石纹理
+    ctx.strokeStyle = '#d0d0d0';
+    ctx.lineWidth = 1;
+    for(let tx = bank.x + 15; tx < bank.x + bank.w - 15; tx += 20){
+      ctx.beginPath();
+      ctx.moveTo(tx, bank.y + 10);
+      ctx.lineTo(tx, bank.y + bank.h - 10);
+      ctx.stroke();
+    }
+    for(let ty = bank.y + 15; ty < bank.y + bank.h - 15; ty += 20){
+      ctx.beginPath();
+      ctx.moveTo(bank.x + 10, ty);
+      ctx.lineTo(bank.x + bank.w - 10, ty);
+      ctx.stroke();
+    }
+    
+    // 银行内部的尸体（抢劫现场）
+    if(bank.robbed){
+      ctx.font = '24px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = 0.7;
+      ctx.fillText('💀', bank.x + bank.w*0.3, bank.y + bank.h*0.4);
+      ctx.fillText('💀', bank.x + bank.w*0.7, bank.y + bank.h*0.6);
+      ctx.globalAlpha = 1;
+    }
+    
+    // 银行柜台
+    ctx.fillStyle = '#8b4513';
+    ctx.fillRect(bank.x + 15, bank.y + bank.h - 40, bank.w - 30, 15);
+    ctx.fillStyle = '#a0522d';
+    ctx.fillRect(bank.x + 15, bank.y + bank.h - 40, bank.w - 30, 5);
+    
     // 银行阴影
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.fillRect(bank.x + 6, bank.y + 6, bank.w, bank.h);
@@ -5837,13 +5939,16 @@ function drawBanks(){
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('🏦 BANK', bank.x + bank.w/2, bank.y + bank.h - 16);
+    // 银行入口（门口，玩家可以走进来）
+    ctx.fillStyle = '#2c3e50';
+    ctx.fillRect(bank.x + bank.w/2 - 15, bank.y + bank.h - 5, 30, 10);
     // 如果被抢了，显示破窗效果
     if(bank.robbed){
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(bank.x + 10, bank.y + 15, bank.w - 20, bank.h - 45);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(bank.x + 10, bank.y + 15, bank.w - 20, bank.h - 50);
       ctx.fillStyle = '#e74c3c';
-      ctx.font = '20px serif';
-      ctx.fillText('💀', bank.x + bank.w/2, bank.y + bank.h/2 - 5);
+      ctx.font = '16px serif';
+      ctx.fillText('ROBBED!', bank.x + bank.w/2, bank.y + 25);
     }
   });
 }
