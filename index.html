@@ -5350,26 +5350,25 @@ function drawPlayer2(){
   ctx.textBaseline = 'middle';
   ctx.fillText(p.face, 0, 0);
 
-  // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转
-  if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'||p.weapon==='laser'||p.weapon==='spreadLaser'){
+  // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转（枪和火焰弹，光线不需要）
+  if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'){
     ctx.save();
     // 武器emoji
     let weaponEmoji = '🔫';
     if(p.weapon==='fire'||p.weapon==='chargeFire') weaponEmoji = '🔥';
-    if(p.weapon==='laser'||p.weapon==='spreadLaser') weaponEmoji = '⚡';
     // 根据瞄准轮盘方向计算旋转角度
     const aimX = p.aimX || p.facing;
     const aimY = p.aimY || 0;
     const angle = Math.atan2(aimY, aimX);
-    // 移动到玩家手上
-    ctx.translate(p.w*0.4, 0);
+    // 先旋转坐标系
     ctx.rotate(angle);
-    // 如果朝左，镜像翻转
+    // 朝左时镜像翻转emoji，避免倒置
     if(aimX < 0) ctx.scale(1, -1);
-    ctx.font = (p.w*0.6)+'px serif';
+    // 武器显示在玩家身体外侧（旋转后自动对应方向）
+    ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(weaponEmoji, p.w*0.2, 0);
+    ctx.fillText(weaponEmoji, p.w*0.55, 0);
     ctx.restore();
   }
 
@@ -5425,26 +5424,25 @@ function drawPlayer(){
   ctx.textBaseline = 'middle';
   ctx.fillText(p.face, 0, 0);
 
-  // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转
-  if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'||p.weapon==='laser'||p.weapon==='spreadLaser'){
+  // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转（枪和火焰弹，光线不需要）
+  if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'){
     ctx.save();
     // 武器emoji
     let weaponEmoji = '🔫';
     if(p.weapon==='fire'||p.weapon==='chargeFire') weaponEmoji = '🔥';
-    if(p.weapon==='laser'||p.weapon==='spreadLaser') weaponEmoji = '⚡';
     // 根据瞄准轮盘方向计算旋转角度
     const aimX = p.aimX || p.facing;
     const aimY = p.aimY || 0;
     const angle = Math.atan2(aimY, aimX);
-    // 移动到玩家手上
-    ctx.translate(p.w*0.4, 0);
+    // 先旋转坐标系
     ctx.rotate(angle);
-    // 如果朝左，镜像翻转
+    // 朝左时镜像翻转emoji，避免倒置
     if(aimX < 0) ctx.scale(1, -1);
-    ctx.font = (p.w*0.6)+'px serif';
+    // 武器显示在玩家身体外侧（旋转后自动对应方向）
+    ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(weaponEmoji, p.w*0.2, 0);
+    ctx.fillText(weaponEmoji, p.w*0.55, 0);
     ctx.restore();
   }
 
