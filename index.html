@@ -828,6 +828,10 @@ const G = {
   cityRoads: [], // 城市地图的马路
   cityCars: [], // 城市地图的汽车
   cityBuildings: [], // 城市地图的高楼大厦
+  banks: [], // 银行建筑
+  bankGuards: [], // 银行守卫
+  policeCars: [], // 警察车辆
+  policeOfficers: [], // 警察NPC
   day: true,
   dayTimer: 0,
   dayDuration: 3600, // 白天60秒，夜晚也60秒
@@ -1906,6 +1910,10 @@ function loadGame(slot){
     G.cityRoads = [];
     G.cityCars = [];
     G.cityBuildings = [];
+    G.banks = [];
+    G.bankGuards = [];
+    G.policeCars = [];
+    G.policeOfficers = [];
     G.miniBossSpawned = d.miniBossSpawned || false;
     G.finalBossSpawned = d.finalBossSpawned || false;
     G.gotShield = d.gotShield || false;
@@ -2055,6 +2063,9 @@ function loadGame(slot){
       if(G.killers.length === 0) createCityKillers();
       if(G.cityCorpses.length === 0) createCityCorpses();
       if(G.cityRoads.length === 0) createCityElements();
+      if(G.banks.length === 0) createBanks();
+      if(G.bankGuards.length === 0) createBankGuards();
+      if(G.policeCars.length === 0) createPolice();
     }
     // 处理载具相关UI
     const carBtn = document.getElementById('carBtn');
@@ -2410,6 +2421,9 @@ function createNPCs(){
     createCityKillers();
     createCityCorpses();
     createCityElements(); // 生成马路、汽车、高楼大厦
+    createBanks(); // 生成银行
+    createBankGuards(); // 生成银行守卫
+    createPolice(); // 生成警察巡逻系统
   }
 }
 
@@ -2587,6 +2601,334 @@ function handleBuildingCollision(entity, oldX, oldY){
   if(checkBuildingCollision(testY)){
     entity.y = oldY; // y方向碰撞，回退y
   }
+}
+
+// 城市地图：创建银行建筑
+function createBanks(){
+  G.banks = [];
+  // 在城市地图中创建2个银行
+  const bankPositions = [
+    {x: WORLD_W*0.15, y: WORLD_H*0.45},
+    {x: WORLD_W*0.8, y: WORLD_H*0.45},
+  ];
+  bankPositions.forEach(pos=>{
+    G.banks.push({
+      x: pos.x, y: pos.y,
+      w: 140, h: 100,
+      name: 'bank',
+      robbed: false, // 是否被抢过
+      goldSpawned: false, // 金币是否已生成
+    });
+  });
+}
+
+// 城市地图：创建银行守卫
+function createBankGuards(){
+  G.bankGuards = [];
+  G.banks.forEach(bank=>{
+    // 每个银行有2-3个守卫
+    const guardCount = rand(2, 3);
+    for(let i = 0; i < guardCount; i++){
+      G.bankGuards.push({
+        x: bank.x + rand(10, bank.w - 50),
+        y: bank.y + bank.h + rand(10, 40),
+        w: 44, h: 44,
+        hp: 15,
+        maxHp: 15,
+        speed: 1.5,
+        damage: 4,
+        atkCd: 0,
+        face: '🙂',
+        weapon: '🔫',
+        bankIndex: G.banks.indexOf(bank),
+        dead: false,
+      });
+    }
+  });
+}
+
+// 城市地图：更新银行守卫
+function updateBankGuards(){
+  if(G.currentMap !== 'city') return;
+  for(let i = G.bankGuards.length-1; i >= 0; i--){
+    const guard = G.bankGuards[i];
+    if(guard.dead) continue;
+    
+    // 攻击冷却
+    if(guard.atkCd > 0) guard.atkCd--;
+    
+    // 寻找最近的玩家
+    let target = null;
+    let minDist = Infinity;
+    if(G.player && !G.player.dead){
+      const d = dist(guard, G.player);
+      if(d < minDist){ minDist = d; target = G.player; }
+    }
+    if(G.isCoop && G.player2 && !G.coopP2Dead){
+      const d = dist(guard, G.player2);
+      if(d < minDist){ minDist = d; target = G.player2; }
+    }
+    
+    if(target && minDist < 300){
+      // 追逐玩家
+      const dx = target.x - guard.x;
+      const dy = target.y - guard.y;
+      const len = Math.hypot(dx, dy);
+      if(len > 80){
+        const oldX = guard.x, oldY = guard.y;
+        guard.x += (dx/len) * guard.speed;
+        guard.y += (dy/len) * guard.speed;
+        handleBuildingCollision(guard, oldX, oldY);
+      }
+      // 攻击玩家（远程射击）
+      if(guard.atkCd <= 0 && minDist < 250){
+        guard.atkCd = 90;
+        const angle = Math.atan2(dy, dx);
+        G.projectiles.push({
+          x: guard.x + guard.w/2,
+          y: guard.y + guard.h/2,
+          vx: Math.cos(angle) * 6,
+          vy: Math.sin(angle) * 6,
+          damage: guard.damage,
+          from: 'bankGuard',
+          color: '#00aaff',
+          size: 6,
+          life: 120,
+        });
+        playSound('shoot');
+      }
+    }
+    
+    // 边界限制
+    guard.x = clamp(guard.x, 0, WORLD_W - guard.w);
+    guard.y = clamp(guard.y, 0, WORLD_H - guard.h);
+  }
+  
+  // 检查银行是否被抢（所有守卫都死了）
+  G.banks.forEach((bank, bi)=>{
+    if(!bank.robbed){
+      const guardsAlive = G.bankGuards.filter(g=>g.bankIndex === bi && !g.dead).length;
+      if(guardsAlive === 0){
+        bank.robbed = true;
+        // 生成大量金币
+        if(!bank.goldSpawned){
+          bank.goldSpawned = true;
+          for(let gi = 0; gi < 10; gi++){
+            G.coins.push({
+              x: bank.x + rand(10, bank.w - 10),
+              y: bank.y + rand(10, bank.h - 10),
+              value: 10,
+            });
+          }
+          showToast('银行被抢了！满地都是金币！');
+        }
+      }
+    }
+  });
+}
+
+// 城市地图：创建警察巡逻系统
+function createPolice(){
+  G.policeCars = [];
+  G.policeOfficers = [];
+  
+  // 创建3辆警车（乱开，在草地上和道路上都可以）
+  for(let i = 0; i < 3; i++){
+    G.policeCars.push({
+      x: rand(100, WORLD_W-100),
+      y: rand(100, WORLD_H-100),
+      w: 60, h: 36,
+      vx: rand(-3, 3),
+      vy: rand(-3, 3),
+      color: '#3498db',
+      sirenTimer: 0,
+    });
+  }
+  
+  // 创建5个警察（乱杀人）
+  for(let i = 0; i < 5; i++){
+    G.policeOfficers.push({
+      x: rand(100, WORLD_W-100),
+      y: rand(100, WORLD_H-100),
+      w: 44, h: 44,
+      hp: 20,
+      maxHp: 20,
+      speed: 2,
+      damage: 5,
+      atkCd: 0,
+      face: '👮',
+      weapon: '🔫',
+      dead: false,
+      target: null,
+      wanderTimer: 0,
+      wanderDir: {x: 0, y: 0},
+    });
+  }
+}
+
+// 城市地图：更新警车（乱开，乱撞）
+function updatePoliceCars(){
+  if(G.currentMap !== 'city') return;
+  G.policeCars.forEach(car=>{
+    // 随机改变方向（乱开）
+    if(Math.random() < 0.02){
+      car.vx = rand(-4, 4);
+      car.vy = rand(-4, 4);
+    }
+    // 移动
+    const oldX = car.x, oldY = car.y;
+    car.x += car.vx;
+    car.y += car.vy;
+    // 碰到高楼大厦就反弹
+    if(checkBuildingCollision(car)){
+      car.x = oldX;
+      car.y = oldY;
+      car.vx = -car.vx;
+      car.vy = -car.vy;
+    }
+    // 边界反弹
+    if(car.x < 0 || car.x > WORLD_W - car.w){ car.vx = -car.vx; car.x = clamp(car.x, 0, WORLD_W - car.w); }
+    if(car.y < 0 || car.y > WORLD_H - car.h){ car.vy = -car.vy; car.y = clamp(car.y, 0, WORLD_H - car.h); }
+    
+    // 警灯闪烁
+    car.sirenTimer++;
+    
+    // 碰撞检测：撞死玩家、怪物、NPC、杀手
+    const carBox = {x:car.x, y:car.y, w:car.w, h:car.h};
+    if(G.player && !G.player.dead && rectOverlap(carBox, G.player)){
+      G.player.hp = 0;
+      G.player.dead = true;
+      showToast('1P 被警车撞死了！');
+      playSound('death');
+      makeCorpse(G.player);
+      if(!G.isCoop){
+        G.running = false;
+        G.state = 'gameover';
+        gameOver(false);
+      } else {
+        G.coopP1Dead = true;
+        if(G.coopP2Dead){
+          G.running = false;
+          G.state = 'gameover';
+          gameOver(false);
+        }
+      }
+    }
+    if(G.isCoop && G.player2 && !G.coopP2Dead && rectOverlap(carBox, G.player2)){
+      G.player2.hp = 0;
+      G.player2.dead = true;
+      showToast('2P 被警车撞死了！');
+      playSound('death');
+      makeCorpse(G.player2);
+      G.coopP2Dead = true;
+      if(G.coopP1Dead){
+        G.running = false;
+        G.state = 'gameover';
+        gameOver(false);
+      }
+    }
+    // 撞死怪物
+    for(let mi = G.mobs.length-1; mi >= 0; mi--){
+      const m = G.mobs[mi];
+      if(rectOverlap(carBox, m)){
+        makeCorpse(m);
+        spawnParticles(m.x+m.w/2, m.y+m.h/2, '#ff0000', 10);
+        G.mobs.splice(mi, 1);
+        G.killCount++;
+      }
+    }
+    // 撞死杀手
+    for(let ki = G.killers.length-1; ki >= 0; ki--){
+      const k = G.killers[ki];
+      if(!k.dead && rectOverlap(carBox, k)){
+        k.dead = true;
+        makeCorpse(k);
+        G.killers.splice(ki, 1);
+        G.killCount++;
+      }
+    }
+  });
+}
+
+// 城市地图：更新警察（乱杀人）
+function updatePoliceOfficers(){
+  if(G.currentMap !== 'city') return;
+  G.policeOfficers.forEach(officer=>{
+    if(officer.dead) return;
+    
+    // 攻击冷却
+    if(officer.atkCd > 0) officer.atkCd--;
+    
+    // 随机巡逻
+    officer.wanderTimer--;
+    if(officer.wanderTimer <= 0){
+      officer.wanderTimer = rand(60, 180);
+      const angle = rand(0, Math.PI*2);
+      officer.wanderDir = {x: Math.cos(angle), y: Math.sin(angle)};
+    }
+    
+    // 寻找最近的目标（玩家、怪物、NPC、杀手，见人就杀）
+    let target = null;
+    let minDist = 350;
+    if(G.player && !G.player.dead){
+      const d = dist(officer, G.player);
+      if(d < minDist){ minDist = d; target = G.player; }
+    }
+    if(G.isCoop && G.player2 && !G.coopP2Dead){
+      const d = dist(officer, G.player2);
+      if(d < minDist){ minDist = d; target = G.player2; }
+    }
+    G.mobs.forEach(m=>{
+      const d = dist(officer, m);
+      if(d < minDist){ minDist = d; target = m; }
+    });
+    G.killers.forEach(k=>{
+      if(!k.dead){
+        const d = dist(officer, k);
+        if(d < minDist){ minDist = d; target = k; }
+      }
+    });
+    
+    if(target){
+      // 追逐目标
+      const dx = target.x - officer.x;
+      const dy = target.y - officer.y;
+      const len = Math.hypot(dx, dy);
+      if(len > 100){
+        const oldX = officer.x, oldY = officer.y;
+        officer.x += (dx/len) * officer.speed;
+        officer.y += (dy/len) * officer.speed;
+        handleBuildingCollision(officer, oldX, oldY);
+      }
+      // 攻击目标（远程射击）
+      if(officer.atkCd <= 0 && len < 280){
+        officer.atkCd = 70;
+        const angle = Math.atan2(dy, dx);
+        G.projectiles.push({
+          x: officer.x + officer.w/2,
+          y: officer.y + officer.h/2,
+          vx: Math.cos(angle) * 7,
+          vy: Math.sin(angle) * 7,
+          damage: officer.damage,
+          from: 'police',
+          color: '#0000ff',
+          size: 6,
+          life: 120,
+        });
+        playSound('shoot');
+      }
+    } else {
+      // 随机巡逻
+      const oldX = officer.x, oldY = officer.y;
+      officer.x += officer.wanderDir.x * officer.speed * 0.5;
+      officer.y += officer.wanderDir.y * officer.speed * 0.5;
+      handleBuildingCollision(officer, oldX, oldY);
+    }
+    
+    // 边界限制
+    officer.x = clamp(officer.x, 0, WORLD_W - officer.w);
+    officer.y = clamp(officer.y, 0, WORLD_H - officer.h);
+  });
 }
 
 function createWoods(){
@@ -2932,6 +3274,40 @@ function hitAllMobs(hitBox, dmg){
           makeCorpse(k);
           G.killCount++;
           spawnParticles(k.x+k.w/2, k.y+k.h/2, '#ff0000', 15);
+          playSound('kill');
+        }
+      }
+    });
+    // 城市地图：也能打银行守卫
+    G.bankGuards.forEach(g=>{
+      if(!g.dead && rectOverlap(hitBox, g)){
+        g.hp -= dmg;
+        g.hurtFlash = 8;
+        spawnParticles(g.x+g.w/2, g.y+g.h/2, '#ff4444', 5);
+        playSound('hurt');
+        // 检查是否死亡
+        if(g.hp <= 0){
+          g.dead = true;
+          makeCorpse(g);
+          G.killCount++;
+          spawnParticles(g.x+g.w/2, g.y+g.h/2, '#ff0000', 15);
+          playSound('kill');
+        }
+      }
+    });
+    // 城市地图：也能打警察
+    G.policeOfficers.forEach(po=>{
+      if(!po.dead && rectOverlap(hitBox, po)){
+        po.hp -= dmg;
+        po.hurtFlash = 8;
+        spawnParticles(po.x+po.w/2, po.y+po.h/2, '#ff4444', 5);
+        playSound('hurt');
+        // 检查是否死亡
+        if(po.hp <= 0){
+          po.dead = true;
+          makeCorpse(po);
+          G.killCount++;
+          spawnParticles(po.x+po.w/2, po.y+po.h/2, '#ff0000', 15);
           playSound('kill');
         }
       }
@@ -3533,6 +3909,12 @@ function update(){
   if(G.currentMap === 'city') updateKillers();
   // 更新城市汽车（城市地图）
   if(G.currentMap === 'city') updateCars();
+  // 更新银行守卫（城市地图）
+  if(G.currentMap === 'city') updateBankGuards();
+  // 更新警车（城市地图）
+  if(G.currentMap === 'city') updatePoliceCars();
+  // 更新警察（城市地图）
+  if(G.currentMap === 'city') updatePoliceOfficers();
   // 更新载具
   updateCar();
   // 更新投射物
@@ -4546,6 +4928,42 @@ function updateProjectiles(){
             break; // 一个投射物只打一个杀手
           }
         }
+        // 城市地图：远程也能打银行守卫
+        for(let gi = G.bankGuards.length-1; gi >= 0; gi--){
+          const g = G.bankGuards[gi];
+          if(!g.dead && rectOverlap(box, g)){
+            g.hp -= pr.dmg;
+            g.hurtFlash = 8;
+            spawnParticles(g.x+g.w/2, g.y+g.h/2, '#ff6600', 5);
+            hit = true;
+            if(g.hp <= 0){
+              g.dead = true;
+              makeCorpse(g);
+              G.killCount++;
+              spawnParticles(g.x+g.w/2, g.y+g.h/2, '#ff0000', 15);
+              playSound('kill');
+            }
+            break;
+          }
+        }
+        // 城市地图：远程也能打警察
+        for(let pi = G.policeOfficers.length-1; pi >= 0; pi--){
+          const po = G.policeOfficers[pi];
+          if(!po.dead && rectOverlap(box, po)){
+            po.hp -= pr.dmg;
+            po.hurtFlash = 8;
+            spawnParticles(po.x+po.w/2, po.y+po.h/2, '#ff6600', 5);
+            hit = true;
+            if(po.hp <= 0){
+              po.dead = true;
+              makeCorpse(po);
+              G.killCount++;
+              spawnParticles(po.x+po.w/2, po.y+po.h/2, '#ff0000', 15);
+              playSound('kill');
+            }
+            break;
+          }
+        }
       }
       if(hit && !pr.isGrenade){
         // 火焰弹/蓄力火焰弹命中后生成地面火焰
@@ -4825,6 +5243,7 @@ function render(){
     drawBackground();
     camera.x = oldCamX; camera.y = oldCamY;
     if(G.currentMap === 'city') drawCityElements(false); // 马路和高楼大厦
+    if(G.currentMap === 'city') drawBanks(); // 银行建筑
     G.woods.forEach(w=>drawEntity(w, false));
     G.corpses.forEach(c=>drawCorpse(c));
     if(G.currentMap === 'city') drawCityCorpses();
@@ -4834,12 +5253,15 @@ function render(){
     if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
     drawAuthorNPC();
     if(G.currentMap === 'city') drawKillers();
+    if(G.currentMap === 'city') drawBankGuards(); // 银行守卫
+    if(G.currentMap === 'city') drawPoliceOfficers(); // 警察
     G.mobs.forEach(m=>drawEntity(m, true));
     G.bosses.forEach(b=>drawBoss(b));
     drawCar();
     if(G.player) drawPlayer();
     if(G.player2 && !G.coopP2Dead) drawPlayer2();
     if(G.currentMap === 'city') drawCityElements(true); // 汽车（在玩家上面）
+    if(G.currentMap === 'city') drawPoliceCars(); // 警车（在玩家上面）
     G.projectiles.forEach(pr=>drawProjectile(pr));
     G.fireGrounds.forEach(fg=>{
       const alpha = fg.life < 60 ? fg.life/60 : 1;
@@ -4885,6 +5307,7 @@ function render(){
       drawBackground();
       camera.x = oldCamX2; camera.y = oldCamY2;
       if(G.currentMap === 'city') drawCityElements(false); // 马路和高楼大厦
+      if(G.currentMap === 'city') drawBanks(); // 银行建筑
       G.woods.forEach(w=>drawEntity(w, false));
       G.corpses.forEach(c=>drawCorpse(c));
       if(G.currentMap === 'city') drawCityCorpses();
@@ -4894,12 +5317,15 @@ function render(){
       if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
       drawAuthorNPC();
       if(G.currentMap === 'city') drawKillers();
+      if(G.currentMap === 'city') drawBankGuards(); // 银行守卫
+      if(G.currentMap === 'city') drawPoliceOfficers(); // 警察
       G.mobs.forEach(m=>drawEntity(m, true));
       G.bosses.forEach(b=>drawBoss(b));
       drawCar();
       if(G.player) drawPlayer();
       if(G.player2 && !G.coopP2Dead) drawPlayer2();
       if(G.currentMap === 'city') drawCityElements(true); // 汽车（在玩家上面）
+      if(G.currentMap === 'city') drawPoliceCars(); // 警车（在玩家上面）
       drawCar();
       if(G.player) drawPlayer();
       if(G.player2 && !G.coopP2Dead) drawPlayer2();
@@ -4982,6 +5408,7 @@ ctx.globalAlpha = 1;
   // 背景（世界坐标）
   drawBackground();
   if(G.currentMap === 'city') drawCityElements(false); // 马路和高楼大厦
+  if(G.currentMap === 'city') drawBanks(); // 银行建筑
 
   // 木头
   G.woods.forEach(w=>drawEntity(w, false));
@@ -4997,6 +5424,8 @@ ctx.globalAlpha = 1;
   if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
   drawAuthorNPC();
   if(G.currentMap === 'city') drawKillers();
+  if(G.currentMap === 'city') drawBankGuards(); // 银行守卫
+  if(G.currentMap === 'city') drawPoliceOfficers(); // 警察
 
   // 怪物
   G.mobs.forEach(m=>drawEntity(m, true));
@@ -5010,6 +5439,7 @@ ctx.globalAlpha = 1;
   // 玩家
   if(G.player) drawPlayer();
   if(G.currentMap === 'city') drawCityElements(true); // 汽车（在玩家上面）
+  if(G.currentMap === 'city') drawPoliceCars(); // 警车（在玩家上面）
 
   // 投射物
   G.projectiles.forEach(pr=>drawProjectile(pr));
@@ -5378,6 +5808,121 @@ function drawCityElements(onlyCars){
       ctx.restore();
     });
   }
+}
+
+// 城市地图：渲染银行建筑
+function drawBanks(){
+  if(G.currentMap !== 'city') return;
+  G.banks.forEach(bank=>{
+    // 银行阴影
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(bank.x + 6, bank.y + 6, bank.w, bank.h);
+    // 银行本体（大理石色）
+    ctx.fillStyle = '#d5d8dc';
+    ctx.fillRect(bank.x, bank.y, bank.w, bank.h);
+    // 银行边框
+    ctx.strokeStyle = '#7f8c8d';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(bank.x, bank.y, bank.w, bank.h);
+    // 银行标志（顶部柱子）
+    ctx.fillStyle = '#aeb6bf';
+    for(let i = 0; i < 4; i++){
+      ctx.fillRect(bank.x + 15 + i*30, bank.y + 10, 12, bank.h - 30);
+    }
+    // 银行招牌
+    ctx.fillStyle = '#2c3e50';
+    ctx.fillRect(bank.x + 20, bank.y + bank.h - 25, bank.w - 40, 18);
+    ctx.fillStyle = '#f1c40f';
+    ctx.font = '14px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🏦 BANK', bank.x + bank.w/2, bank.y + bank.h - 16);
+    // 如果被抢了，显示破窗效果
+    if(bank.robbed){
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(bank.x + 10, bank.y + 15, bank.w - 20, bank.h - 45);
+      ctx.fillStyle = '#e74c3c';
+      ctx.font = '20px serif';
+      ctx.fillText('💀', bank.x + bank.w/2, bank.y + bank.h/2 - 5);
+    }
+  });
+}
+
+// 城市地图：渲染银行守卫
+function drawBankGuards(){
+  if(G.currentMap !== 'city') return;
+  G.bankGuards.forEach(guard=>{
+    if(guard.dead) return;
+    // 守卫身体
+    ctx.font = guard.w + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(guard.face, guard.x + guard.w/2, guard.y + guard.h/2);
+    // 武器
+    ctx.font = (guard.w*0.6) + 'px serif';
+    ctx.fillText(guard.weapon, guard.x + guard.w + 5, guard.y + guard.h/2);
+    // 血条
+    const hpRatio = guard.hp / guard.maxHp;
+    ctx.fillStyle = '#333';
+    ctx.fillRect(guard.x, guard.y - 8, guard.w, 4);
+    ctx.fillStyle = hpRatio > 0.5 ? '#2ecc71' : hpRatio > 0.25 ? '#f39c12' : '#e74c3c';
+    ctx.fillRect(guard.x, guard.y - 8, guard.w * hpRatio, 4);
+  });
+}
+
+// 城市地图：渲染警车
+function drawPoliceCars(){
+  if(G.currentMap !== 'city') return;
+  G.policeCars.forEach(car=>{
+    ctx.save();
+    // 警车阴影
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(car.x + 3, car.y + 3, car.w, car.h);
+    // 警车本体（蓝白相间）
+    ctx.fillStyle = '#3498db';
+    ctx.fillRect(car.x, car.y, car.w, car.h);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(car.x + car.w*0.3, car.y, car.w*0.4, car.h);
+    // 警车边框
+    ctx.strokeStyle = '#2c3e50';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(car.x, car.y, car.w, car.h);
+    // 警灯（闪烁）
+    const sirenOn = Math.floor(car.sirenTimer / 15) % 2 === 0;
+    ctx.fillStyle = sirenOn ? '#e74c3c' : '#3498db';
+    ctx.fillRect(car.x + car.w*0.35, car.y - 6, 8, 6);
+    ctx.fillStyle = sirenOn ? '#3498db' : '#e74c3c';
+    ctx.fillRect(car.x + car.w*0.55, car.y - 6, 8, 6);
+    // 警车文字
+    ctx.fillStyle = '#2c3e50';
+    ctx.font = '10px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('POLICE', car.x + car.w/2, car.y + car.h/2);
+    ctx.restore();
+  });
+}
+
+// 城市地图：渲染警察
+function drawPoliceOfficers(){
+  if(G.currentMap !== 'city') return;
+  G.policeOfficers.forEach(officer=>{
+    if(officer.dead) return;
+    // 警察身体
+    ctx.font = officer.w + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(officer.face, officer.x + officer.w/2, officer.y + officer.h/2);
+    // 武器
+    ctx.font = (officer.w*0.6) + 'px serif';
+    ctx.fillText(officer.weapon, officer.x + officer.w + 5, officer.y + officer.h/2);
+    // 血条
+    const hpRatio = officer.hp / officer.maxHp;
+    ctx.fillStyle = '#333';
+    ctx.fillRect(officer.x, officer.y - 8, officer.w, 4);
+    ctx.fillStyle = hpRatio > 0.5 ? '#2ecc71' : hpRatio > 0.25 ? '#f39c12' : '#e74c3c';
+    ctx.fillRect(officer.x, officer.y - 8, officer.w * hpRatio, 4);
+  });
 }
 
 function drawMinimap(){
