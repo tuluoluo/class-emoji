@@ -7208,6 +7208,25 @@ function updateCar(){
     }
   });
   
+  // 碰撞检测：撞杀手NPC（秒杀）
+  if(G.currentMap === 'city'){
+    for(let i = G.killers.length-1; i >= 0; i--){
+      const k = G.killers[i];
+      if(!k.dead && rectOverlap(carBox, k)){
+        k.dead = true;
+        makeCorpse(k);
+        spawnParticles(k.x+k.w/2, k.y+k.h/2, '#ff4444', 12);
+        G.killers.splice(i, 1);
+        G.killCount++;
+        playSound('kill');
+        showToast((driverNum === 2 ? '2P ' : '1P ') + '开车撞死了杀手！');
+        // 车稍微减速
+        car.vx *= 0.7;
+        car.vy *= 0.7;
+      }
+    }
+  }
+  
   // 碰撞检测：撞NPC（不伤害作者NPC，其他NPC击退）
   Object.values(G.npcs).forEach(npc=>{
     if(npc && !npc.dead && npc.face !== '🤬' && rectOverlap(carBox, npc)){
