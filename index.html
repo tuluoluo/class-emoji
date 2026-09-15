@@ -4121,22 +4121,30 @@ function updateNPCs(){
         } else {
           authorPanel.style.opacity = '1';
         }
-        // 计算面板位置（根据最近玩家所在的视口）
+        // 计算面板位置（参考askBtn的正确写法）
         const rect = wrap.getBoundingClientRect();
         const scaleX = rect.width / W;
         const scaleY = rect.height / H;
         let btnCamX = camera.x, btnCamY = camera.y;
+        let btnOffsetX = 0;
         if(G.isCoop){
-          // 双人模式：根据最近玩家是1P还是2P，使用对应的相机
+          // 双人模式：根据最近玩家是1P还是2P，使用对应的相机和偏移
           if(nearPlayer === G.player2){
-            btnCamX = camera2.x;
-            btnCamY = camera2.y;
+            btnCamX = clamp(G.player2.x + G.player2.w/2 - W/4, 0, Math.max(0, WORLD_W - W/2));
+            btnCamY = clamp(G.player2.y + G.player2.h/2 - H/2, 0, Math.max(0, WORLD_H - H));
+            btnOffsetX = W/2; // 2P在右半屏，需要偏移W/2
+          } else {
+            btnCamX = clamp(G.player.x + G.player.w/2 - W/4, 0, Math.max(0, WORLD_W - W/2));
+            btnCamY = clamp(G.player.y + G.player.h/2 - H/2, 0, Math.max(0, WORLD_H - H));
           }
         }
-        const screenX = (an.x + an.w/2 - btnCamX) * scaleX;
-        const screenY = (an.y - 220 - btnCamY) * scaleY;
-        authorPanel.style.left = (screenX - 70) + 'px';
-        authorPanel.style.top = Math.max(10, screenY) + 'px';
+        const btnX = (an.x + an.w/2 - btnCamX) * scaleX + btnOffsetX * scaleX;
+        const btnY = (an.y - btnCamY) * scaleY;
+        // 面板宽140，居中；放在作者NPC上方，不超出屏幕顶部
+        const panelLeft = Math.max(5, Math.min(btnX - 70, W * scaleX - 145));
+        const panelTop = Math.max(5, btnY - 210);
+        authorPanel.style.left = panelLeft + 'px';
+        authorPanel.style.top = panelTop + 'px';
         // 保存最近玩家引用，供点击时使用
         authorPanel._nearPlayer = nearPlayer;
       } else {
