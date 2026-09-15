@@ -156,6 +156,16 @@ input:checked + .slider:before{transform:translateX(24px)}
 #saveSelectPanel{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:103;display:none;align-items:center;justify-content:center}
 .save-select-box{background:#fdf6e3;border:4px solid #222;border-radius:12px;padding:20px;width:min(420px,90%);max-height:85%;overflow-y:auto}
 .save-select-box h3{text-align:center;font-size:20px;margin-bottom:14px;border-bottom:3px solid #333;padding-bottom:6px}
+#mapSelectPanel{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:103;display:none;align-items:center;justify-content:center}
+.map-select-box{background:#fdf6e3;border:4px solid #222;border-radius:12px;padding:20px;width:min(500px,90%);max-height:85%;overflow-y:auto}
+.map-select-box h3{text-align:center;font-size:20px;margin-bottom:14px;border-bottom:3px solid #333;padding-bottom:6px}
+.map-options{display:flex;gap:14px;justify-content:center;margin-bottom:16px}
+.map-option{flex:1;max-width:200px;background:#fff;border:3px solid #333;border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:transform 0.15s, box-shadow 0.15s}
+.map-option:hover{transform:translateY(-3px);box-shadow:0 6px 12px rgba(0,0,0,.3)}
+.map-option:active{transform:scale(0.97)}
+.map-preview{width:100%;height:80px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:8px;border:2px solid #333}
+.map-name{font-size:18px;font-weight:bold;margin-bottom:4px}
+.map-desc{font-size:12px;color:#666}
 .save-slot{background:#fff;border:3px solid #ccc;border-radius:8px;padding:12px;margin:10px 0;cursor:pointer;transition:all .15s}
 .save-slot:hover{border-color:#27ae60;transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.15)}
 .save-slot.empty{opacity:.5}
@@ -717,6 +727,26 @@ input:checked + .slider:before{transform:translateX(24px)}
     </div>
   </div>
 
+  <!-- 地图选择面板 -->
+  <div id="mapSelectPanel">
+    <div class="map-select-box">
+      <h3>🗺️ 选择地图</h3>
+      <div class="map-options">
+        <div class="map-option" id="mapGrassland">
+          <div class="map-preview" style="background:linear-gradient(135deg,#7ec850,#5a9e3a)">🌿</div>
+          <div class="map-name">草原</div>
+          <div class="map-desc">经典大草原，怪物出没</div>
+        </div>
+        <div class="map-option" id="mapCity">
+          <div class="map-preview" style="background:linear-gradient(135deg,#555,#333)">🏙️</div>
+          <div class="map-name">城市</div>
+          <div class="map-desc">废弃城市，杀手横行，尸体遍地</div>
+        </div>
+      </div>
+      <button id="closeMapSelectBtn" class="settings-close">返回</button>
+    </div>
+  </div>
+
   <!-- 设置面板 -->
   <div id="settingsPanel">
     <div class="settings-box">
@@ -791,6 +821,10 @@ const G = {
   running: true,
   soundOn: true,
   language: 'en', // 默认英语
+  selectedMap: 'grassland', // 选择的地图：grassland草原 / city城市
+  currentMap: 'grassland', // 当前地图
+  killers: [], // 城市地图的杀手NPC
+  cityCorpses: [], // 城市地图的尸体
   day: true,
   dayTimer: 0,
   dayDuration: 3600, // 白天60秒，夜晚也60秒
@@ -2353,6 +2387,63 @@ function createNPCs(){
     spawnX:ax, spawnY:ay, dead:false,
     interactCooldown:0,
   };
+  
+  // 城市地图：生成杀手NPC和尸体
+  if(G.currentMap === 'city'){
+    createCityKillers();
+    createCityCorpses();
+  }
+}
+
+// 城市地图：生成杀手NPC
+function createCityKillers(){
+  G.killers = [];
+  const killerCount = 5; // 5个杀手
+  for(let i = 0; i < killerCount; i++){
+    // 出生在离玩家至少300像素的位置
+    let kx, ky, ktries = 0;
+    do {
+      kx = rand(200, WORLD_W-200);
+      ky = rand(200, WORLD_H-200);
+      ktries++;
+    } while(G.player && Math.hypot(kx-G.player.x, ky-G.player.y) < 300 && ktries < 50);
+    
+    // 随机武器：刀或枪
+    const weaponType = Math.random() < 0.5 ? 'knife' : 'gun';
+    const face = weaponType === 'knife' ? '🔪' : '🔫';
+    
+    G.killers.push({
+      x:kx, y:ky, w:44, h:44,
+      hp: weaponType === 'knife' ? 15 : 10,
+      maxHp: weaponType === 'knife' ? 15 : 10,
+      face: face,
+      weapon: weaponType, // knife刀 / gun枪
+      speed: weaponType === 'knife' ? 1.8 : 1.2,
+      atkCd: 0,
+      hurtFlash: 0,
+      knockback: {x:0, y:0},
+      dead: false,
+      facing: 1,
+      slipTimer: 0,
+      slipRotate: false,
+    });
+  }
+}
+
+// 城市地图：生成尸体（🙂重复渲染）
+function createCityCorpses(){
+  G.cityCorpses = [];
+  const corpseCount = 30; // 30具尸体
+  for(let i = 0; i < corpseCount; i++){
+    G.cityCorpses.push({
+      x: rand(100, WORLD_W-100),
+      y: rand(100, WORLD_H-100),
+      w: 44, h: 44,
+      face: '🙂',
+      angle: Math.PI/2, // 翻转90度
+      rotation: rand(0, Math.PI*2), // 随机旋转角度
+    });
+  }
 }
 
 function createWoods(){
@@ -2677,6 +2768,30 @@ function hitAllMobs(hitBox, dmg){
     G.npcs.wanderer.knockback.x += dir*6;
     G.npcs.wanderer.knockback.y += rand(-2,2);
     playSound('hurt');
+  }
+  // 城市地图：也能打杀手NPC
+  if(G.currentMap === 'city'){
+    G.killers.forEach(k=>{
+      if(!k.dead && rectOverlap(hitBox, k)){
+        k.hp -= dmg;
+        k.hurtFlash = 8;
+        spawnParticles(k.x+k.w/2, k.y+k.h/2, '#ff4444', 5);
+        playSound('hurt');
+        // 击退
+        const kdx = k.x - G.player.x;
+        const kdy = k.y - G.player.y;
+        const klen = Math.hypot(kdx, kdy) || 1;
+        k.knockback = {x: kdx/klen*5, y: kdy/klen*5};
+        // 检查是否死亡
+        if(k.hp <= 0){
+          k.dead = true;
+          makeCorpse(k);
+          G.killCount++;
+          spawnParticles(k.x+k.w/2, k.y+k.h/2, '#ff0000', 15);
+          playSound('kill');
+        }
+      }
+    });
   }
 }
 
@@ -3264,6 +3379,8 @@ function update(){
   updateBosses();
   // 更新NPC
   updateNPCs();
+  // 更新杀手NPC（城市地图）
+  if(G.currentMap === 'city') updateKillers();
   // 更新载具
   updateCar();
   // 更新投射物
@@ -4255,6 +4372,27 @@ function updateProjectiles(){
         G.npcs.wanderer.hurtFlash = 8;
         hit = true;
       }
+      // 城市地图：远程也能打杀手NPC
+      if(G.currentMap === 'city'){
+        for(let ki = G.killers.length-1; ki >= 0; ki--){
+          const k = G.killers[ki];
+          if(!k.dead && rectOverlap(box, k)){
+            k.hp -= pr.dmg;
+            k.hurtFlash = 8;
+            spawnParticles(k.x+k.w/2, k.y+k.h/2, '#ff6600', 5);
+            hit = true;
+            // 检查是否死亡
+            if(k.hp <= 0){
+              k.dead = true;
+              makeCorpse(k);
+              G.killCount++;
+              spawnParticles(k.x+k.w/2, k.y+k.h/2, '#ff0000', 15);
+              playSound('kill');
+            }
+            break; // 一个投射物只打一个杀手
+          }
+        }
+      }
       if(hit && !pr.isGrenade){
         // 火焰弹/蓄力火焰弹命中后生成地面火焰
         if(pr.face === '🔥'){
@@ -4534,11 +4672,13 @@ function render(){
     camera.x = oldCamX; camera.y = oldCamY;
     G.woods.forEach(w=>drawEntity(w, false));
     G.corpses.forEach(c=>drawCorpse(c));
+    if(G.currentMap === 'city') drawCityCorpses();
     if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
     if(G.npcs.merchant) drawEntity(G.npcs.merchant, false);
     if(G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
     if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
     drawAuthorNPC();
+    if(G.currentMap === 'city') drawKillers();
     G.mobs.forEach(m=>drawEntity(m, true));
     G.bosses.forEach(b=>drawBoss(b));
     drawCar();
@@ -4590,11 +4730,13 @@ function render(){
       camera.x = oldCamX2; camera.y = oldCamY2;
       G.woods.forEach(w=>drawEntity(w, false));
       G.corpses.forEach(c=>drawCorpse(c));
+      if(G.currentMap === 'city') drawCityCorpses();
       if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
       if(G.npcs.merchant) drawEntity(G.npcs.merchant, false);
       if(G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
       if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
       drawAuthorNPC();
+      if(G.currentMap === 'city') drawKillers();
       G.mobs.forEach(m=>drawEntity(m, true));
       G.bosses.forEach(b=>drawBoss(b));
       drawCar();
@@ -4684,6 +4826,7 @@ ctx.globalAlpha = 1;
 
   // 尸体（在角色下面）
   G.corpses.forEach(c=>drawCorpse(c));
+  if(G.currentMap === 'city') drawCityCorpses();
 
   // NPC
   if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
@@ -4691,6 +4834,7 @@ ctx.globalAlpha = 1;
   if(G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
   if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
   drawAuthorNPC();
+  if(G.currentMap === 'city') drawKillers();
 
   // 怪物
   G.mobs.forEach(m=>drawEntity(m, true));
@@ -4838,35 +4982,122 @@ ctx.globalAlpha = 1;
 }
 
 function drawBackground(){
-  // 像素风草原 - 世界坐标
-  ctx.fillStyle = G.day ? '#7ec850' : '#3a5a3a';
-  ctx.fillRect(0, 0, WORLD_W, WORLD_H);
-  // 草地棋盘纹理 - 只绘制可见区域
-  ctx.fillStyle = G.day ? '#6ab040' : '#2d4a2d';
-  const gridSize = 40;
-  const startX = Math.floor(camera.x / gridSize) * gridSize;
-  const startY = Math.floor(camera.y / gridSize) * gridSize;
-  for(let x = startX; x < camera.x + W + gridSize; x += gridSize){
-    for(let y = startY; y < camera.y + H + gridSize; y += gridSize){
-      if((Math.floor(x/gridSize) + Math.floor(y/gridSize)) % 2 === 0){
-        ctx.fillRect(x, y, gridSize, gridSize);
+  if(G.currentMap === 'city'){
+    // 城市地图 - 灰色水泥地
+    ctx.fillStyle = G.day ? '#555555' : '#2a2a2a';
+    ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    // 水泥地棋盘纹理 - 只绘制可见区域
+    ctx.fillStyle = G.day ? '#4a4a4a' : '#222222';
+    const gridSize = 80;
+    const startX = Math.floor(camera.x / gridSize) * gridSize;
+    const startY = Math.floor(camera.y / gridSize) * gridSize;
+    for(let x = startX; x < camera.x + W + gridSize; x += gridSize){
+      for(let y = startY; y < camera.y + H + gridSize; y += gridSize){
+        if((Math.floor(x/gridSize) + Math.floor(y/gridSize)) % 2 === 0){
+          ctx.fillRect(x, y, gridSize, gridSize);
+        }
       }
     }
-  }
-  // 草丛装饰
-  ctx.fillStyle = G.day ? '#5da035' : '#264026';
-  for(let i = 0; i < 50; i++){
-    const gx = (i * 137 + Math.floor(camera.x/100)*100) % WORLD_W;
-    const gy = (i * 211 + Math.floor(camera.y/100)*100) % WORLD_H;
-    if(gx > camera.x - 20 && gx < camera.x + W + 20 && gy > camera.y - 20 && gy < camera.y + H + 20){
-      ctx.fillRect(gx, gy, 8, 4);
-      ctx.fillRect(gx+3, gy-3, 4, 4);
+    // 裂缝装饰
+    ctx.strokeStyle = G.day ? '#3a3a3a' : '#1a1a1a';
+    ctx.lineWidth = 2;
+    for(let i = 0; i < 30; i++){
+      const cx = (i * 211 + Math.floor(camera.x/200)*200) % WORLD_W;
+      const cy = (i * 137 + Math.floor(camera.y/200)*200) % WORLD_H;
+      if(cx > camera.x - 50 && cx < camera.x + W + 50 && cy > camera.y - 50 && cy < camera.y + H + 50){
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + rand(-30, 30), cy + rand(-30, 30));
+        ctx.lineTo(cx + rand(-50, 50), cy + rand(-50, 50));
+        ctx.stroke();
+      }
     }
+    // 世界边界
+    ctx.strokeStyle = 'rgba(30,30,30,0.8)';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(0, 0, WORLD_W, WORLD_H);
+  } else {
+    // 像素风草原 - 世界坐标
+    ctx.fillStyle = G.day ? '#7ec850' : '#3a5a3a';
+    ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    // 草地棋盘纹理 - 只绘制可见区域
+    ctx.fillStyle = G.day ? '#6ab040' : '#2d4a2d';
+    const gridSize = 40;
+    const startX = Math.floor(camera.x / gridSize) * gridSize;
+    const startY = Math.floor(camera.y / gridSize) * gridSize;
+    for(let x = startX; x < camera.x + W + gridSize; x += gridSize){
+      for(let y = startY; y < camera.y + H + gridSize; y += gridSize){
+        if((Math.floor(x/gridSize) + Math.floor(y/gridSize)) % 2 === 0){
+          ctx.fillRect(x, y, gridSize, gridSize);
+        }
+      }
+    }
+    // 草丛装饰
+    ctx.fillStyle = G.day ? '#5da035' : '#264026';
+    for(let i = 0; i < 50; i++){
+      const gx = (i * 137 + Math.floor(camera.x/100)*100) % WORLD_W;
+      const gy = (i * 211 + Math.floor(camera.y/100)*100) % WORLD_H;
+      if(gx > camera.x - 20 && gx < camera.x + W + 20 && gy > camera.y - 20 && gy < camera.y + H + 20){
+        ctx.fillRect(gx, gy, 8, 4);
+        ctx.fillRect(gx+3, gy-3, 4, 4);
+      }
+    }
+    // 世界边界
+    ctx.strokeStyle = 'rgba(80,50,20,0.6)';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(0, 0, WORLD_W, WORLD_H);
   }
-  // 世界边界
-  ctx.strokeStyle = 'rgba(80,50,20,0.6)';
-  ctx.lineWidth = 8;
-  ctx.strokeRect(0, 0, WORLD_W, WORLD_H);
+}
+
+// 渲染杀手NPC
+function drawKillers(){
+  G.killers.forEach(k=>{
+    if(k.dead) return;
+    ctx.save();
+    // 受伤闪烁
+    if(k.hurtFlash > 0 && k.hurtFlash % 4 < 2){
+      ctx.globalAlpha = 0.5;
+    }
+    // 摔倒旋转
+    if(k.slipRotate){
+      ctx.translate(k.x + k.w/2, k.y + k.h/2);
+      ctx.rotate(Math.PI/2);
+      ctx.translate(-k.x - k.w/2, -k.y - k.h/2);
+    }
+    // 绘制杀手emoji
+    ctx.font = k.w + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(k.face, k.x + k.w/2, k.y + k.h/2);
+    // 血条
+    if(k.hp < k.maxHp){
+      const barW = k.w;
+      const barH = 4;
+      const barX = k.x;
+      const barY = k.y - 8;
+      ctx.fillStyle = '#333';
+      ctx.fillRect(barX, barY, barW, barH);
+      ctx.fillStyle = '#e74c3c';
+      ctx.fillRect(barX, barY, barW * (k.hp/k.maxHp), barH);
+    }
+    ctx.restore();
+  });
+}
+
+// 渲染城市尸体
+function drawCityCorpses(){
+  G.cityCorpses.forEach(c=>{
+    ctx.save();
+    ctx.translate(c.x + c.w/2, c.y + c.h/2);
+    ctx.rotate(c.rotation);
+    ctx.rotate(Math.PI/2); // 翻转90度
+    ctx.font = c.w + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.globalAlpha = 0.7; // 半透明
+    ctx.fillText(c.face, 0, 0);
+    ctx.restore();
+  });
 }
 
 function drawMinimap(){
@@ -6341,6 +6572,113 @@ function activateCarNitro(playerNum){
   G.shake = 10;
 }
 
+// ==================== 杀手NPC（城市地图） ====================
+function updateKillers(){
+  for(let i = G.killers.length-1; i >= 0; i--){
+    const k = G.killers[i];
+    if(k.dead){
+      G.killers.splice(i, 1);
+      continue;
+    }
+    
+    // 受伤闪烁
+    if(k.hurtFlash > 0) k.hurtFlash--;
+    
+    // 攻击冷却
+    if(k.atkCd > 0) k.atkCd--;
+    
+    // 击退
+    if(k.knockback.x !== 0 || k.knockback.y !== 0){
+      k.x += k.knockback.x;
+      k.y += k.knockback.y;
+      k.knockback.x *= 0.85;
+      k.knockback.y *= 0.85;
+      if(Math.abs(k.knockback.x) < 0.1) k.knockback.x = 0;
+      if(Math.abs(k.knockback.y) < 0.1) k.knockback.y = 0;
+    }
+    
+    // 打滑摔倒（下雨时）
+    if(k.slipTimer > 0){
+      k.slipTimer--;
+      if(k.slipTimer <= 0) k.slipRotate = false;
+      continue; // 摔倒时不能移动和攻击
+    }
+    
+    // 找到最近的玩家
+    let targetPlayer = G.player;
+    let minDist = Infinity;
+    if(G.player && !G.player.dead){
+      const d = Math.hypot(k.x - G.player.x, k.y - G.player.y);
+      if(d < minDist){ minDist = d; targetPlayer = G.player; }
+    }
+    if(G.isCoop && G.player2 && !G.player2.dead){
+      const d = Math.hypot(k.x - G.player2.x, k.y - G.player2.y);
+      if(d < minDist){ minDist = d; targetPlayer = G.player2; }
+    }
+    
+    if(!targetPlayer) continue;
+    
+    // 计算朝向
+    const dx = targetPlayer.x - k.x;
+    const dy = targetPlayer.y - k.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    k.facing = dx > 0 ? 1 : -1;
+    
+    if(k.weapon === 'knife'){
+      // 刀杀手：追逐玩家，靠近后近战攻击
+      if(dist > 50){
+        k.x += (dx/dist) * k.speed;
+        k.y += (dy/dist) * k.speed;
+      } else if(k.atkCd <= 0){
+        // 近战攻击
+        targetPlayer.hp -= 5;
+        targetPlayer.hurtFlash = 10;
+        k.atkCd = 60; // 1秒冷却
+        playSound('hurt');
+        spawnParticles(targetPlayer.x+targetPlayer.w/2, targetPlayer.y+targetPlayer.h/2, '#ff0000', 8);
+        // 击退玩家
+        targetPlayer.knockback = {x: (dx/dist)*4, y: (dy/dist)*4};
+      }
+    } else {
+      // 枪杀手：保持距离，远程射击
+      const idealDist = 250; // 理想距离
+      if(dist > idealDist + 50){
+        // 太近了，后退
+        k.x -= (dx/dist) * k.speed * 0.5;
+        k.y -= (dy/dist) * k.speed * 0.5;
+      } else if(dist < idealDist - 50){
+        // 太远了，前进
+        k.x += (dx/dist) * k.speed;
+        k.y += (dy/dist) * k.speed;
+      }
+      // 射击
+      if(k.atkCd <= 0 && dist < 400){
+        // 发射子弹
+        const bulletSpeed = 6;
+        G.projectiles.push({
+          x: k.x + k.w/2,
+          y: k.y + k.h/2,
+          w: 8, h: 8,
+          dx: (dx/dist) * bulletSpeed,
+          dy: (dy/dist) * bulletSpeed,
+          dmg: 3,
+          life: 120,
+          fromPlayer: false,
+          fromKiller: true,
+          face: '•',
+          color: '#ffff00',
+        });
+        k.atkCd = 90; // 1.5秒冷却
+        playSound('shoot');
+      }
+    }
+    
+    // 边界限制
+    k.x = clamp(k.x, 0, WORLD_W - k.w);
+    k.y = clamp(k.y, 0, WORLD_H - k.h);
+  }
+}
+
 function updateCar(){
   if(!G.carOwned || !G.car) return;
   const car = G.car;
@@ -6924,6 +7262,11 @@ function startGame(){
   initAudio();
   G.state = 'playing';
   G.running = true;
+  // 设置当前地图（如果没有选择，默认草原）
+  if(!G.selectedMap) G.selectedMap = 'grassland';
+  G.currentMap = G.selectedMap;
+  G.killers = []; // 重置杀手NPC
+  G.cityCorpses = []; // 重置城市尸体
   G.day = true; G.dayTimer = 0; G.killCount = 0;
   G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
   G.fireGrounds = [];
@@ -7129,7 +7472,10 @@ function exitToMenu(){
 
 // 主页按钮
 document.getElementById('playBtn').addEventListener('click', ()=>{
-  initAudio(); playSound('click'); openSaveSelect('new');
+  initAudio(); playSound('click');
+  // 先显示地图选择界面
+  document.getElementById('mapSelectPanel').style.display = 'flex';
+  G.selectedMap = null;
 });
 document.getElementById('coopBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click'); openSaveSelect('coop');
@@ -7140,6 +7486,23 @@ document.getElementById('continueBtn').addEventListener('click', ()=>{
 document.getElementById('closeSaveSelectBtn').addEventListener('click', ()=>{
   playSound('click');
   document.getElementById('saveSelectPanel').style.display = 'none';
+});
+// 地图选择按钮
+document.getElementById('mapGrassland').addEventListener('click', ()=>{
+  playSound('click');
+  G.selectedMap = 'grassland';
+  document.getElementById('mapSelectPanel').style.display = 'none';
+  openSaveSelect('new');
+});
+document.getElementById('mapCity').addEventListener('click', ()=>{
+  playSound('click');
+  G.selectedMap = 'city';
+  document.getElementById('mapSelectPanel').style.display = 'none';
+  openSaveSelect('new');
+});
+document.getElementById('closeMapSelectBtn').addEventListener('click', ()=>{
+  playSound('click');
+  document.getElementById('mapSelectPanel').style.display = 'none';
 });
 document.getElementById('menuSettingsBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click');
