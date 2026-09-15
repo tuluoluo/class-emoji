@@ -5335,6 +5335,30 @@ function drawPlayer2(){
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(p.face, 0, 0);
+
+  // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转
+  if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'||p.weapon==='laser'||p.weapon==='spreadLaser'){
+    ctx.save();
+    // 武器emoji
+    let weaponEmoji = '🔫';
+    if(p.weapon==='fire'||p.weapon==='chargeFire') weaponEmoji = '🔥';
+    if(p.weapon==='laser'||p.weapon==='spreadLaser') weaponEmoji = '⚡';
+    // 根据瞄准轮盘方向计算旋转角度
+    const aimX = p.aimX || p.facing;
+    const aimY = p.aimY || 0;
+    const angle = Math.atan2(aimY, aimX);
+    // 移动到玩家手上
+    ctx.translate(p.w*0.4, 0);
+    ctx.rotate(angle);
+    // 如果朝左，镜像翻转
+    if(aimX < 0) ctx.scale(1, -1);
+    ctx.font = (p.w*0.6)+'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(weaponEmoji, p.w*0.2, 0);
+    ctx.restore();
+  }
+
   if(p.attackAnim>0 && (p.weapon==='fist'||p.weapon==='knife')){
     ctx.save();
     ctx.translate(p.facing*p.w*0.7, 0);
@@ -5386,6 +5410,29 @@ function drawPlayer(){
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(p.face, 0, 0);
+
+  // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转
+  if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'||p.weapon==='laser'||p.weapon==='spreadLaser'){
+    ctx.save();
+    // 武器emoji
+    let weaponEmoji = '🔫';
+    if(p.weapon==='fire'||p.weapon==='chargeFire') weaponEmoji = '🔥';
+    if(p.weapon==='laser'||p.weapon==='spreadLaser') weaponEmoji = '⚡';
+    // 根据瞄准轮盘方向计算旋转角度
+    const aimX = p.aimX || p.facing;
+    const aimY = p.aimY || 0;
+    const angle = Math.atan2(aimY, aimX);
+    // 移动到玩家手上
+    ctx.translate(p.w*0.4, 0);
+    ctx.rotate(angle);
+    // 如果朝左，镜像翻转
+    if(aimX < 0) ctx.scale(1, -1);
+    ctx.font = (p.w*0.6)+'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(weaponEmoji, p.w*0.2, 0);
+    ctx.restore();
+  }
 
   // 攻击特效
   if(p.attackAnim>0 && (p.weapon==='fist'||p.weapon==='knife')){
