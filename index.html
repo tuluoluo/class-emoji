@@ -2410,14 +2410,14 @@ function createCityKillers(){
     
     // 随机武器：刀或枪
     const weaponType = Math.random() < 0.5 ? 'knife' : 'gun';
-    const face = weaponType === 'knife' ? '🔪' : '🔫';
     
     G.killers.push({
       x:kx, y:ky, w:44, h:44,
       hp: weaponType === 'knife' ? 15 : 10,
       maxHp: weaponType === 'knife' ? 15 : 10,
-      face: face,
+      face: '🥷', // 杀手本体：忍者
       weapon: weaponType, // knife刀 / gun枪
+      weaponFace: weaponType === 'knife' ? '🔪' : '🔫', // 武器emoji
       speed: weaponType === 'knife' ? 1.8 : 1.2,
       atkCd: 0,
       hurtFlash: 0,
@@ -5064,11 +5064,16 @@ function drawKillers(){
       ctx.rotate(Math.PI/2);
       ctx.translate(-k.x - k.w/2, -k.y - k.h/2);
     }
-    // 绘制杀手emoji
+    // 绘制杀手本体emoji
     ctx.font = k.w + 'px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(k.face, k.x + k.w/2, k.y + k.h/2);
+    // 绘制武器（在杀手的手上，根据朝向）
+    ctx.font = (k.w * 0.6) + 'px serif';
+    const weaponOffsetX = k.facing > 0 ? k.w * 0.5 : -k.w * 0.5;
+    const weaponOffsetY = k.h * 0.1;
+    ctx.fillText(k.weaponFace, k.x + k.w/2 + weaponOffsetX, k.y + k.h/2 + weaponOffsetY);
     // 血条
     if(k.hp < k.maxHp){
       const barW = k.w;
