@@ -1926,6 +1926,8 @@ function loadGame(slot){
     G._nearStair = false; // 重置楼梯检测
     G._nearElevator = false; // 重置电梯检测
     G._nearExit = false; // 重置出口检测
+    G._outdoorPlayerX = null; // 重置室外位置保存
+    G._outdoorPlayerY = null; // 重置室外位置保存
     G.miniBossSpawned = d.miniBossSpawned || false;
     G.finalBossSpawned = d.finalBossSpawned || false;
     G.gotShield = d.gotShield || false;
@@ -8967,6 +8969,12 @@ function startGame(){
   G.cityBossSpawned = false; // 重置城市Boss生成状态
   G.inBuilding = null; // 重置室内状态
   G.buildingFloor = 1; // 重置楼层
+  G._nearBuildingIndex = null; // 重置建筑入口检测
+  G._nearStair = false; // 重置楼梯检测
+  G._nearElevator = false; // 重置电梯检测
+  G._nearExit = false; // 重置出口检测
+  G._outdoorPlayerX = null; // 重置室外位置保存
+  G._outdoorPlayerY = null; // 重置室外位置保存
   G.day = true; G.dayTimer = 0; G.killCount = 0;
   G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
   G.fireGrounds = [];
@@ -9040,6 +9048,12 @@ function startCoopGame(){
   G.cityBossSpawned = false;
   G.inBuilding = null;
   G.buildingFloor = 1;
+  G._nearBuildingIndex = null; // 重置建筑入口检测
+  G._nearStair = false; // 重置楼梯检测
+  G._nearElevator = false; // 重置电梯检测
+  G._nearExit = false; // 重置出口检测
+  G._outdoorPlayerX = null; // 重置室外位置保存
+  G._outdoorPlayerY = null; // 重置室外位置保存
   G.day = true; G.dayTimer = 0; G.killCount = 0;
   G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
   G.fireGrounds = [];
