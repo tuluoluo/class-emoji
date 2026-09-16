@@ -836,6 +836,12 @@ const G = {
   cityBossSpawned: false, // 城市Boss是否已生成
   inBuilding: null, // 当前在哪个建筑内（null=在室外）
   buildingFloor: 1, // 当前楼层
+  _nearBuildingIndex: null, // 靠近的建筑入口索引
+  _nearStair: false, // 是否靠近楼梯
+  _nearElevator: false, // 是否靠近电梯
+  _nearExit: false, // 是否靠近出口
+  _outdoorPlayerX: 0, // 室外玩家X位置（进入建筑前保存）
+  _outdoorPlayerY: 0, // 室外玩家Y位置（进入建筑前保存）
   day: true,
   dayTimer: 0,
   dayDuration: 3600, // 白天60秒，夜晚也60秒
@@ -3128,7 +3134,7 @@ function enterBuilding(buildingIndex){
 
 // 退出建筑
 function exitBuilding(){
-  if(G.inBuilding === null) return;
+  if(G.currentMap !== 'city' || G.inBuilding === null) return;
   // 恢复玩家在室外的位置
   G.player.x = G._outdoorPlayerX || 100;
   G.player.y = G._outdoorPlayerY || 100;
@@ -3146,7 +3152,7 @@ function exitBuilding(){
 
 // 上一层楼
 function goUpFloor(){
-  if(G.inBuilding === null) return;
+  if(G.currentMap !== 'city' || G.inBuilding === null) return;
   const building = G.cityBuildings[G.inBuilding];
   if(!building) return;
   if(G.buildingFloor >= building.floors){
@@ -3167,7 +3173,7 @@ function goUpFloor(){
 
 // 下一层楼
 function goDownFloor(){
-  if(G.inBuilding === null) return;
+  if(G.currentMap !== 'city' || G.inBuilding === null) return;
   if(G.buildingFloor <= 1){
     // 一楼可以退出建筑
     exitBuilding();
@@ -3209,7 +3215,7 @@ function checkBuildingEntrance(){
 
 // 渲染室内场景
 function drawIndoor(){
-  if(G.inBuilding === null) return;
+  if(G.currentMap !== 'city' || G.inBuilding === null) return;
   const building = G.cityBuildings[G.inBuilding];
   if(!building) return;
   
@@ -3301,7 +3307,7 @@ function drawIndoor(){
 
 // 更新室内逻辑
 function updateIndoor(){
-  if(G.inBuilding === null) return;
+  if(G.currentMap !== 'city' || G.inBuilding === null) return;
   if(!G.player || G.player.dead) return;
   
   // 检查玩家是否靠近楼梯
