@@ -8608,6 +8608,17 @@ function startGame(){
   G.currentMap = G.selectedMap;
   G.killers = []; // 重置杀手NPC
   G.cityCorpses = []; // 重置城市尸体
+  G.cityRoads = []; // 重置马路
+  G.cityCars = []; // 重置汽车
+  G.cityBuildings = []; // 重置高楼大厦
+  G.banks = []; // 重置银行
+  G.bankGuards = []; // 重置银行守卫
+  G.policeCars = []; // 重置警车
+  G.policeOfficers = []; // 重置警察
+  G.cityBoss = null; // 重置城市Boss
+  G.cityBossSpawned = false; // 重置城市Boss生成状态
+  G.inBuilding = null; // 重置室内状态
+  G.buildingFloor = 1; // 重置楼层
   G.day = true; G.dayTimer = 0; G.killCount = 0;
   G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
   G.fireGrounds = [];
@@ -8664,6 +8675,23 @@ function startCoopGame(){
   G.state = 'playing';
   G.running = true;
   G.isCoop = true;
+  // 设置当前地图（如果没有选择，默认草原）—— 关键修复！
+  if(!G.selectedMap) G.selectedMap = 'grassland';
+  G.currentMap = G.selectedMap;
+  // 重置城市地图相关变量
+  G.killers = [];
+  G.cityCorpses = [];
+  G.cityRoads = [];
+  G.cityCars = [];
+  G.cityBuildings = [];
+  G.banks = [];
+  G.bankGuards = [];
+  G.policeCars = [];
+  G.policeOfficers = [];
+  G.cityBoss = null;
+  G.cityBossSpawned = false;
+  G.inBuilding = null;
+  G.buildingFloor = 1;
   G.day = true; G.dayTimer = 0; G.killCount = 0;
   G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
   G.fireGrounds = [];
