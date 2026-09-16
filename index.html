@@ -1918,6 +1918,14 @@ function loadGame(slot){
     G.bankGuards = [];
     G.policeCars = [];
     G.policeOfficers = [];
+    G.cityBoss = null; // 重置城市Boss
+    G.cityBossSpawned = false; // 重置城市Boss生成状态
+    G.inBuilding = null; // 重置室内状态
+    G.buildingFloor = 1; // 重置楼层
+    G._nearBuildingIndex = null; // 重置建筑入口检测
+    G._nearStair = false; // 重置楼梯检测
+    G._nearElevator = false; // 重置电梯检测
+    G._nearExit = false; // 重置出口检测
     G.miniBossSpawned = d.miniBossSpawned || false;
     G.finalBossSpawned = d.finalBossSpawned || false;
     G.gotShield = d.gotShield || false;
@@ -3292,6 +3300,7 @@ function drawIndoor(){
 // 更新室内逻辑
 function updateIndoor(){
   if(G.inBuilding === null) return;
+  if(!G.player || G.player.dead) return;
   
   // 检查玩家是否靠近楼梯
   const stairX = 130, stairY = H - 150;
