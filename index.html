@@ -2076,6 +2076,7 @@ function loadGame(slot){
       if(!G.carNitroActive && G.car) G.car.maxSpeed = 6.5;
     }
     // 重建NPC和树木
+    if(!G.npcs) G.npcs = {}; // 确保NPC对象存在
     createNPCs();
     createWoods();
     // 城市地图：确保杀手和尸体已创建
@@ -2389,6 +2390,7 @@ function createCityBoss(){
 }
 
 function createNPCs(){
+  if(!G.npcs) G.npcs = {}; // 确保NPC对象存在
   const rX = rand(300,WORLD_W-300), rY = rand(300,WORLD_H-300);
   G.npcs.robot = {
     x:rX, y:rY, w:44, h:44,
@@ -5851,10 +5853,10 @@ function render(){
     G.woods.forEach(w=>drawEntity(w, false));
     G.corpses.forEach(c=>drawCorpse(c));
     if(G.currentMap === 'city') drawCityCorpses();
-    if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
-    if(G.npcs.merchant) drawEntity(G.npcs.merchant, false);
-    if(G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
-    if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
+    if(G.npcs && G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
+    if(G.npcs && G.npcs.merchant) drawEntity(G.npcs.merchant, false);
+    if(G.npcs && G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
+    if(G.npcs && G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
     drawAuthorNPC();
     if(G.currentMap === 'city') drawKillers();
     if(G.currentMap === 'city') drawBankGuards(); // 银行守卫
@@ -6026,10 +6028,10 @@ ctx.globalAlpha = 1;
   if(G.currentMap === 'city') drawCityCorpses();
 
   // NPC
-  if(G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
-  if(G.npcs.merchant) drawEntity(G.npcs.merchant, false);
-  if(G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
-  if(G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
+  if(G.npcs && G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
+  if(G.npcs && G.npcs.merchant) drawEntity(G.npcs.merchant, false);
+  if(G.npcs && G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
+  if(G.npcs && G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
   drawAuthorNPC();
   if(G.currentMap === 'city') drawKillers();
   if(G.currentMap === 'city') drawBankGuards(); // 银行守卫
@@ -9071,6 +9073,7 @@ function startGame(){
   G.isDashing = false;
   G.dashTimer = 0;
   inputState.left=false; inputState.right=false; inputState.up=false; inputState.down=false;
+  if(!G.npcs) G.npcs = {}; // 确保NPC对象存在
   G.player = createPlayer();
   createNPCs();
   createWoods();
