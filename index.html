@@ -5763,6 +5763,52 @@ function renderWorld(){
 }
 
 function render(){
+  // 错误信息显示（画在最开头，确保即使后面渲染出错也能看到）
+  if(window._gameError){
+    try {
+      const err = window._gameError;
+      ctx.save();
+      // 半透明黑色背景
+      ctx.fillStyle = 'rgba(0,0,0,0.9)';
+      ctx.fillRect(10, 10, W-20, 250);
+      // 红色边框
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, W-20, 250);
+      // 错误标题
+      ctx.fillStyle = '#ff4444';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('❌ 游戏错误（把这个截图发给作者）', 20, 20);
+      // 错误信息
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '14px monospace';
+      const msgStr = String(err.msg || '未知错误').substring(0, 150);
+      ctx.fillText('错误: ' + msgStr, 20, 55);
+      // 错误堆栈（只显示前8行）
+      ctx.fillStyle = '#ffcc00';
+      ctx.font = '11px monospace';
+      const stackStr = String(err.stack || '').substring(0, 800);
+      const stackLines = stackStr.split('\n');
+      let yPos = 80;
+      for(let i=0;i<Math.min(stackLines.length, 10);i++){
+        ctx.fillText(stackLines[i].substring(0, 100), 20, yPos);
+        yPos += 16;
+      }
+      ctx.restore();
+    } catch(e3) {
+      // 绘制错误信息时也出错了，至少画个红框
+      try {
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(0, 0, W, 50);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText('❌ 严重错误！', 20, 15);
+      } catch(e4) {}
+    }
+  }
+  
   if(G.state === 'menu'){
     renderMenuScene();
     return;
@@ -6136,44 +6182,6 @@ ctx.globalAlpha = 1;
 
   // 小地图
   drawMinimap();
-
-  // 错误信息显示（画在最上层，手机端也能看到）
-  if(window._gameError){
-    const err = window._gameError;
-    ctx.save();
-    // 半透明黑色背景
-    ctx.fillStyle = 'rgba(0,0,0,0.85)';
-    ctx.fillRect(10, 10, W-20, 200);
-    // 红色边框
-    ctx.strokeStyle = '#ff0000';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(10, 10, W-20, 200);
-    // 错误标题
-    ctx.fillStyle = '#ff4444';
-    ctx.font = 'bold 18px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('❌ 游戏逻辑错误（把这个截图发给作者）', 20, 20);
-    // 错误信息
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '14px monospace';
-    const msgLines = (err.msg || '').substring(0, 100).split('\n');
-    let yPos = 50;
-    for(let i=0;i<Math.min(msgLines.length, 2);i++){
-      ctx.fillText(msgLines[i], 20, yPos);
-      yPos += 18;
-    }
-    // 错误堆栈（只显示前几行）
-    ctx.fillStyle = '#ffcc00';
-    ctx.font = '11px monospace';
-    const stackLines = (err.stack || '').split('\n');
-    yPos += 5;
-    for(let i=0;i<Math.min(stackLines.length, 6);i++){
-      ctx.fillText(stackLines[i].substring(0, 80), 20, yPos);
-      yPos += 14;
-    }
-    ctx.restore();
-  }
 }
 
 function drawBackground(){
