@@ -8927,6 +8927,7 @@ function gameLoop(){
   try {
     // 竖屏时冻结游戏逻辑
     if(G.state === 'playing' && !G.paused && !isPortrait){
+      const _updateStart = Date.now();
       try {
         update();
       } catch(e2) {
@@ -8938,6 +8939,11 @@ function gameLoop(){
           stack: (e2.stack || '').substring(0, 500),
           time: Date.now()
         };
+      }
+      const _updateTime = Date.now() - _updateStart;
+      if(_updateTime > 500){
+        console.warn('UPDATE函数执行时间过长:', _updateTime, 'ms');
+        window._updateSlow = _updateTime;
       }
     }
     render();
