@@ -8866,11 +8866,22 @@ function gameLoop(){
   try {
     // 竖屏时冻结游戏逻辑
     if(G.state === 'playing' && !G.paused && !isPortrait){
-      update();
+      try {
+        update();
+      } catch(e2) {
+        console.error('UPDATE函数错误:', e2);
+        console.error('UPDATE错误堆栈:', e2.stack);
+        // 显示错误提示
+        if(!window._updateErrorShown){
+          window._updateErrorShown = true;
+          showToast('游戏逻辑错误: ' + e2.message, 5000);
+        }
+      }
     }
     render();
   } catch(e) {
     console.error('游戏循环错误:', e);
+    console.error('错误堆栈:', e.stack);
     // 出错时尝试重置玩家状态，避免卡死
     if(G.player){
       if(G.player.stunTimer > 120) G.player.stunTimer = 0;
