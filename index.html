@@ -6188,27 +6188,38 @@ ctx.globalAlpha = 1;
   // 小地图
   drawMinimap();
   
-  // 调试信息显示（右上角，半透明背景，不会被UI覆盖）
+  // 调试信息显示（屏幕中间，最明显的位置，确保能看到）
   try {
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.85)';
-    ctx.fillRect(W - 290, 5, 285, 110);
-    ctx.strokeStyle = '#00ff00';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(W - 290, 5, 285, 110);
-    ctx.fillStyle = '#00ff00';
-    ctx.font = 'bold 13px monospace';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('=== DEBUG INFO ===', W - 280, 10);
-    ctx.font = '12px monospace';
-    ctx.fillText('UPDATE: ' + G._debugUpdateCount + '  RENDER: ' + G._debugRenderCount, W - 280, 28);
-    ctx.fillText('state: ' + G.state + '  running: ' + G.running, W - 280, 44);
-    ctx.fillText('paused: ' + G.paused + '  isPortrait: ' + isPortrait, W - 280, 60);
-    ctx.fillText('map: ' + G.currentMap + '  inBuilding: ' + G.inBuilding, W - 280, 76);
-    ctx.fillText('player: ' + (G.player ? 'OK hp='+G.player.hp : 'NULL') + '  mobs: ' + G.mobs.length, W - 280, 92);
-    ctx.restore();
-  } catch(eDebug) {}
+    if(typeof W === 'number' && typeof H === 'number' && W > 0 && H > 0){
+      const dbgX = 10;
+      const dbgY = H/2 - 60;
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.9)';
+      ctx.fillRect(dbgX, dbgY, 350, 130);
+      ctx.strokeStyle = '#00ff00';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(dbgX, dbgY, 350, 130);
+      ctx.fillStyle = '#00ff00';
+      ctx.font = 'bold 16px monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('=== DEBUG INFO ===', dbgX + 10, dbgY + 8);
+      ctx.font = '14px monospace';
+      const updCnt = (typeof G._debugUpdateCount === 'number') ? G._debugUpdateCount : 'N/A';
+      const rndCnt = (typeof G._debugRenderCount === 'number') ? G._debugRenderCount : 'N/A';
+      ctx.fillText('UPDATE: ' + updCnt + '  RENDER: ' + rndCnt, dbgX + 10, dbgY + 30);
+      ctx.fillText('state: ' + String(G.state) + '  running: ' + String(G.running), dbgX + 10, dbgY + 50);
+      ctx.fillText('paused: ' + String(G.paused) + '  isPortrait: ' + String(isPortrait), dbgX + 10, dbgY + 70);
+      ctx.fillText('map: ' + String(G.currentMap) + '  inBuilding: ' + String(G.inBuilding), dbgX + 10, dbgY + 90);
+      const pInfo = G.player ? ('OK hp=' + G.player.hp) : 'NULL';
+      const mLen = G.mobs ? G.mobs.length : 'N/A';
+      ctx.fillText('player: ' + pInfo + '  mobs: ' + mLen, dbgX + 10, dbgY + 110);
+      ctx.restore();
+    }
+  } catch(eDebug) {
+    // 调试信息出错时，至少在控制台打印
+    if(window.console && console.error) console.error('Debug display error:', eDebug);
+  }
 }
 
 function drawBackground(){
