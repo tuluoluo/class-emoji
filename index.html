@@ -853,6 +853,8 @@ const G = {
   authorNPC: null, // 作者NPC实体
   authorNPCImgs: {left: null, right: null}, // 作者NPC左右行走帧图片
   authorNPCInteractCooldown: 0, // 作者NPC交互冷却
+  _debugUpdateCount: 0, // 调试：update函数调用次数
+  _debugRenderCount: 0, // 调试：render函数调用次数
   killedByAuthor: false, // 是否被作者NPC杀死
   deathCause: '', // 死亡原因：''普通/'lightning'雷劈/'bleeding'流血/'prank'整蛊/'author'作者
   projectiles: [],
@@ -3909,6 +3911,7 @@ function handlePlayerDeath(player, isP2){
 
 function update(){
   if(!G.running) return;
+  G._debugUpdateCount++; // 调试：update函数调用次数
   const p = G.player;
   // 双人模式：两人都死亡时确保游戏结束
   if(G.isCoop && G.coopP1Dead && G.coopP2Dead){
@@ -5808,6 +5811,25 @@ function render(){
       } catch(e4) {}
     }
   }
+  
+  G._debugRenderCount++; // 调试：render函数调用次数
+  
+  // 调试信息显示（左上角，半透明背景）
+  try {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(5, 5, 280, 100);
+    ctx.fillStyle = '#00ff00';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('UPDATE: ' + G._debugUpdateCount + '  RENDER: ' + G._debugRenderCount, 10, 10);
+    ctx.fillText('state: ' + G.state + '  running: ' + G.running, 10, 28);
+    ctx.fillText('paused: ' + G.paused + '  isPortrait: ' + isPortrait, 10, 46);
+    ctx.fillText('map: ' + G.currentMap + '  inBuilding: ' + G.inBuilding, 10, 64);
+    ctx.fillText('player: ' + (G.player ? 'exists' : 'NULL') + '  hp: ' + (G.player ? G.player.hp : 'N/A'), 10, 82);
+    ctx.restore();
+  } catch(eDebug) {}
   
   if(G.state === 'menu'){
     renderMenuScene();
