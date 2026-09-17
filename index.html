@@ -853,8 +853,6 @@ const G = {
   authorNPC: null, // 作者NPC实体
   authorNPCImgs: {left: null, right: null}, // 作者NPC左右行走帧图片
   authorNPCInteractCooldown: 0, // 作者NPC交互冷却
-  _debugUpdateCount: 0, // 调试：update函数调用次数
-  _debugRenderCount: 0, // 调试：render函数调用次数
   killedByAuthor: false, // 是否被作者NPC杀死
   deathCause: '', // 死亡原因：''普通/'lightning'雷劈/'bleeding'流血/'prank'整蛊/'author'作者
   projectiles: [],
@@ -3911,7 +3909,6 @@ function handlePlayerDeath(player, isP2){
 
 function update(){
   if(!G.running) return;
-  G._debugUpdateCount++; // 调试：update函数调用次数
   const p = G.player;
   // 双人模式：两人都死亡时确保游戏结束
   if(G.isCoop && G.coopP1Dead && G.coopP2Dead){
@@ -5812,8 +5809,6 @@ function render(){
     }
   }
   
-  G._debugRenderCount++; // 调试：render函数调用次数
-  
   if(G.state === 'menu'){
     renderMenuScene();
     return;
@@ -6187,39 +6182,6 @@ ctx.globalAlpha = 1;
 
   // 小地图
   drawMinimap();
-  
-  // 调试信息显示（屏幕中间，最明显的位置，确保能看到）
-  try {
-    if(typeof W === 'number' && typeof H === 'number' && W > 0 && H > 0){
-      const dbgX = 10;
-      const dbgY = H/2 - 60;
-      ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.9)';
-      ctx.fillRect(dbgX, dbgY, 350, 130);
-      ctx.strokeStyle = '#00ff00';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(dbgX, dbgY, 350, 130);
-      ctx.fillStyle = '#00ff00';
-      ctx.font = 'bold 16px monospace';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.fillText('=== DEBUG INFO ===', dbgX + 10, dbgY + 8);
-      ctx.font = '14px monospace';
-      const updCnt = (typeof G._debugUpdateCount === 'number') ? G._debugUpdateCount : 'N/A';
-      const rndCnt = (typeof G._debugRenderCount === 'number') ? G._debugRenderCount : 'N/A';
-      ctx.fillText('UPDATE: ' + updCnt + '  RENDER: ' + rndCnt, dbgX + 10, dbgY + 30);
-      ctx.fillText('state: ' + String(G.state) + '  running: ' + String(G.running), dbgX + 10, dbgY + 50);
-      ctx.fillText('paused: ' + String(G.paused) + '  isPortrait: ' + String(isPortrait), dbgX + 10, dbgY + 70);
-      ctx.fillText('map: ' + String(G.currentMap) + '  inBuilding: ' + String(G.inBuilding), dbgX + 10, dbgY + 90);
-      const pInfo = G.player ? ('OK hp=' + G.player.hp) : 'NULL';
-      const mLen = G.mobs ? G.mobs.length : 'N/A';
-      ctx.fillText('player: ' + pInfo + '  mobs: ' + mLen, dbgX + 10, dbgY + 110);
-      ctx.restore();
-    }
-  } catch(eDebug) {
-    // 调试信息出错时，至少在控制台打印
-    if(window.console && console.error) console.error('Debug display error:', eDebug);
-  }
 }
 
 function drawBackground(){
