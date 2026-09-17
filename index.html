@@ -6136,6 +6136,44 @@ ctx.globalAlpha = 1;
 
   // 小地图
   drawMinimap();
+
+  // 错误信息显示（画在最上层，手机端也能看到）
+  if(window._gameError){
+    const err = window._gameError;
+    ctx.save();
+    // 半透明黑色背景
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(10, 10, W-20, 200);
+    // 红色边框
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10, 10, W-20, 200);
+    // 错误标题
+    ctx.fillStyle = '#ff4444';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('❌ 游戏逻辑错误（把这个截图发给作者）', 20, 20);
+    // 错误信息
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '14px monospace';
+    const msgLines = (err.msg || '').substring(0, 100).split('\n');
+    let yPos = 50;
+    for(let i=0;i<Math.min(msgLines.length, 2);i++){
+      ctx.fillText(msgLines[i], 20, yPos);
+      yPos += 18;
+    }
+    // 错误堆栈（只显示前几行）
+    ctx.fillStyle = '#ffcc00';
+    ctx.font = '11px monospace';
+    const stackLines = (err.stack || '').split('\n');
+    yPos += 5;
+    for(let i=0;i<Math.min(stackLines.length, 6);i++){
+      ctx.fillText(stackLines[i].substring(0, 80), 20, yPos);
+      yPos += 14;
+    }
+    ctx.restore();
+  }
 }
 
 function drawBackground(){
@@ -8871,17 +8909,24 @@ function gameLoop(){
       } catch(e2) {
         console.error('UPDATE函数错误:', e2);
         console.error('UPDATE错误堆栈:', e2.stack);
-        // 显示错误提示
-        if(!window._updateErrorShown){
-          window._updateErrorShown = true;
-          showToast('游戏逻辑错误: ' + e2.message, 5000);
-        }
+        // 把错误信息存到全局变量，render时画在画面上
+        window._gameError = {
+          msg: e2.message || '未知错误',
+          stack: (e2.stack || '').substring(0, 500),
+          time: Date.now()
+        };
       }
     }
     render();
   } catch(e) {
     console.error('游戏循环错误:', e);
     console.error('错误堆栈:', e.stack);
+    // 把错误信息存到全局变量
+    window._gameError = {
+      msg: e.message || '未知错误',
+      stack: (e.stack || '').substring(0, 500),
+      time: Date.now()
+    };
     // 出错时尝试重置玩家状态，避免卡死
     if(G.player){
       if(G.player.stunTimer > 120) G.player.stunTimer = 0;
