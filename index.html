@@ -6032,40 +6032,42 @@ ctx.globalAlpha = 1;
   if(G.currentMap === 'city') drawBanks(); // 银行建筑
 
   // 木头
-  G.woods.forEach(w=>drawEntity(w, false));
+  try { G.woods.forEach(w=>drawEntity(w, false)); } catch(e) {}
 
   // 尸体（在角色下面）
-  G.corpses.forEach(c=>drawCorpse(c));
-  if(G.currentMap === 'city') drawCityCorpses();
+  try { G.corpses.forEach(c=>drawCorpse(c)); } catch(e) {}
+  try { if(G.currentMap === 'city') drawCityCorpses(); } catch(e) {}
 
   // NPC
-  if(G.npcs && G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
-  if(G.npcs && G.npcs.merchant) drawEntity(G.npcs.merchant, false);
-  if(G.npcs && G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
-  if(G.npcs && G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
-  drawAuthorNPC();
-  if(G.currentMap === 'city') drawKillers();
-  if(G.currentMap === 'city') drawBankGuards(); // 银行守卫
-  if(G.currentMap === 'city') drawPoliceOfficers(); // 警察
+  try {
+    if(G.npcs && G.npcs.robot && !G.npcs.robot.dead) drawEntity(G.npcs.robot, false);
+    if(G.npcs && G.npcs.merchant) drawEntity(G.npcs.merchant, false);
+    if(G.npcs && G.npcs.trouble && !G.npcs.trouble.dead) drawEntity(G.npcs.trouble, false);
+    if(G.npcs && G.npcs.wanderer && !G.npcs.wanderer.dead) drawEntity(G.npcs.wanderer, false);
+  } catch(e) {}
+  try { drawAuthorNPC(); } catch(e) {}
+  try { if(G.currentMap === 'city') drawKillers(); } catch(e) {}
+  try { if(G.currentMap === 'city') drawBankGuards(); } catch(e) {}
+  try { if(G.currentMap === 'city') drawPoliceOfficers(); } catch(e) {}
 
   // 怪物
-  G.mobs.forEach(m=>drawEntity(m, true));
+  try { G.mobs.forEach(m=>drawEntity(m, true)); } catch(e) {}
 
   // Boss
-  G.bosses.forEach(b=>drawBoss(b));
+  try { G.bosses.forEach(b=>drawBoss(b)); } catch(e) {}
 
   // 载具
-  drawCar();
+  try { drawCar(); } catch(e) {}
 
   // 玩家
-  if(G.player) drawPlayer();
-  if(G.currentMap === 'city') drawCityElements(true); // 汽车（在玩家上面）
-  if(G.currentMap === 'city') drawPoliceCars(); // 警车（在玩家上面）
-  if(G.currentMap === 'city') drawCityBoss(); // 城市Boss🥺（在玩家上面）
-  drawCoins(); // 金币（在玩家上面）
+  try { if(G.player) drawPlayer(); } catch(e) {}
+  try { if(G.currentMap === 'city') drawCityElements(true); } catch(e) {}
+  try { if(G.currentMap === 'city') drawPoliceCars(); } catch(e) {}
+  try { if(G.currentMap === 'city') drawCityBoss(); } catch(e) {}
+  try { drawCoins(); } catch(e) {}
 
   // 投射物
-  G.projectiles.forEach(pr=>drawProjectile(pr));
+  try { G.projectiles.forEach(pr=>drawProjectile(pr)); } catch(e) {}
 
   // 地面火焰
   G.fireGrounds.forEach(fg=>{
