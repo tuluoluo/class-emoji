@@ -3912,6 +3912,17 @@ function handlePlayerDeath(player, isP2){
 function update(){
   if(!G.running) return;
   const p = G.player;
+  if(!p) return; // 确保玩家存在
+  if(!G.npcs) G.npcs = {}; // 确保NPC对象存在
+  if(!G.mobs) G.mobs = []; // 确保怪物数组存在
+  if(!G.bosses) G.bosses = []; // 确保Boss数组存在
+  if(!G.projectiles) G.projectiles = []; // 确保投射物数组存在
+  if(!G.particles) G.particles = []; // 确保粒子数组存在
+  if(!G.woods) G.woods = []; // 确保树木数组存在
+  if(!G.corpses) G.corpses = []; // 确保尸体数组存在
+  if(!G.coins) G.coins = []; // 确保金币数组存在
+  if(!G.fireGrounds) G.fireGrounds = []; // 确保火焰数组存在
+  if(!G.rainDrops) G.rainDrops = []; // 确保雨滴数组存在
   // 双人模式：两人都死亡时确保游戏结束
   if(G.isCoop && G.coopP1Dead && G.coopP2Dead){
     G.running = false;
