@@ -5814,23 +5814,6 @@ function render(){
   
   G._debugRenderCount++; // 调试：render函数调用次数
   
-  // 调试信息显示（左上角，半透明背景）
-  try {
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(5, 5, 280, 100);
-    ctx.fillStyle = '#00ff00';
-    ctx.font = '12px monospace';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('UPDATE: ' + G._debugUpdateCount + '  RENDER: ' + G._debugRenderCount, 10, 10);
-    ctx.fillText('state: ' + G.state + '  running: ' + G.running, 10, 28);
-    ctx.fillText('paused: ' + G.paused + '  isPortrait: ' + isPortrait, 10, 46);
-    ctx.fillText('map: ' + G.currentMap + '  inBuilding: ' + G.inBuilding, 10, 64);
-    ctx.fillText('player: ' + (G.player ? 'exists' : 'NULL') + '  hp: ' + (G.player ? G.player.hp : 'N/A'), 10, 82);
-    ctx.restore();
-  } catch(eDebug) {}
-  
   if(G.state === 'menu'){
     renderMenuScene();
     return;
@@ -6204,6 +6187,28 @@ ctx.globalAlpha = 1;
 
   // 小地图
   drawMinimap();
+  
+  // 调试信息显示（右上角，半透明背景，不会被UI覆盖）
+  try {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(W - 290, 5, 285, 110);
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(W - 290, 5, 285, 110);
+    ctx.fillStyle = '#00ff00';
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('=== DEBUG INFO ===', W - 280, 10);
+    ctx.font = '12px monospace';
+    ctx.fillText('UPDATE: ' + G._debugUpdateCount + '  RENDER: ' + G._debugRenderCount, W - 280, 28);
+    ctx.fillText('state: ' + G.state + '  running: ' + G.running, W - 280, 44);
+    ctx.fillText('paused: ' + G.paused + '  isPortrait: ' + isPortrait, W - 280, 60);
+    ctx.fillText('map: ' + G.currentMap + '  inBuilding: ' + G.inBuilding, W - 280, 76);
+    ctx.fillText('player: ' + (G.player ? 'OK hp='+G.player.hp : 'NULL') + '  mobs: ' + G.mobs.length, W - 280, 92);
+    ctx.restore();
+  } catch(eDebug) {}
 }
 
 function drawBackground(){
