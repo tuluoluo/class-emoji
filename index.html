@@ -3609,7 +3609,8 @@ function drawIndoor(){
         ctx.arc(npc.x, npc.y, 28, 0, Math.PI * 2);
         ctx.stroke();
       }
-      // 绘制NPC（全部用🙂）
+      // 绘制NPC（全部用🙂，确保完全不透明）
+      ctx.globalAlpha = 1;
       ctx.font = '36px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -4695,8 +4696,10 @@ function update(){
       const oldX = p.x, oldY = p.y;
       p.x += dx*spd;
       p.y += dy*spd;
-      // 高楼大厦碰撞检测
-      handleBuildingCollision(p, oldX, oldY);
+      // 高楼大厦碰撞检测（室内时跳过，避免空气墙）
+      if(G.inBuilding === null){
+        handleBuildingCollision(p, oldX, oldY);
+      }
       if(Math.abs(dx)>0.1) p.facing = dx>0?1:-1;
 
       // 下雨/打雷：有概率打滑摔倒
@@ -4876,8 +4879,10 @@ function update(){
         const oldX2 = p2.x, oldY2 = p2.y;
         p2.x += dx2*spd2;
         p2.y += dy2*spd2;
-        // 高楼大厦碰撞检测
-        handleBuildingCollision(p2, oldX2, oldY2);
+        // 高楼大厦碰撞检测（室内时跳过，避免空气墙）
+        if(G.inBuilding === null){
+          handleBuildingCollision(p2, oldX2, oldY2);
+        }
         if(Math.abs(dx2)>0.1) p2.facing = dx2>0?1:-1;
         // 2P打滑
         if((G.weather === 'rain' || G.weather === 'thunder') && p2.slipTimer <= 0 && !G.cheat.noSlip){
