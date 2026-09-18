@@ -2897,9 +2897,9 @@ function updatePoliceCars(){
     // 警灯闪烁
     car.sirenTimer++;
     
-    // 碰撞检测：撞死玩家、怪物、NPC、杀手
+    // 碰撞检测：撞死玩家、怪物、NPC、杀手（室内的玩家不会被室外警车撞到）
     const carBox = {x:car.x, y:car.y, w:car.w, h:car.h};
-    if(G.player && !G.player.dead && rectOverlap(carBox, G.player)){
+    if(G.player && !G.player.dead && !G.inBuilding && rectOverlap(carBox, G.player)){
       G.player.hp = 0;
       G.player.dead = true;
       showToast('1P 被警车撞死了！');
@@ -2918,7 +2918,7 @@ function updatePoliceCars(){
         }
       }
     }
-    if(G.isCoop && G.player2 && !G.coopP2Dead && rectOverlap(carBox, G.player2)){
+    if(G.isCoop && G.player2 && !G.coopP2Dead && !G.inBuilding && rectOverlap(carBox, G.player2)){
       G.player2.hp = 0;
       G.player2.dead = true;
       showToast('2P 被警车撞死了！');
@@ -2971,14 +2971,14 @@ function updatePoliceOfficers(){
       officer.wanderDir = {x: Math.cos(angle), y: Math.sin(angle)};
     }
     
-    // 寻找最近的目标（玩家、怪物、NPC、杀手，见人就杀）
+    // 寻找最近的目标（玩家、怪物、NPC、杀手，见人就杀；室内的玩家不会被室外警察攻击）
     let target = null;
     let minDist = 350;
-    if(G.player && !G.player.dead){
+    if(G.player && !G.player.dead && !G.inBuilding){
       const d = dist(officer, G.player);
       if(d < minDist){ minDist = d; target = G.player; }
     }
-    if(G.isCoop && G.player2 && !G.coopP2Dead){
+    if(G.isCoop && G.player2 && !G.coopP2Dead && !G.inBuilding){
       const d = dist(officer, G.player2);
       if(d < minDist){ minDist = d; target = G.player2; }
     }
@@ -4450,8 +4450,8 @@ function update(){
       G.shake = 15;
       // 闪电劈人：检查闪电位置附近的实体
       const strikeRadius = 60;
-      // 1. 劈玩家
-      if(Math.hypot(p.x+p.w/2 - G.lightningX, p.y+p.h/2 - G.lightningY) < strikeRadius && !G.cheat.infHp){
+      // 1. 劈玩家（室内的玩家不会被雷劈到）
+      if(!G.inBuilding && Math.hypot(p.x+p.w/2 - G.lightningX, p.y+p.h/2 - G.lightningY) < strikeRadius && !G.cheat.infHp){
         p.hp -= 8;
         p.invincible = 60;
         spawnParticles(p.x+p.w/2, p.y+p.h/2, '#ffff00', 15);
@@ -4989,23 +4989,23 @@ function updateMobs(){
         m.dodgeCd = 30;
       }
     }
-    // AI：向最近的玩家移动
+    // AI：向最近的玩家移动（室内的玩家不会被室外怪物追踪）
     const cx = m.x+m.w/2, cy = m.y+m.h/2;
     let px = p.x+p.w/2, py = p.y+p.h/2;
     let targetPlayer = p;
     let d = Infinity;
-    // 双人模式：1P死亡后不追击1P
-    const p1Alive = !(G.isCoop && G.coopP1Dead);
+    // 双人模式：1P死亡后不追击1P，室内的玩家也不被追击
+    const p1Alive = !(G.isCoop && G.coopP1Dead) && !G.inBuilding;
     if(p1Alive){
       d = Math.hypot(px-cx, py-cy);
     }
-    // 双人模式：比较2P距离，追踪更近的玩家
-    if(G.isCoop && G.player2 && !G.coopP2Dead){
+    // 双人模式：比较2P距离，追踪更近的玩家（室内的玩家也不被追击）
+    if(G.isCoop && G.player2 && !G.coopP2Dead && !G.inBuilding){
       const p2x = G.player2.x+G.player2.w/2, p2y = G.player2.y+G.player2.h/2;
       const d2 = Math.hypot(p2x-cx, p2y-cy);
       if(!p1Alive || d2 < d){ px = p2x; py = p2y; d = d2; targetPlayer = G.player2; }
     }
-    // 如果两个玩家都死亡了，怪物原地不动
+    // 如果两个玩家都死亡了或者都在室内，怪物原地不动
     if(d === Infinity){ continue; }
 
     // 😎音乐吸引怪物：如果游离乐子人在播放音乐，怪物会被吸引过去
@@ -5113,11 +5113,17 @@ function updateBosses(){
   const p = G.player;
   // 双人模式：获取Boss最近的存活玩家
   function getNearestAlivePlayer(bx, by){
-    let best = p, bestD = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:bx,y:by});
-    let label = '1P';
-    if(G.isCoop && G.player2 && !G.coopP2Dead){
+    // 室外的Boss不能攻击室内的玩家
+    let best = null, bestD = Infinity, label = '1P';
+    const p1InBuilding = !!G.inBuilding;
+    if(!p1InBuilding && !(G.isCoop && G.coopP1Dead)){
+      best = p;
+      bestD = dist({x:p.x+p.w/2,y:p.y+p.h/2},{x:bx,y:by});
+      label = '1P';
+    }
+    if(G.isCoop && G.player2 && !G.coopP2Dead && !p1InBuilding){
       const d2 = dist({x:G.player2.x+G.player2.w/2,y:G.player2.y+G.player2.h/2},{x:bx,y:by});
-      if(d2 < bestD){ best = G.player2; bestD = d2; label = '2P'; }
+      if(best === null || d2 < bestD){ best = G.player2; bestD = d2; label = '2P'; }
     }
     return {player: best, dist: bestD, label: label};
   }
@@ -5229,6 +5235,11 @@ function updateBosses(){
       }
     }
 
+    // 如果没有目标（玩家都在室内），Boss不移动不攻击
+    if(!targetP){
+      continue;
+    }
+    
     const cx = b.x+b.w/2, cy = b.y+b.h/2;
     const px = targetP.x+targetP.w/2, py = targetP.y+targetP.h/2;
     const d = Math.hypot(px-cx, py-cy);
@@ -5964,14 +5975,14 @@ function updateProjectiles(){
         G.projectiles.splice(i,1);
       }
     } else {
-      // 打玩家（双人模式：1P和2P都能被打中）
+      // 打玩家（双人模式：1P和2P都能被打中，室内的玩家不被室外投射物击中）
       let projectileHit = false;
-      if(rectOverlap(box,p) && p.invincible<=0){
+      if(rectOverlap(box,p) && p.invincible<=0 && !G.inBuilding){
         damagePlayer(pr.dmg);
         spawnParticles(p.x+p.w/2, p.y+p.h/2, '#00ffff', 5);
         projectileHit = true;
       }
-      if(G.isCoop && G.player2 && !G.coopP2Dead && rectOverlap(box,G.player2) && G.player2.invincible<=0){
+      if(G.isCoop && G.player2 && !G.coopP2Dead && rectOverlap(box,G.player2) && G.player2.invincible<=0 && !G.inBuilding){
         damagePlayer2(pr.dmg);
         spawnParticles(G.player2.x+G.player2.w/2, G.player2.y+G.player2.h/2, '#00ffff', 5);
         projectileHit = true;
@@ -8727,14 +8738,14 @@ function updateKillers(){
       continue; // 摔倒时不能移动和攻击
     }
     
-    // 找到最近的玩家
-    let targetPlayer = G.player;
+    // 找到最近的玩家（室内的玩家不会被室外杀手追踪）
+    let targetPlayer = null;
     let minDist = Infinity;
-    if(G.player && !G.player.dead){
+    if(G.player && !G.player.dead && !G.inBuilding){
       const d = Math.hypot(k.x - G.player.x, k.y - G.player.y);
       if(d < minDist){ minDist = d; targetPlayer = G.player; }
     }
-    if(G.isCoop && G.player2 && !G.player2.dead){
+    if(G.isCoop && G.player2 && !G.player2.dead && !G.inBuilding){
       const d = Math.hypot(k.x - G.player2.x, k.y - G.player2.y);
       if(d < minDist){ minDist = d; targetPlayer = G.player2; }
     }
@@ -8819,9 +8830,9 @@ function updateCars(){
       if(car.speed < 0 && car.y < -car.h - 100) car.y = WORLD_H + 50;
     }
     
-    // 碰撞检测：撞死玩家
+    // 碰撞检测：撞死玩家（室内的玩家不会被室外车撞到）
     const carBox = {x:car.x, y:car.y, w:car.w, h:car.h};
-    if(G.player && !G.player.dead && rectOverlap(carBox, G.player)){
+    if(G.player && !G.player.dead && !G.inBuilding && rectOverlap(carBox, G.player)){
       G.player.hp = 0;
       G.player.dead = true;
       G.deathCause = '';
@@ -8842,7 +8853,7 @@ function updateCars(){
       }
     }
     // 撞死2P
-    if(G.isCoop && G.player2 && !G.coopP2Dead && rectOverlap(carBox, G.player2)){
+    if(G.isCoop && G.player2 && !G.coopP2Dead && !G.inBuilding && rectOverlap(carBox, G.player2)){
       G.player2.hp = 0;
       G.player2.dead = true;
       G.deathCause = '';
