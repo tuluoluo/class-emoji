@@ -3589,54 +3589,43 @@ function drawIndoor(){
     }
   }
   
-  // ===== 楼层NPC =====
-  if(!G.indoorNPCs || G.indoorNPCs.floor !== G.buildingFloor || G.indoorNPCs.building !== G.inBuilding){
-    // 生成当前楼层的NPC
-    G.indoorNPCs = {
-      floor: G.buildingFloor,
-      building: G.inBuilding,
-      npcs: []
-    };
-    const npcCount = 2 + Math.floor(Math.random() * 3);
-    const npcEmojis = ['👤', '🧑', '👨', '👩', '🧔', '👴', '👵', '🧑‍💼', '👨‍💼', '👩‍💼'];
-    for(let i = 0; i < npcCount; i++){
-      G.indoorNPCs.npcs.push({
-        x: 250 + Math.random() * (W - 500),
-        y: 180 + Math.random() * (H - 380),
-        emoji: npcEmojis[Math.floor(Math.random() * npcEmojis.length)],
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        talkTimer: Math.random() * 300
-      });
-    }
+  // ===== 楼层NPC（非人类，废弃城市氛围）=====
+  if(G.indoorNPCs && G.indoorNPCs.npcs){
+    G.indoorNPCs.npcs.forEach(npc => {
+      // 幽灵漂浮效果（上下浮动）
+      const floatY = npc.emoji === '👻' ? Math.sin(npc.floatOffset) * 8 : 0;
+      // 绘制NPC阴影
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      ctx.ellipse(npc.x, npc.y + 18, 16, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // 绘制NPC
+      ctx.font = '36px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // 幽灵半透明效果
+      if(npc.emoji === '👻'){
+        ctx.globalAlpha = 0.7;
+      }
+      ctx.fillText(npc.emoji, npc.x, npc.y + floatY);
+      ctx.globalAlpha = 1;
+      // 对话气泡（只显示前60帧）
+      if(npc.talkText && npc.talkTimer > 120){
+        const textWidth = ctx.measureText(npc.talkText).width + 16;
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillRect(npc.x - textWidth/2, npc.y - 50 + floatY, textWidth, 24);
+        // 气泡小三角
+        ctx.beginPath();
+        ctx.moveTo(npc.x - 6, npc.y - 26 + floatY);
+        ctx.lineTo(npc.x + 6, npc.y - 26 + floatY);
+        ctx.lineTo(npc.x, npc.y - 18 + floatY);
+        ctx.fill();
+        ctx.fillStyle = '#333';
+        ctx.font = '12px serif';
+        ctx.fillText(npc.talkText, npc.x, npc.y - 34 + floatY);
+      }
+    });
   }
-  // 更新和绘制NPC
-  G.indoorNPCs.npcs.forEach(npc => {
-    // 移动
-    npc.x += npc.vx;
-    npc.y += npc.vy;
-    // 边界反弹
-    if(npc.x < 200 || npc.x > W - 200) npc.vx *= -1;
-    if(npc.y < 160 || npc.y > H - 180) npc.vy *= -1;
-    // 绘制NPC
-    ctx.font = '32px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(npc.emoji, npc.x, npc.y);
-    // 对话气泡
-    npc.talkTimer--;
-    if(npc.talkTimer < 0){
-      npc.talkTimer = 200 + Math.random() * 200;
-      npc.talkText = ['...', '嗯...', '今天天气不错', '你好啊', '这楼真高', '电梯怎么还没来', '好累啊'][Math.floor(Math.random() * 7)];
-    }
-    if(npc.talkText && npc.talkTimer > 150){
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.fillRect(npc.x - 35, npc.y - 45, 70, 22);
-      ctx.fillStyle = '#333';
-      ctx.font = '11px serif';
-      ctx.fillText(npc.talkText, npc.x, npc.y - 30);
-    }
-  });
   
   // ===== 楼层显示 =====
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -3662,6 +3651,15 @@ function drawIndoor(){
 function updateIndoor(){
   if(G.currentMap !== 'city' || G.inBuilding === null) return;
   if(!G.player || G.player.dead) return;
+  
+  // 限制1P在室内走廊范围内移动
+  G.player.x = clamp(G.player.x, 50, W - 90);
+  G.player.y = clamp(G.player.y, 120, H - 160);
+  // 限制2P在室内走廊范围内移动（双人模式）
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    G.player2.x = clamp(G.player2.x, 50, W - 90);
+    G.player2.y = clamp(G.player2.y, 120, H - 160);
+  }
   
   // 上楼楼梯位置（左下角）
   const stairUpX = 130, stairUpY = H - 150;
@@ -3733,6 +3731,49 @@ function updateIndoor(){
       if(Math.hypot(dxExit2, dyExit2) < 60) G._nearExit = true;
     }
   }
+  
+  // ===== 更新楼层NPC（非人类，废弃城市氛围）=====
+  if(!G.indoorNPCs || G.indoorNPCs.floor !== G.buildingFloor || G.indoorNPCs.building !== G.inBuilding){
+    // 生成当前楼层的NPC（非人类：幽灵、蝙蝠、蜘蛛、蟑螂、老鼠、尸体）
+    G.indoorNPCs = {
+      floor: G.buildingFloor,
+      building: G.inBuilding,
+      npcs: []
+    };
+    const npcCount = 2 + Math.floor(Math.random() * 3);
+    const npcEmojis = ['👻', '🦇', '🕷️', '🪳', '🐀', '🙂', '💀', '🧟'];
+    for(let i = 0; i < npcCount; i++){
+      G.indoorNPCs.npcs.push({
+        x: 220 + Math.random() * (W - 440),
+        y: 170 + Math.random() * (H - 360),
+        emoji: npcEmojis[Math.floor(Math.random() * npcEmojis.length)],
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        talkTimer: Math.random() * 300,
+        talkText: '',
+        floatOffset: Math.random() * Math.PI * 2 // 用于幽灵漂浮动画
+      });
+    }
+  }
+  // 更新NPC移动和对话
+  G.indoorNPCs.npcs.forEach(npc => {
+    // 移动
+    npc.x += npc.vx;
+    npc.y += npc.vy;
+    npc.floatOffset += 0.05;
+    // 边界反弹（确保在走廊范围内）
+    if(npc.x < 200){ npc.x = 200; npc.vx = Math.abs(npc.vx); }
+    if(npc.x > W - 200){ npc.x = W - 200; npc.vx = -Math.abs(npc.vx); }
+    if(npc.y < 160){ npc.y = 160; npc.vy = Math.abs(npc.vy); }
+    if(npc.y > H - 180){ npc.y = H - 180; npc.vy = -Math.abs(npc.vy); }
+    // 对话计时器
+    npc.talkTimer--;
+    if(npc.talkTimer <= 0){
+      npc.talkTimer = 180 + Math.random() * 180;
+      const ghostTalks = ['...', '呜呜呜...', '救救我...', '这里好黑...', '别过来...', '我死得好惨...', '电梯...电梯在哪...', '有人吗...'];
+      npc.talkText = ghostTalks[Math.floor(Math.random() * ghostTalks.length)];
+    }
+  });
 }
 
 // 更新金币（拾取逻辑）
