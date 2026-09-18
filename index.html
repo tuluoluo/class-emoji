@@ -2377,7 +2377,7 @@ function createFinalBoss(){
 function createCityBoss(){
   const p = G.player;
   return {
-    x:clamp(p.x, 100, WORLD_W-164), y:clamp(p.y-250, 80, WORLD_H-144), w:64, h:64, hp:80, maxHp:80,
+    x:clamp(p.x, 100, WORLD_W-164), y:clamp(p.y-250, 80, WORLD_H-144), w:64, h:64, hp:1000, maxHp:1000,
     face:'🥺', dmg:999, speed:2.5, atkRange:70, atkCd:0, maxAtkCd:60,
     ranged:false, type:'cityBoss', isBoss:true, hurtFlash:0, attackAnim:0,
     weapon:'🔪', // 手里拿着刀
@@ -4432,10 +4432,10 @@ function update(){
   // 更新城市Boss🥺
   if(G.currentMap === 'city') updateCityBoss();
   // 城市Boss生成：击杀数达到60时生成
-  if(G.currentMap === 'city' && G.killCount >= 60 && !G.cityBossSpawned){
+  if(G.currentMap === 'city' && G.killCount >= 120 && !G.cityBossSpawned){
     G.cityBossSpawned = true;
     G.cityBoss = createCityBoss();
-    showToast('⚠ 城市屠夫 🥺 出现了！一刀秒杀，小心！');
+    showToast('⚠ 城市屠夫 🥺 出现了！1000血量，一刀秒杀，小心！');
     playSound('boss');
   }
   // 室内场景系统
@@ -6016,6 +6016,23 @@ ctx.globalAlpha = 1;
     // 右半屏小地图
     drawCoopMinimap(W - 110, 82, 100);
     ctx.restore();
+
+    // 城市地图：室外靠近建筑入口时显示提示（左右半屏分别显示）
+    if(G.currentMap === 'city' && G.inBuilding === null && G._nearBuildingIndex !== null && G._nearBuildingIndex !== undefined){
+      ctx.font = '14px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // 左半屏提示（1P）
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(W/4 - 100, H - 60, 200, 28);
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText('🏢 按E进入高楼', W/4, H - 46);
+      // 右半屏提示（2P）
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(W*3/4 - 100, H - 60, 200, 28);
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText('🏢 按6进入高楼', W*3/4, H - 46);
+    }
     return;
   }
   ctx.save();
@@ -6197,6 +6214,17 @@ ctx.globalAlpha = 1;
 
   // 小地图
   drawMinimap();
+
+  // 城市地图：室外靠近建筑入口时显示提示
+  if(G.currentMap === 'city' && G.inBuilding === null && G._nearBuildingIndex !== null && G._nearBuildingIndex !== undefined){
+    ctx.font = '18px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(W/2 - 150, H - 80, 300, 36);
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText('🏢 靠近高楼入口，按E进入室内', W/2, H - 62);
+  }
 }
 
 function drawBackground(){
