@@ -3729,10 +3729,10 @@ function updateIndoor(){
   
   // 检查1P是否靠近出口（一楼）
   if(G.buildingFloor === 1){
-    const exitX = W/2, exitY = H - 60;
+    const exitX = W/2, exitY = H - 85; // 出口门中心位置（和绘制位置一致）
     const dxExit = G.player.x + G.player.w/2 - exitX;
     const dyExit = G.player.y + G.player.h/2 - exitY;
-    G._nearExit = Math.hypot(dxExit, dyExit) < 60;
+    G._nearExit = Math.hypot(dxExit, dyExit) < 70;
   } else {
     G._nearExit = false;
   }
@@ -3758,10 +3758,10 @@ function updateIndoor(){
     if(Math.hypot(dxElev2, dyElev2) < 60) G._nearElevator = true;
     // 2P出口
     if(G.buildingFloor === 1){
-      const exitX = W/2, exitY = H - 60;
+      const exitX = W/2, exitY = H - 85; // 出口门中心位置（和绘制位置一致）
       const dxExit2 = G.player2.x + G.player2.w/2 - exitX;
       const dyExit2 = G.player2.y + G.player2.h/2 - exitY;
-      if(Math.hypot(dxExit2, dyExit2) < 60) G._nearExit = true;
+      if(Math.hypot(dxExit2, dyExit2) < 70) G._nearExit = true;
     }
   }
   
