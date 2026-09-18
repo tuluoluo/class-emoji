@@ -840,7 +840,9 @@ const G = {
   buildingFloor: 1, // 当前楼层
   _nearBuildingIndex: null, // 靠近的建筑入口索引（1P）
   _nearBuildingIndex2: null, // 靠近的建筑入口索引（2P）
-  _nearStair: false, // 是否靠近楼梯
+  _nearStair: false, // 是否靠近楼梯（保留兼容）
+  _nearStairUp: false, // 是否靠近上楼楼梯
+  _nearStairDown: false, // 是否靠近下楼楼梯
   _nearElevator: false, // 是否靠近电梯
   _nearExit: false, // 是否靠近出口
   _outdoorPlayerX: 0, // 室外玩家X位置（进入建筑前保存）
@@ -1934,6 +1936,9 @@ function loadGame(slot){
     G._nearBuildingIndex = null; // 重置建筑入口检测
     G._nearBuildingIndex2 = null; // 重置2P建筑入口检测
     G._nearStair = false; // 重置楼梯检测
+    G._nearStairUp = false; // 重置上楼楼梯检测
+    G._nearStairDown = false; // 重置下楼楼梯检测
+    G.indoorNPCs = null; // 重置室内NPC
     G._nearElevator = false; // 重置电梯检测
     G._nearExit = false; // 重置出口检测
     G._outdoorPlayerX = null; // 重置室外位置保存
@@ -2118,7 +2123,8 @@ function loadGame(slot){
       if(enterBtn){
         if(G.inBuilding !== null){
           if(G._nearExit) enterBtn.textContent = '🚪退出';
-          else if(G._nearStair) enterBtn.textContent = '⬆上楼';
+          else if(G._nearStairUp) enterBtn.textContent = '⬆上楼';
+          else if(G._nearStairDown) enterBtn.textContent = '⬇下楼';
           else if(G._nearElevator) enterBtn.textContent = '🛗电梯';
           else enterBtn.textContent = '🏢';
         } else if(G._nearBuildingIndex !== null && G._nearBuildingIndex !== undefined){
@@ -2132,7 +2138,8 @@ function loadGame(slot){
         enterBtn2.style.display = 'flex';
         if(G.inBuilding !== null){
           if(G._nearExit) enterBtn2.textContent = '🚪退出';
-          else if(G._nearStair) enterBtn2.textContent = '⬆上楼';
+          else if(G._nearStairUp) enterBtn2.textContent = '⬆上楼';
+          else if(G._nearStairDown) enterBtn2.textContent = '⬇下楼';
           else if(G._nearElevator) enterBtn2.textContent = '🛗电梯';
           else enterBtn2.textContent = '🏢';
         } else if(G._nearBuildingIndex2 !== null && G._nearBuildingIndex2 !== undefined){
@@ -3161,6 +3168,7 @@ function enterBuilding(buildingIndex, playerNum){
   
   G.inBuilding = buildingIndex;
   G.buildingFloor = 1;
+  G.indoorNPCs = null; // 重置室内NPC，进入新建筑时重新生成
   // 保存玩家在室外的位置，用于退出时返回（保存触发进入的玩家位置）
   const enteringPlayer = playerNum === 2 ? G.player2 : G.player;
   if(enteringPlayer){
@@ -3191,6 +3199,7 @@ function enterBuilding(buildingIndex, playerNum){
 // 退出建筑
 function exitBuilding(){
   if(G.currentMap !== 'city' || G.inBuilding === null) return;
+  G.indoorNPCs = null; // 重置室内NPC
   // 恢复1P在室外的位置
   if(G.player){
     G.player.x = G._outdoorPlayerX || 100;
@@ -3223,6 +3232,7 @@ function goUpFloor(){
     return;
   }
   G.buildingFloor++;
+  G.indoorNPCs = null; // 重置室内NPC，新楼层重新生成
   if(G.player){
     G.player.x = 200;
     G.player.y = 300;
@@ -3250,6 +3260,7 @@ function goDownFloor(){
     return;
   }
   G.buildingFloor--;
+  G.indoorNPCs = null; // 重置室内NPC，新楼层重新生成
   if(G.player){
     G.player.x = 200;
     G.player.y = 300;
@@ -3312,91 +3323,339 @@ function drawIndoor(){
   if(G.currentMap !== 'city' || G.inBuilding === null) return;
   const building = G.cityBuildings[G.inBuilding];
   if(!building) return;
+  const maxFloor = building.floors;
   
-  // 室内背景（走廊）
-  ctx.fillStyle = '#2c2c2c';
-  ctx.fillRect(0, 0, W, H);
+  // ===== 室内背景 =====
+  // 天花板
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, W, 80);
+  // 天花板灯光
+  for(let i = 0; i < 5; i++){
+    const lx = 150 + i * (W - 300) / 4;
+    ctx.fillStyle = '#fffacd';
+    ctx.fillRect(lx - 30, 20, 60, 8);
+    // 光晕
+    const grad = ctx.createRadialGradient(lx, 60, 5, lx, 60, 80);
+    grad.addColorStop(0, 'rgba(255,250,205,0.3)');
+    grad.addColorStop(1, 'rgba(255,250,205,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(lx - 80, 30, 160, 120);
+  }
+  // 墙壁（上下）
+  ctx.fillStyle = '#2d2d2d';
+  ctx.fillRect(0, 80, W, 40);
+  ctx.fillRect(0, H - 120, W, 40);
+  // 墙壁纹理（砖块）
+  ctx.strokeStyle = '#252525';
+  ctx.lineWidth = 1;
+  for(let y = 85; y < 115; y += 12){
+    for(let x = 0; x < W; x += 40){
+      ctx.strokeRect(x + (y % 24 === 0 ? 20 : 0), y, 40, 12);
+    }
+  }
+  for(let y = H - 115; y < H - 85; y += 12){
+    for(let x = 0; x < W; x += 40){
+      ctx.strokeRect(x + (y % 24 === 0 ? 20 : 0), y, 40, 12);
+    }
+  }
+  // 左右墙壁
+  ctx.fillStyle = '#2d2d2d';
+  ctx.fillRect(0, 80, 40, H - 160);
+  ctx.fillRect(W - 40, 80, 40, H - 160);
   
-  // 地板
-  ctx.fillStyle = '#3d3d3d';
-  ctx.fillRect(50, 100, W - 100, H - 200);
-  
-  // 地板纹理
+  // ===== 地板 =====
+  ctx.fillStyle = '#3a3a3a';
+  ctx.fillRect(40, 120, W - 80, H - 240);
+  // 地板瓷砖纹理
   ctx.strokeStyle = '#333';
   ctx.lineWidth = 1;
-  for(let x = 50; x < W - 50; x += 60){
+  for(let x = 40; x < W - 40; x += 50){
     ctx.beginPath();
-    ctx.moveTo(x, 100);
-    ctx.lineTo(x, H - 100);
+    ctx.moveTo(x, 120);
+    ctx.lineTo(x, H - 120);
     ctx.stroke();
   }
-  for(let y = 100; y < H - 100; y += 60){
+  for(let y = 120; y < H - 120; y += 50){
     ctx.beginPath();
-    ctx.moveTo(50, y);
-    ctx.lineTo(W - 50, y);
+    ctx.moveTo(40, y);
+    ctx.lineTo(W - 40, y);
     ctx.stroke();
   }
+  // 地板反光
+  ctx.fillStyle = 'rgba(255,255,255,0.02)';
+  ctx.fillRect(40, 120, W - 80, (H - 240) / 2);
   
-  // 墙壁
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(0, 0, W, 100);
-  ctx.fillRect(0, H - 100, W, 100);
-  ctx.fillRect(0, 0, 50, H);
-  ctx.fillRect(W - 50, 0, 50, H);
-  
-  // 房间门（左右两边）
-  ctx.fillStyle = '#4a3728';
-  ctx.fillRect(60, 150, 40, 80);
-  ctx.fillRect(W - 100, 150, 40, 80);
-  ctx.fillRect(60, H - 250, 40, 80);
-  ctx.fillRect(W - 100, H - 250, 40, 80);
-  // 门把手
-  ctx.fillStyle = '#ffd700';
-  ctx.beginPath();
-  ctx.arc(90, 190, 3, 0, Math.PI*2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(W - 70, 190, 3, 0, Math.PI*2);
-  ctx.fill();
-  
-  // 楼梯（左下角）
-  ctx.fillStyle = '#555';
-  ctx.fillRect(80, H - 180, 100, 60);
-  ctx.fillStyle = '#666';
-  ctx.font = '14px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('⬆ 楼梯', 130, H - 145);
-  
-  // 电梯（右下角）
-  ctx.fillStyle = '#444';
-  ctx.fillRect(W - 180, H - 180, 100, 60);
-  ctx.fillStyle = '#888';
-  ctx.fillRect(W - 170, H - 170, 80, 40);
-  ctx.fillStyle = '#fff';
-  ctx.font = '14px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('🛗 电梯', W - 130, H - 145);
-  
-  // 出口（一楼时显示）
-  if(G.buildingFloor === 1){
-    ctx.fillStyle = '#8b4513';
-    ctx.fillRect(W/2 - 30, H - 100, 60, 80);
+  // ===== 房间门（走廊两边）=====
+  const doorPositions = [
+    {x: 100, y: 160}, {x: 100, y: 320}, {x: 100, y: H - 360},
+    {x: W - 140, y: 160}, {x: W - 140, y: 320}, {x: W - 140, y: H - 360}
+  ];
+  doorPositions.forEach((door, idx) => {
+    // 门框
+    ctx.fillStyle = '#4a3728';
+    ctx.fillRect(door.x - 3, door.y - 3, 46, 86);
+    // 门
+    ctx.fillStyle = '#5d4037';
+    ctx.fillRect(door.x, door.y, 40, 80);
+    // 门板纹理
+    ctx.strokeStyle = '#4a3728';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(door.x + 5, door.y + 5, 30, 30);
+    ctx.strokeRect(door.x + 5, door.y + 45, 30, 30);
+    // 门把手
     ctx.fillStyle = '#ffd700';
-    ctx.font = '12px serif';
+    ctx.beginPath();
+    ctx.arc(door.x + 32, door.y + 42, 4, 0, Math.PI * 2);
+    ctx.fill();
+    // 房间号
+    ctx.fillStyle = '#ccc';
+    ctx.font = 'bold 11px serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🚪 出口', W/2, H - 60);
+    const roomNum = G.buildingFloor * 100 + idx + 1;
+    ctx.fillText(roomNum, door.x + 20, door.y - 8);
+  });
+  
+  // ===== 上楼楼梯（左下角）=====
+  if(G.buildingFloor < maxFloor){
+    const sx = 60, sy = H - 200, sw = 120, sh = 80;
+    // 楼梯间背景
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(sx - 5, sy - 5, sw + 10, sh + 10);
+    // 楼梯台阶（透视效果）
+    for(let i = 0; i < 6; i++){
+      const stepY = sy + sh - (i + 1) * (sh / 6);
+      const stepH = sh / 6;
+      const brightness = 60 + i * 15;
+      ctx.fillStyle = `rgb(${brightness},${brightness},${brightness})`;
+      ctx.fillRect(sx + i * 8, stepY, sw - i * 16, stepH);
+      // 台阶边缘
+      ctx.fillStyle = `rgb(${brightness - 20},${brightness - 20},${brightness - 20})`;
+      ctx.fillRect(sx + i * 8, stepY, sw - i * 16, 3);
+    }
+    // 扶手
+    ctx.strokeStyle = '#8b7355';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(sx + 5, sy + sh);
+    ctx.lineTo(sx + sw - 5, sy + 5);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(sx + 15, sy + sh);
+    ctx.lineTo(sx + sw - 15, sy + 15);
+    ctx.stroke();
+    // 上楼标识
+    ctx.fillStyle = G._nearStairUp ? '#ffd700' : '#aaa';
+    ctx.font = 'bold 16px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⬆ 上楼', sx + sw / 2, sy - 10);
+    if(G._nearStairUp){
+      ctx.fillStyle = 'rgba(255,215,0,0.2)';
+      ctx.fillRect(sx - 5, sy - 5, sw + 10, sh + 10);
+    }
   }
   
-  // 楼层显示
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 24px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('第 ' + G.buildingFloor + ' 层 / 共 ' + building.floors + ' 层', W/2, 50);
+  // ===== 下楼楼梯（左上角）=====
+  if(G.buildingFloor > 1){
+    const sx = 60, sy = 130, sw = 120, sh = 80;
+    // 楼梯间背景
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(sx - 5, sy - 5, sw + 10, sh + 10);
+    // 楼梯台阶（向下透视）
+    for(let i = 0; i < 6; i++){
+      const stepY = sy + i * (sh / 6);
+      const stepH = sh / 6;
+      const brightness = 80 - i * 10;
+      ctx.fillStyle = `rgb(${brightness},${brightness},${brightness})`;
+      ctx.fillRect(sx + i * 8, stepY, sw - i * 16, stepH);
+      // 台阶边缘
+      ctx.fillStyle = `rgb(${brightness - 15},${brightness - 15},${brightness - 15})`;
+      ctx.fillRect(sx + i * 8, stepY + stepH - 3, sw - i * 16, 3);
+    }
+    // 扶手
+    ctx.strokeStyle = '#8b7355';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(sx + 5, sy + 5);
+    ctx.lineTo(sx + sw - 5, sy + sh - 5);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(sx + 15, sy + 15);
+    ctx.lineTo(sx + sw - 15, sy + sh - 15);
+    ctx.stroke();
+    // 下楼标识
+    ctx.fillStyle = G._nearStairDown ? '#ffd700' : '#aaa';
+    ctx.font = 'bold 16px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⬇ 下楼', sx + sw / 2, sy + sh + 20);
+    if(G._nearStairDown){
+      ctx.fillStyle = 'rgba(255,215,0,0.2)';
+      ctx.fillRect(sx - 5, sy - 5, sw + 10, sh + 10);
+    }
+  }
   
-  // 操作提示
+  // ===== 电梯（右下角）=====
+  const ex = W - 180, ey = H - 200, ew = 120, eh = 80;
+  // 电梯间背景
+  ctx.fillStyle = '#1f1f1f';
+  ctx.fillRect(ex - 8, ey - 8, ew + 16, eh + 16);
+  // 电梯门框
+  ctx.fillStyle = '#444';
+  ctx.fillRect(ex - 3, ey - 3, ew + 6, eh + 6);
+  // 电梯门（左右分开）
+  const doorOpen = G._nearElevator ? 15 : 0;
+  ctx.fillStyle = '#666';
+  ctx.fillRect(ex, ey, ew / 2 - doorOpen, eh);
+  ctx.fillRect(ex + ew / 2 + doorOpen, ey, ew / 2 - doorOpen, eh);
+  // 电梯门纹理
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(ex + 5, ey + 5, ew / 2 - doorOpen - 10, eh - 10);
+  ctx.strokeRect(ex + ew / 2 + doorOpen + 5, ey + 5, ew / 2 - doorOpen - 10, eh - 10);
+  // 电梯内部（门打开时可见）
+  if(doorOpen > 0){
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(ex + ew / 2 - doorOpen, ey + 5, doorOpen * 2, eh - 10);
+    // 电梯内部灯光
+    ctx.fillStyle = '#fffacd';
+    ctx.fillRect(ex + ew / 2 - 10, ey + 8, 20, 4);
+  }
+  // 电梯楼层显示屏
+  ctx.fillStyle = '#000';
+  ctx.fillRect(ex + ew / 2 - 20, ey - 25, 40, 20);
+  ctx.fillStyle = '#ff0000';
+  ctx.font = 'bold 14px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(G.buildingFloor + 'F', ex + ew / 2, ey - 10);
+  // 电梯按钮
+  ctx.fillStyle = '#333';
+  ctx.beginPath();
+  ctx.arc(ex + ew + 10, ey + 20, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '10px serif';
+  ctx.fillText('▲', ex + ew + 10, ey + 23);
+  ctx.fillStyle = '#333';
+  ctx.beginPath();
+  ctx.arc(ex + ew + 10, ey + 45, 8, 0, Math.PI * 2);
+  ctx.fill();
   ctx.fillStyle = '#aaa';
-  ctx.font = '14px serif';
-  ctx.fillText('靠近楼梯/电梯按E上下楼，靠近出口按E退出', W/2, 80);
+  ctx.font = '10px serif';
+  ctx.fillText('▼', ex + ew + 10, ey + 48);
+  // 电梯标识
+  ctx.fillStyle = G._nearElevator ? '#ffd700' : '#aaa';
+  ctx.font = 'bold 14px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🛗 电梯（直达顶楼）', ex + ew / 2, ey + eh + 20);
+  if(G._nearElevator){
+    ctx.fillStyle = 'rgba(255,215,0,0.15)';
+    ctx.fillRect(ex - 8, ey - 8, ew + 16, eh + 16);
+  }
+  
+  // ===== 出口（一楼）=====
+  if(G.buildingFloor === 1){
+    const ox = W / 2 - 40, oy = H - 130, ow = 80, oh = 90;
+    // 出口门框
+    ctx.fillStyle = '#5d4037';
+    ctx.fillRect(ox - 5, oy - 5, ow + 10, oh + 10);
+    // 出口门
+    ctx.fillStyle = '#8b4513';
+    ctx.fillRect(ox, oy, ow, oh);
+    // 门板纹理
+    ctx.strokeStyle = '#6d3510';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(ox + 8, oy + 10, ow - 16, oh - 20);
+    // 玻璃
+    ctx.fillStyle = 'rgba(135,206,235,0.3)';
+    ctx.fillRect(ox + 12, oy + 15, ow - 24, 30);
+    // 门把手
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.arc(ox + ow - 15, oy + oh / 2, 5, 0, Math.PI * 2);
+    ctx.fill();
+    // 出口标识
+    ctx.fillStyle = '#00ff00';
+    ctx.font = 'bold 16px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🚪 EXIT 出口', ox + ow / 2, oy - 12);
+    // 出口指示灯
+    ctx.fillStyle = G._nearExit ? '#00ff00' : '#004400';
+    ctx.fillRect(ox + ow / 2 - 25, oy - 30, 50, 12);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px serif';
+    ctx.fillText('EXIT', ox + ow / 2, oy - 21);
+    if(G._nearExit){
+      ctx.fillStyle = 'rgba(0,255,0,0.2)';
+      ctx.fillRect(ox - 5, oy - 5, ow + 10, oh + 10);
+    }
+  }
+  
+  // ===== 楼层NPC =====
+  if(!G.indoorNPCs || G.indoorNPCs.floor !== G.buildingFloor || G.indoorNPCs.building !== G.inBuilding){
+    // 生成当前楼层的NPC
+    G.indoorNPCs = {
+      floor: G.buildingFloor,
+      building: G.inBuilding,
+      npcs: []
+    };
+    const npcCount = 2 + Math.floor(Math.random() * 3);
+    const npcEmojis = ['👤', '🧑', '👨', '👩', '🧔', '👴', '👵', '🧑‍💼', '👨‍💼', '👩‍💼'];
+    for(let i = 0; i < npcCount; i++){
+      G.indoorNPCs.npcs.push({
+        x: 250 + Math.random() * (W - 500),
+        y: 180 + Math.random() * (H - 380),
+        emoji: npcEmojis[Math.floor(Math.random() * npcEmojis.length)],
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        talkTimer: Math.random() * 300
+      });
+    }
+  }
+  // 更新和绘制NPC
+  G.indoorNPCs.npcs.forEach(npc => {
+    // 移动
+    npc.x += npc.vx;
+    npc.y += npc.vy;
+    // 边界反弹
+    if(npc.x < 200 || npc.x > W - 200) npc.vx *= -1;
+    if(npc.y < 160 || npc.y > H - 180) npc.vy *= -1;
+    // 绘制NPC
+    ctx.font = '32px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(npc.emoji, npc.x, npc.y);
+    // 对话气泡
+    npc.talkTimer--;
+    if(npc.talkTimer < 0){
+      npc.talkTimer = 200 + Math.random() * 200;
+      npc.talkText = ['...', '嗯...', '今天天气不错', '你好啊', '这楼真高', '电梯怎么还没来', '好累啊'][Math.floor(Math.random() * 7)];
+    }
+    if(npc.talkText && npc.talkTimer > 150){
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fillRect(npc.x - 35, npc.y - 45, 70, 22);
+      ctx.fillStyle = '#333';
+      ctx.font = '11px serif';
+      ctx.fillText(npc.talkText, npc.x, npc.y - 30);
+    }
+  });
+  
+  // ===== 楼层显示 =====
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(W / 2 - 120, 15, 240, 50);
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(W / 2 - 120, 15, 240, 50);
+  ctx.fillStyle = '#ffd700';
+  ctx.font = 'bold 22px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('第 ' + G.buildingFloor + ' 层 / 共 ' + maxFloor + ' 层', W / 2, 48);
+  
+  // ===== 操作提示 =====
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(W / 2 - 200, H - 35, 400, 25);
+  ctx.fillStyle = '#ccc';
+  ctx.font = '13px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('⬆上楼楼梯(左下) ⬇下楼楼梯(左上) 🛗电梯(右下) 🚪出口(一楼中下)', W / 2, H - 18);
 }
 
 // 更新室内逻辑
@@ -3404,38 +3663,75 @@ function updateIndoor(){
   if(G.currentMap !== 'city' || G.inBuilding === null) return;
   if(!G.player || G.player.dead) return;
   
-  // 检查玩家是否靠近楼梯
-  const stairX = 130, stairY = H - 150;
-  const dxStair = G.player.x + G.player.w/2 - stairX;
-  const dyStair = G.player.y + G.player.h/2 - stairY;
-  if(Math.hypot(dxStair, dyStair) < 60){
-    G._nearStair = true;
+  // 上楼楼梯位置（左下角）
+  const stairUpX = 130, stairUpY = H - 150;
+  // 下楼楼梯位置（左上角）
+  const stairDownX = 130, stairDownY = 150;
+  // 电梯位置（右下角）
+  const elevX = W - 130, elevY = H - 150;
+  
+  // 检查1P是否靠近上楼楼梯（顶楼时不可上楼）
+  const building = G.cityBuildings[G.inBuilding];
+  const maxFloor = building ? building.floors : 10;
+  if(G.buildingFloor < maxFloor){
+    const dxUp = G.player.x + G.player.w/2 - stairUpX;
+    const dyUp = G.player.y + G.player.h/2 - stairUpY;
+    G._nearStairUp = Math.hypot(dxUp, dyUp) < 60;
   } else {
-    G._nearStair = false;
+    G._nearStairUp = false;
   }
   
-  // 检查玩家是否靠近电梯
-  const elevX = W - 130, elevY = H - 150;
+  // 检查1P是否靠近下楼楼梯（一楼时不可下楼，因为一楼是出口）
+  if(G.buildingFloor > 1){
+    const dxDown = G.player.x + G.player.w/2 - stairDownX;
+    const dyDown = G.player.y + G.player.h/2 - stairDownY;
+    G._nearStairDown = Math.hypot(dxDown, dyDown) < 60;
+  } else {
+    G._nearStairDown = false;
+  }
+  G._nearStair = G._nearStairUp || G._nearStairDown; // 兼容旧变量
+  
+  // 检查1P是否靠近电梯
   const dxElev = G.player.x + G.player.w/2 - elevX;
   const dyElev = G.player.y + G.player.h/2 - elevY;
-  if(Math.hypot(dxElev, dyElev) < 60){
-    G._nearElevator = true;
-  } else {
-    G._nearElevator = false;
-  }
+  G._nearElevator = Math.hypot(dxElev, dyElev) < 60;
   
-  // 检查玩家是否靠近出口（一楼）
+  // 检查1P是否靠近出口（一楼）
   if(G.buildingFloor === 1){
     const exitX = W/2, exitY = H - 60;
     const dxExit = G.player.x + G.player.w/2 - exitX;
     const dyExit = G.player.y + G.player.h/2 - exitY;
-    if(Math.hypot(dxExit, dyExit) < 60){
-      G._nearExit = true;
-    } else {
-      G._nearExit = false;
-    }
+    G._nearExit = Math.hypot(dxExit, dyExit) < 60;
   } else {
     G._nearExit = false;
+  }
+  
+  // 双人模式：检查2P是否靠近交互点
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    // 2P上楼楼梯
+    if(G.buildingFloor < maxFloor){
+      const dxUp2 = G.player2.x + G.player2.w/2 - stairUpX;
+      const dyUp2 = G.player2.y + G.player2.h/2 - stairUpY;
+      // 2P靠近时也设置（因为两人在同一建筑同一楼层，共享交互状态）
+      if(Math.hypot(dxUp2, dyUp2) < 60) G._nearStairUp = true;
+    }
+    // 2P下楼楼梯
+    if(G.buildingFloor > 1){
+      const dxDown2 = G.player2.x + G.player2.w/2 - stairDownX;
+      const dyDown2 = G.player2.y + G.player2.h/2 - stairDownY;
+      if(Math.hypot(dxDown2, dyDown2) < 60) G._nearStairDown = true;
+    }
+    // 2P电梯
+    const dxElev2 = G.player2.x + G.player2.w/2 - elevX;
+    const dyElev2 = G.player2.y + G.player2.h/2 - elevY;
+    if(Math.hypot(dxElev2, dyElev2) < 60) G._nearElevator = true;
+    // 2P出口
+    if(G.buildingFloor === 1){
+      const exitX = W/2, exitY = H - 60;
+      const dxExit2 = G.player2.x + G.player2.w/2 - exitX;
+      const dyExit2 = G.player2.y + G.player2.h/2 - exitY;
+      if(Math.hypot(dxExit2, dyExit2) < 60) G._nearExit = true;
+    }
   }
 }
 
@@ -8209,9 +8505,14 @@ function handleEKey(playerNum){
       exitBuilding();
       return;
     }
-    // 靠近楼梯 → 上一层楼
-    if(G._nearStair){
+    // 靠近上楼楼梯 → 上一层楼
+    if(G._nearStairUp){
       goUpFloor();
+      return;
+    }
+    // 靠近下楼楼梯 → 下一层楼
+    if(G._nearStairDown){
+      goDownFloor();
       return;
     }
     // 靠近电梯 → 直接到顶楼
@@ -8220,6 +8521,7 @@ function handleEKey(playerNum){
       if(building){
         // 电梯直接到顶楼
         G.buildingFloor = building.floors;
+        G.indoorNPCs = null; // 重置室内NPC，新楼层重新生成
         if(G.player){
           G.player.x = 200;
           G.player.y = 300;
@@ -8239,7 +8541,7 @@ function handleEKey(playerNum){
       return;
     }
     // 室内但没靠近任何交互点，提示
-    showToast('靠近楼梯/电梯/出口按E交互');
+    showToast('靠近上楼/下楼楼梯/电梯/出口按E交互');
     return;
   }
   
