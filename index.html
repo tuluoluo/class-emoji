@@ -836,7 +836,8 @@ const G = {
   cityBossSpawned: false, // 城市Boss是否已生成
   inBuilding: null, // 当前在哪个建筑内（null=在室外）
   buildingFloor: 1, // 当前楼层
-  _nearBuildingIndex: null, // 靠近的建筑入口索引
+  _nearBuildingIndex: null, // 靠近的建筑入口索引（1P）
+  _nearBuildingIndex2: null, // 靠近的建筑入口索引（2P）
   _nearStair: false, // 是否靠近楼梯
   _nearElevator: false, // 是否靠近电梯
   _nearExit: false, // 是否靠近出口
@@ -1929,6 +1930,7 @@ function loadGame(slot){
     G.inBuilding = null; // 重置室内状态
     G.buildingFloor = 1; // 重置楼层
     G._nearBuildingIndex = null; // 重置建筑入口检测
+    G._nearBuildingIndex2 = null; // 重置2P建筑入口检测
     G._nearStair = false; // 重置楼梯检测
     G._nearElevator = false; // 重置电梯检测
     G._nearExit = false; // 重置出口检测
@@ -3111,19 +3113,29 @@ function updateCityBoss(){
 // ==================== 高楼大厦室内场景系统 ====================
 
 // 进入建筑
-function enterBuilding(buildingIndex){
+function enterBuilding(buildingIndex, playerNum){
   if(G.currentMap !== 'city') return;
   const building = G.cityBuildings[buildingIndex];
   if(!building || !building.canEnter) return;
   
   G.inBuilding = buildingIndex;
   G.buildingFloor = 1;
-  // 保存玩家在室外的位置，用于退出时返回
-  G._outdoorPlayerX = G.player.x;
-  G._outdoorPlayerY = G.player.y;
-  // 玩家进入后放在一楼大厅
-  G.player.x = 200;
-  G.player.y = 300;
+  // 保存玩家在室外的位置，用于退出时返回（保存触发进入的玩家位置）
+  const enteringPlayer = playerNum === 2 ? G.player2 : G.player;
+  if(enteringPlayer){
+    G._outdoorPlayerX = enteringPlayer.x;
+    G._outdoorPlayerY = enteringPlayer.y;
+  }
+  // 1P进入后放在一楼大厅
+  if(G.player){
+    G.player.x = 200;
+    G.player.y = 300;
+  }
+  // 2P也进入同一建筑（双人模式）
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    G.player2.x = 280;
+    G.player2.y = 300;
+  }
   // Boss也跟随进入
   if(G.cityBoss && G.cityBoss.hp > 0){
     G.cityBoss.inBuilding = buildingIndex;
@@ -3131,21 +3143,29 @@ function enterBuilding(buildingIndex){
     G.cityBoss.x = 400;
     G.cityBoss.y = 300;
   }
-  showToast('进入建筑！第1层，小心Boss！');
+  const playerLabel = playerNum === 2 ? '2P ' : '1P ';
+  showToast(playerLabel + '进入建筑！第1层，小心Boss！');
 }
 
 // 退出建筑
 function exitBuilding(){
   if(G.currentMap !== 'city' || G.inBuilding === null) return;
-  // 恢复玩家在室外的位置
-  G.player.x = G._outdoorPlayerX || 100;
-  G.player.y = G._outdoorPlayerY || 100;
+  // 恢复1P在室外的位置
+  if(G.player){
+    G.player.x = G._outdoorPlayerX || 100;
+    G.player.y = G._outdoorPlayerY || 100;
+  }
+  // 恢复2P在室外的位置（双人模式，放在1P旁边）
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    G.player2.x = (G._outdoorPlayerX || 100) + 60;
+    G.player2.y = G._outdoorPlayerY || 100;
+  }
   // Boss也跟随退出
   if(G.cityBoss && G.cityBoss.hp > 0 && G.cityBoss.inBuilding !== null){
     G.cityBoss.inBuilding = null;
     G.cityBoss.buildingFloor = 1;
-    G.cityBoss.x = G.player.x + 100;
-    G.cityBoss.y = G.player.y;
+    G.cityBoss.x = (G._outdoorPlayerX || 100) + 100;
+    G.cityBoss.y = G._outdoorPlayerY || 100;
   }
   G.inBuilding = null;
   G.buildingFloor = 1;
@@ -3162,8 +3182,15 @@ function goUpFloor(){
     return;
   }
   G.buildingFloor++;
-  G.player.x = 200;
-  G.player.y = 300;
+  if(G.player){
+    G.player.x = 200;
+    G.player.y = 300;
+  }
+  // 2P也跟随上楼（双人模式）
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    G.player2.x = 280;
+    G.player2.y = 300;
+  }
   // Boss也跟随上楼
   if(G.cityBoss && G.cityBoss.hp > 0 && G.cityBoss.inBuilding !== null){
     G.cityBoss.buildingFloor = G.buildingFloor;
@@ -3182,8 +3209,15 @@ function goDownFloor(){
     return;
   }
   G.buildingFloor--;
-  G.player.x = 200;
-  G.player.y = 300;
+  if(G.player){
+    G.player.x = 200;
+    G.player.y = 300;
+  }
+  // 2P也跟随下楼（双人模式）
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    G.player2.x = 280;
+    G.player2.y = 300;
+  }
   // Boss也跟随下楼
   if(G.cityBoss && G.cityBoss.hp > 0 && G.cityBoss.inBuilding !== null){
     G.cityBoss.buildingFloor = G.buildingFloor;
@@ -3196,23 +3230,40 @@ function goDownFloor(){
 // 检查玩家是否靠近建筑入口（室外时）
 function checkBuildingEntrance(){
   if(G.currentMap !== 'city' || G.inBuilding !== null) return;
-  if(!G.player || G.player.dead) return;
   
-  for(let i = 0; i < G.cityBuildings.length; i++){
-    const b = G.cityBuildings[i];
-    if(!b.canEnter) continue;
-    // 检查玩家是否靠近入口
-    const entranceCenterX = b.entranceX + b.entranceW/2;
-    const entranceCenterY = b.entranceY + b.entranceH/2;
-    const dx = G.player.x + G.player.w/2 - entranceCenterX;
-    const dy = G.player.y + G.player.h/2 - entranceCenterY;
-    if(Math.hypot(dx, dy) < 50){
-      // 显示提示
-      G._nearBuildingIndex = i;
-      return;
+  // 检查1P
+  G._nearBuildingIndex = null;
+  if(G.player && !G.player.dead){
+    for(let i = 0; i < G.cityBuildings.length; i++){
+      const b = G.cityBuildings[i];
+      if(!b.canEnter) continue;
+      const entranceCenterX = b.entranceX + b.entranceW/2;
+      const entranceCenterY = b.entranceY + b.entranceH/2;
+      const dx = G.player.x + G.player.w/2 - entranceCenterX;
+      const dy = G.player.y + G.player.h/2 - entranceCenterY;
+      if(Math.hypot(dx, dy) < 50){
+        G._nearBuildingIndex = i;
+        break;
+      }
     }
   }
-  G._nearBuildingIndex = null;
+  
+  // 检查2P（双人模式）
+  G._nearBuildingIndex2 = null;
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    for(let i = 0; i < G.cityBuildings.length; i++){
+      const b = G.cityBuildings[i];
+      if(!b.canEnter) continue;
+      const entranceCenterX = b.entranceX + b.entranceW/2;
+      const entranceCenterY = b.entranceY + b.entranceH/2;
+      const dx = G.player2.x + G.player2.w/2 - entranceCenterX;
+      const dy = G.player2.y + G.player2.h/2 - entranceCenterY;
+      if(Math.hypot(dx, dy) < 50){
+        G._nearBuildingIndex2 = i;
+        break;
+      }
+    }
+  }
 }
 
 // 渲染室内场景
@@ -6018,20 +6069,24 @@ ctx.globalAlpha = 1;
     ctx.restore();
 
     // 城市地图：室外靠近建筑入口时显示提示（左右半屏分别显示）
-    if(G.currentMap === 'city' && G.inBuilding === null && G._nearBuildingIndex !== null && G._nearBuildingIndex !== undefined){
+    if(G.currentMap === 'city' && G.inBuilding === null){
       ctx.font = '14px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       // 左半屏提示（1P）
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.fillRect(W/4 - 100, H - 60, 200, 28);
-      ctx.fillStyle = '#ffd700';
-      ctx.fillText('🏢 按E进入高楼', W/4, H - 46);
+      if(G._nearBuildingIndex !== null && G._nearBuildingIndex !== undefined){
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(W/4 - 100, H - 60, 200, 28);
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText('🏢 按E进入高楼', W/4, H - 46);
+      }
       // 右半屏提示（2P）
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.fillRect(W*3/4 - 100, H - 60, 200, 28);
-      ctx.fillStyle = '#ffd700';
-      ctx.fillText('🏢 按6进入高楼', W*3/4, H - 46);
+      if(G._nearBuildingIndex2 !== null && G._nearBuildingIndex2 !== undefined){
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(W*3/4 - 100, H - 60, 200, 28);
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText('🏢 按6进入高楼', W*3/4, H - 46);
+      }
     }
     return;
   }
@@ -6919,8 +6974,8 @@ function drawPlayer2(){
     const angle = Math.atan2(aimY, aimX);
     // 先旋转坐标系
     ctx.rotate(angle);
-    // 朝左时镜像翻转emoji，避免倒置
-    if(aimX < 0) ctx.scale(1, -1);
+    // 朝左时镜像翻转emoji，避免倒置（水平翻转，保持枪口方向正确）
+    if(aimX < 0) ctx.scale(-1, 1);
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
@@ -6993,8 +7048,8 @@ function drawPlayer(){
     const angle = Math.atan2(aimY, aimX);
     // 先旋转坐标系
     ctx.rotate(angle);
-    // 朝左时镜像翻转emoji，避免倒置
-    if(aimX < 0) ctx.scale(1, -1);
+    // 朝左时镜像翻转emoji，避免倒置（水平翻转，保持枪口方向正确）
+    if(aimX < 0) ctx.scale(-1, 1);
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
@@ -8116,14 +8171,21 @@ function handleEKey(playerNum){
       goUpFloor();
       return;
     }
-    // 靠近电梯 → 上一层楼（电梯更快，直接到顶楼）
+    // 靠近电梯 → 直接到顶楼
     if(G._nearElevator){
       const building = G.cityBuildings[G.inBuilding];
       if(building){
         // 电梯直接到顶楼
         G.buildingFloor = building.floors;
-        G.player.x = 200;
-        G.player.y = 300;
+        if(G.player){
+          G.player.x = 200;
+          G.player.y = 300;
+        }
+        // 2P也跟随到顶楼（双人模式）
+        if(G.isCoop && G.player2 && !G.coopP2Dead){
+          G.player2.x = 280;
+          G.player2.y = 300;
+        }
         if(G.cityBoss && G.cityBoss.hp > 0 && G.cityBoss.inBuilding !== null){
           G.cityBoss.buildingFloor = G.buildingFloor;
           G.cityBoss.x = 400;
@@ -8139,9 +8201,10 @@ function handleEKey(playerNum){
   }
   
   // 室外场景
-  // 靠近建筑入口 → 进入建筑
-  if(G._nearBuildingIndex !== null && G._nearBuildingIndex !== undefined){
-    enterBuilding(G._nearBuildingIndex);
+  // 靠近建筑入口 → 进入建筑（根据玩家编号检查对应的靠近状态）
+  const nearIdx = playerNum === 2 ? G._nearBuildingIndex2 : G._nearBuildingIndex;
+  if(nearIdx !== null && nearIdx !== undefined){
+    enterBuilding(nearIdx, playerNum);
     return;
   }
   
