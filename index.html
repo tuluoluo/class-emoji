@@ -4151,11 +4151,13 @@ function drawUnderwater(){
   ctx.fillText('💧 氧气: ' + Math.round(G.oxygen) + '/' + G.maxOxygen, W/2, barY - 10);
   
   // 上浮提示
-  if(G._nearWater || true){
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.font = '14px serif';
-    ctx.fillText('按 E 上浮', W/2, H - 50);
-  }
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.font = '14px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('按 E 上浮', W/2, H - 50);
+  
+  // 确保恢复全局透明度
+  ctx.globalAlpha = 1;
 }
 
 // 绘制水域表面
