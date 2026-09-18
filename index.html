@@ -687,6 +687,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="shopItem"><span id="shopMedkitText">💊 医疗包 (回满血+止血)</span><button id="buyMedkit">80金</button></div>
     <div class="shopItem"><span id="shopReviveText">💉 救助器 (复活队友，7秒)</span><button id="buyRevive">100金</button></div>
     <div class="shopItem"><span id="shopCarText">🚗 越野车 (撞怪秒杀+速度快+可撞树)</span><button id="buyCar">500金</button></div>
+    <div class="shopItem"><span id="shopScubaText">🤿 潜水装备 (氧气消耗减半)</span><button id="buyScuba">150金</button></div>
     </div>
     <div class="shopFooter">
     <button id="merchantTalkBtn" style="width:100%;margin-bottom:8px;padding:8px;background:#9b59b6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">💬 聊聊</button>
@@ -910,6 +911,15 @@ const G = {
   carNitroActive: false, // 氮气加速是否激活
   carNitroTimer: 0, // 氮气加速剩余时间（帧）
   carNitroCooldown: 0, // 氮气加速冷却时间（帧）
+  // 海洋潜水系统
+  waters: [], // 水域列表 {x,y,w,h}
+  isUnderwater: false, // 是否在水下
+  oxygen: 100, // 氧气值
+  maxOxygen: 100, // 最大氧气值
+  hasScuba: false, // 是否购买了潜水装备
+  underwaterFish: [], // 水下鱼群
+  underwaterDecor: [], // 水下装饰物（珊瑚、海草、石头）
+  _nearWater: false, // 是否靠近水域
 };
 
 // ==================== 声音系统 ====================
@@ -1851,6 +1861,9 @@ function saveGame(slot){
     carNitroActive: G.carNitroActive || false,
     carNitroTimer: G.carNitroTimer || 0,
     carNitroCooldown: G.carNitroCooldown || 0,
+    // 潜水系统
+    hasScuba: G.hasScuba || false,
+    isUnderwater: G.isUnderwater || false,
   };
   // 双人模式：保存2P状态
   if(G.isCoop && G.player2){
@@ -2088,6 +2101,12 @@ function loadGame(slot){
     if(!G.npcs) G.npcs = {}; // 确保NPC对象存在
     createNPCs();
     createWoods();
+    createWaters(); // 创建水域
+    // 加载潜水系统状态
+    G.hasScuba = d.hasScuba || false;
+    G.isUnderwater = d.isUnderwater || false;
+    if(G.hasScuba) G.maxOxygen = 150;
+    else G.maxOxygen = 100;
     // 城市地图：确保杀手和尸体已创建
     if(G.currentMap === 'city'){
       if(G.killers.length === 0) createCityKillers();
@@ -3948,6 +3967,225 @@ function createWoods(){
   }
 }
 
+// ==================== 海洋潜水系统 ====================
+function createWaters(){
+  G.waters = [];
+  // 在草原地图上添加几个水域
+  if(G.currentMap === 'grassland'){
+    G.waters.push({x: WORLD_W*0.7, y: WORLD_H*0.1, w: 600, h: 400}); // 右上角大湖
+    G.waters.push({x: WORLD_W*0.05, y: WORLD_H*0.7, w: 500, h: 350}); // 左下角池塘
+    G.waters.push({x: WORLD_W*0.4, y: WORLD_H*0.8, w: 400, h: 300}); // 下方小湖
+  }
+  // 生成水下鱼群和装饰物
+  G.underwaterFish = [];
+  G.underwaterDecor = [];
+  G.waters.forEach(water => {
+    // 生成鱼群
+    for(let i = 0; i < 15; i++){
+      G.underwaterFish.push({
+        x: water.x + Math.random() * water.w,
+        y: water.y + Math.random() * water.h,
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 1,
+        size: 12 + Math.random() * 8,
+        color: ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3'][Math.floor(Math.random()*4)]
+      });
+    }
+    // 生成珊瑚、海草、石头
+    for(let i = 0; i < 20; i++){
+      const decorTypes = ['🪸', '🌿', '🪨', '🐚', '⭐'];
+      G.underwaterDecor.push({
+        x: water.x + Math.random() * water.w,
+        y: water.y + Math.random() * water.h,
+        emoji: decorTypes[Math.floor(Math.random()*decorTypes.length)],
+        size: 20 + Math.random() * 15
+      });
+    }
+  });
+  // 重置氧气
+  G.isUnderwater = false;
+  G.oxygen = G.maxOxygen;
+}
+
+// 更新潜水系统
+function updateDiving(){
+  if(!G.player || G.player.dead) return;
+  
+  // 检测是否靠近水域
+  const pCenterX = G.player.x + G.player.w/2;
+  const pCenterY = G.player.y + G.player.h/2;
+  G._nearWater = false;
+  
+  if(!G.isUnderwater && G.inBuilding === null){
+    // 检测玩家是否在水域附近
+    for(let i = 0; i < G.waters.length; i++){
+      const w = G.waters[i];
+      // 玩家在水域边缘附近
+      const inWater = pCenterX > w.x && pCenterX < w.x + w.w && 
+                      pCenterY > w.y && pCenterY < w.y + w.h;
+      const nearEdge = (Math.abs(pCenterX - w.x) < 30 || Math.abs(pCenterX - w.x - w.w) < 30 ||
+                        Math.abs(pCenterY - w.y) < 30 || Math.abs(pCenterY - w.y - w.h) < 30);
+      if(inWater || nearEdge){
+        G._nearWater = true;
+        break;
+      }
+    }
+  }
+  
+  // 潜水状态：氧气倒计时
+  if(G.isUnderwater){
+    // 氧气消耗（有潜水装备消耗慢一半）
+    const oxygenDrain = G.hasScuba ? 0.08 : 0.15; // 每秒约4.5或9点
+    G.oxygen -= oxygenDrain;
+    
+    // 氧气耗尽：开始掉血
+    if(G.oxygen <= 0){
+      G.oxygen = 0;
+      // 每秒掉5点血
+      if(!G.cheat.infHp){
+        G.player.hp -= 0.08; // 每帧约5点/秒
+        if(G.player.hp <= 0){
+          G.deathCause = 'drown';
+          handlePlayerDeath(G.player, false);
+        }
+      }
+    }
+    
+    // 更新鱼群位置
+    G.underwaterFish.forEach(fish => {
+      fish.x += fish.vx;
+      fish.y += fish.vy;
+      // 鱼在水域边界内游动
+      G.waters.forEach(w => {
+        if(fish.x > w.x && fish.x < w.x + w.w && fish.y > w.y && fish.y < w.y + w.h){
+          if(fish.x < w.x + 20) fish.vx = Math.abs(fish.vx);
+          if(fish.x > w.x + w.w - 20) fish.vx = -Math.abs(fish.vx);
+          if(fish.y < w.y + 20) fish.vy = Math.abs(fish.vy);
+          if(fish.y > w.y + w.h - 20) fish.vy = -Math.abs(fish.vy);
+        }
+      });
+    });
+  }
+}
+
+// 进入/离开潜水
+function toggleDive(){
+  if(G.isUnderwater){
+    // 浮上来
+    G.isUnderwater = false;
+    G.oxygen = G.maxOxygen;
+    showToast('浮上水面！');
+    playSound('jump');
+  } else if(G._nearWater && G.inBuilding === null){
+    // 潜入水中
+    G.isUnderwater = true;
+    G.oxygen = G.maxOxygen;
+    showToast('潜入水下！氧气：' + Math.round(G.oxygen));
+    playSound('jump');
+    spawnParticles(G.player.x+G.player.w/2, G.player.y+G.player.h/2, '#4ecdc4', 15);
+  }
+}
+
+// 绘制水下效果
+function drawUnderwater(){
+  if(!G.isUnderwater) return;
+  
+  // 蓝色滤镜
+  ctx.fillStyle = 'rgba(0, 50, 150, 0.4)';
+  ctx.fillRect(0, 0, W, H);
+  
+  // 水下气泡效果
+  for(let i = 0; i < 10; i++){
+    const bx = (Date.now() * 0.05 + i * 100) % W;
+    const by = H - ((Date.now() * 0.1 + i * 80) % H);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(bx, by, 3 + (i%3), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // 水下装饰物（珊瑚、海草等）
+  G.underwaterDecor.forEach(d => {
+    ctx.font = d.size + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.globalAlpha = 0.8;
+    ctx.fillText(d.emoji, d.x - camera.x, d.y - camera.y);
+    ctx.globalAlpha = 1;
+  });
+  
+  // 水下鱼群
+  G.underwaterFish.forEach(fish => {
+    ctx.font = fish.size + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // 根据方向翻转
+    ctx.save();
+    ctx.translate(fish.x - camera.x, fish.y - camera.y);
+    if(fish.vx < 0) ctx.scale(-1, 1);
+    ctx.fillText('🐟', 0, 0);
+    ctx.restore();
+  });
+  
+  // 氧气条UI
+  const barX = W/2 - 100;
+  const barY = 80;
+  const barW = 200;
+  const barH = 20;
+  // 背景
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(barX - 4, barY - 4, barW + 8, barH + 8);
+  // 氧气条
+  const oxygenPercent = G.oxygen / G.maxOxygen;
+  const oxygenColor = oxygenPercent > 0.5 ? '#4ecdc4' : (oxygenPercent > 0.25 ? '#ffe66d' : '#ff6b6b');
+  ctx.fillStyle = oxygenColor;
+  ctx.fillRect(barX, barY, barW * oxygenPercent, barH);
+  // 边框
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(barX, barY, barW, barH);
+  // 文字
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 12px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('💧 氧气: ' + Math.round(G.oxygen) + '/' + G.maxOxygen, W/2, barY - 10);
+  
+  // 上浮提示
+  if(G._nearWater || true){
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.font = '14px serif';
+    ctx.fillText('按 E 上浮', W/2, H - 50);
+  }
+}
+
+// 绘制水域表面
+function drawWaters(){
+  if(G.isUnderwater || G.inBuilding !== null) return;
+  G.waters.forEach(w => {
+    // 水面
+    ctx.fillStyle = 'rgba(30, 144, 255, 0.5)';
+    ctx.fillRect(w.x - camera.x, w.y - camera.y, w.w, w.h);
+    // 水面波纹
+    ctx.strokeStyle = 'rgba(135, 206, 250, 0.6)';
+    ctx.lineWidth = 2;
+    const time = Date.now() * 0.001;
+    for(let i = 0; i < 3; i++){
+      const offset = Math.sin(time + i) * 10;
+      ctx.beginPath();
+      ctx.moveTo(w.x - camera.x + 50, w.y - camera.y + 20 + i * 30 + offset);
+      ctx.lineTo(w.x - camera.x + w.w - 50, w.y - camera.y + 20 + i * 30 + offset);
+      ctx.stroke();
+    }
+    // 靠近时提示
+    if(G._nearWater){
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = '14px serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('按 E 潜水', w.x + w.w/2 - camera.x, w.y - camera.y + 30);
+    }
+  });
+}
+
 // ==================== 尸体系统 ====================
 function makeCorpse(entity){
   G.corpses.push({
@@ -4465,6 +4703,9 @@ function update(){
   if(!G.coins) G.coins = []; // 确保金币数组存在
   if(!G.fireGrounds) G.fireGrounds = []; // 确保火焰数组存在
   if(!G.rainDrops) G.rainDrops = []; // 确保雨滴数组存在
+  if(!G.waters) G.waters = []; // 确保水域数组存在
+  // 更新潜水系统
+  updateDiving();
   // 双人模式：两人都死亡时确保游戏结束
   if(G.isCoop && G.coopP1Dead && G.coopP2Dead){
     G.running = false;
@@ -6686,6 +6927,9 @@ ctx.globalAlpha = 1;
 
   ctx.restore();
 
+  // 水下效果（屏幕空间）
+  drawUnderwater();
+
   // 夜晚遮罩（屏幕空间）
   if(!G.day){
     ctx.fillStyle = 'rgba(10,10,60,0.35)';
@@ -6858,6 +7102,9 @@ function drawBackground(){
     ctx.lineWidth = 8;
     ctx.strokeRect(0, 0, WORLD_W, WORLD_H);
   }
+  
+  // 绘制水域
+  drawWaters();
 }
 
 // 渲染杀手NPC
@@ -8656,6 +8903,25 @@ document.getElementById('buyCar').addEventListener('click', ()=>{
     saveGame();
   } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
 });
+
+// 购买潜水装备
+document.getElementById('buyScuba').addEventListener('click', ()=>{
+  const buyer = getShopBuyer();
+  if(G.hasScuba){
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '🤿 已经有潜水装备了！');
+    return;
+  }
+  if(G.cheat.infGold || buyer.gold>=150){
+    if(!G.cheat.infGold) buyer.gold-=150;
+    G.hasScuba = true;
+    G.maxOxygen = 150; // 有潜水装备后最大氧气增加
+    playSound('unlock');
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '🤿 购买了潜水装备！氧气消耗减半，最大氧气增加！');
+    updateUI();
+    saveGame();
+  } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
+});
+
 document.getElementById('closeShop').addEventListener('click', ()=>{
   document.getElementById('shopPanel').style.display='none';
   G._shopOpened = false;
@@ -8663,10 +8929,20 @@ document.getElementById('closeShop').addEventListener('click', ()=>{
 });
 
 // ==================== 载具系统 ====================
-// E键处理：进入建筑、上下楼、退出建筑、上车/下车
+// E键处理：进入建筑、上下楼、退出建筑、上车/下车、潜水
 function handleEKey(playerNum){
+  // 潜水优先：如果在水下，按E上浮
+  if(G.isUnderwater){
+    toggleDive();
+    return;
+  }
+  
   if(G.currentMap !== 'city'){
-    // 非城市地图，只能上车/下车
+    // 非城市地图：先检查是否靠近水域，是则潜水，否则上车/下车
+    if(G._nearWater && playerNum === 1){
+      toggleDive();
+      return;
+    }
     toggleCar(playerNum);
     return;
   }
@@ -9705,6 +9981,7 @@ function startGame(){
   G.player = createPlayer();
   createNPCs();
   createWoods();
+  createWaters(); // 创建水域
   updateUI();
   updateAimJoystick();
   // 显示上车按钮（如果已经有车了）
@@ -9801,6 +10078,7 @@ function startCoopGame(){
   G.player2 = createPlayer2();
   createNPCs();
   createWoods();
+  createWaters(); // 创建水域
   // 显示分屏元素
   document.getElementById('coopDivider').style.display = 'block';
   document.getElementById('coopLabel1').style.display = 'block';
