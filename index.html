@@ -6580,6 +6580,8 @@ function renderWorld(){
 }
 
 function render(){
+  // 每帧开始时强制重置透明度，防止上一帧残留
+  ctx.globalAlpha = 1;
   // 错误信息显示（画在最开头，确保即使后面渲染出错也能看到）
   if(window._gameError){
     try {
