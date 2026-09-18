@@ -7731,10 +7731,10 @@ function drawPlayer2(){
     const aimX = p.aimX || p.facing;
     const aimY = p.aimY || 0;
     const angle = Math.atan2(aimY, aimX);
-    // 先旋转坐标系
-    ctx.rotate(angle);
-    // 朝左时镜像翻转emoji，避免倒置（水平翻转，保持枪口方向正确）
+    // 朝左时先镜像翻转emoji（先翻转，再旋转，保证枪口方向正确）
     if(aimX < 0) ctx.scale(-1, 1);
+    // 再旋转坐标系
+    ctx.rotate(angle);
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
@@ -7805,10 +7805,10 @@ function drawPlayer(){
     const aimX = p.aimX || p.facing;
     const aimY = p.aimY || 0;
     const angle = Math.atan2(aimY, aimX);
-    // 先旋转坐标系
-    ctx.rotate(angle);
-    // 朝左时镜像翻转emoji，避免倒置（水平翻转，保持枪口方向正确）
+    // 朝左时先镜像翻转emoji（先翻转，再旋转，保证枪口方向正确）
     if(aimX < 0) ctx.scale(-1, 1);
+    // 再旋转坐标系
+    ctx.rotate(angle);
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
