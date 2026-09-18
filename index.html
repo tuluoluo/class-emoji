@@ -7741,6 +7741,8 @@ function drawPlayer2(){
     ctx.arc(0, 0, p.w*0.7, 0, Math.PI*2);
     ctx.stroke();
   }
+  // 绘制玩家脸之前强制重置透明度
+  ctx.globalAlpha = 1;
   ctx.font = p.w + 'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -7816,6 +7818,8 @@ function drawPlayer(){
     ctx.stroke();
   }
 
+  // 绘制玩家脸之前强制重置透明度
+  ctx.globalAlpha = 1;
   ctx.font = p.w + 'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
