@@ -1916,12 +1916,8 @@ function loadGame(slot){
     G.killCount = d.killCount || 0;
     G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
     G.fireGrounds = [];
-    // 重置城市地图状态（双人模式强制用草原地图）
-    if(d.isCoop){
-      G.currentMap = 'grassland';
-    } else {
-      G.currentMap = d.currentMap || 'grassland';
-    }
+    // 重置城市地图状态
+    G.currentMap = d.currentMap || 'grassland';
     G.killers = [];
     G.cityCorpses = [];
     G.cityRoads = [];
@@ -2115,10 +2111,10 @@ function loadGame(slot){
       if(nitroBtn) nitroBtn.style.display = 'none';
       if(nitroBtn2) nitroBtn2.style.display = 'none';
     }
-    // 城市地图中显示进入建筑按钮（单人模式）
-    if(G.currentMap === 'city' && !G.isCoop){
+    // 城市地图中显示进入建筑按钮（单人模式显示1P，双人模式显示1P和2P）
+    if(G.currentMap === 'city'){
+      // 1P进入建筑按钮
       if(enterBtn) enterBtn.style.display = 'flex';
-      // 根据情况切换按钮文字：靠近建筑入口显示进入，室内显示退出/上下楼
       if(enterBtn){
         if(G.inBuilding !== null){
           if(G._nearExit) enterBtn.textContent = '🚪退出';
@@ -2130,6 +2126,22 @@ function loadGame(slot){
         } else {
           enterBtn.textContent = '🏢';
         }
+      }
+      // 2P进入建筑按钮（双人模式）
+      if(G.isCoop && enterBtn2){
+        enterBtn2.style.display = 'flex';
+        if(G.inBuilding !== null){
+          if(G._nearExit) enterBtn2.textContent = '🚪退出';
+          else if(G._nearStair) enterBtn2.textContent = '⬆上楼';
+          else if(G._nearElevator) enterBtn2.textContent = '🛗电梯';
+          else enterBtn2.textContent = '🏢';
+        } else if(G._nearBuildingIndex2 !== null && G._nearBuildingIndex2 !== undefined){
+          enterBtn2.textContent = '🏢进入';
+        } else {
+          enterBtn2.textContent = '🏢';
+        }
+      } else if(enterBtn2){
+        enterBtn2.style.display = 'none';
       }
     } else {
       if(enterBtn) enterBtn.style.display = 'none';
@@ -9227,10 +9239,14 @@ function startGame(){
     const carBtn2 = document.getElementById('carBtn2');
     if(carBtn2) carBtn2.style.display = 'flex';
   }
-  // 城市地图单人模式显示进入建筑按钮
-  if(G.currentMap === 'city' && !G.isCoop){
+  // 城市地图显示进入建筑按钮（单人模式显示1P，双人模式显示1P和2P）
+  if(G.currentMap === 'city'){
     const enterBtn = document.getElementById('enterBtn');
     if(enterBtn) enterBtn.style.display = 'flex';
+    if(G.isCoop){
+      const enterBtn2 = document.getElementById('enterBtn2');
+      if(enterBtn2) enterBtn2.style.display = 'flex';
+    }
   }
   document.getElementById('mainMenu').style.display = 'none';
   document.getElementById('saveSelectPanel').style.display = 'none';
@@ -9250,9 +9266,9 @@ function startCoopGame(){
   G.state = 'playing';
   G.running = true;
   G.isCoop = true;
-  // 双人模式强制只能用草原地图
-  G.selectedMap = 'grassland';
-  G.currentMap = 'grassland';
+  // 设置当前地图（如果没有选择，默认草原）
+  if(!G.selectedMap) G.selectedMap = 'grassland';
+  G.currentMap = G.selectedMap;
   // 重置城市地图相关变量
   G.killers = [];
   G.cityCorpses = [];
@@ -9331,10 +9347,14 @@ function startCoopGame(){
     const carBtn2 = document.getElementById('carBtn2');
     if(carBtn2) carBtn2.style.display = 'flex';
   }
-  // 城市地图单人模式显示进入建筑按钮
-  if(G.currentMap === 'city' && !G.isCoop){
+  // 城市地图显示进入建筑按钮（单人模式显示1P，双人模式显示1P和2P）
+  if(G.currentMap === 'city'){
     const enterBtn = document.getElementById('enterBtn');
     if(enterBtn) enterBtn.style.display = 'flex';
+    if(G.isCoop){
+      const enterBtn2 = document.getElementById('enterBtn2');
+      if(enterBtn2) enterBtn2.style.display = 'flex';
+    }
   }
   // 确保1P摇杆显示
   document.getElementById('joystick').style.display = 'block';
@@ -9431,9 +9451,21 @@ document.getElementById('playBtn').addEventListener('click', ()=>{
   // 先显示地图选择界面
   document.getElementById('mapSelectPanel').style.display = 'flex';
   G.selectedMap = null;
+  G._mapSelectMode = 'new';
 });
 document.getElementById('coopBtn').addEventListener('click', ()=>{
-  initAudio(); playSound('click'); openSaveSelect('coop');
+  initAudio(); playSound('click');
+  // 双人模式也先显示地图选择界面，城市地图也可以选
+  G._mapSelectMode = 'coop';
+  document.getElementById('mapSelectPanel').style.display = 'flex';
+  G.selectedMap = null;
+  // 确保城市地图选项可用
+  const mapCity = document.getElementById('mapCity');
+  if(mapCity){
+    mapCity.style.opacity = '1';
+    mapCity.style.pointerEvents = 'auto';
+    mapCity.style.filter = 'none';
+  }
 });
 document.getElementById('continueBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click'); openSaveSelect('continue');
@@ -9447,17 +9479,30 @@ document.getElementById('mapGrassland').addEventListener('click', ()=>{
   playSound('click');
   G.selectedMap = 'grassland';
   document.getElementById('mapSelectPanel').style.display = 'none';
-  openSaveSelect('new');
+  // 根据地图选择模式决定是单人还是双人
+  if(G._mapSelectMode === 'coop'){
+    openSaveSelect('coop');
+  } else {
+    openSaveSelect('new');
+  }
+  G._mapSelectMode = null;
 });
 document.getElementById('mapCity').addEventListener('click', ()=>{
   playSound('click');
   G.selectedMap = 'city';
   document.getElementById('mapSelectPanel').style.display = 'none';
-  openSaveSelect('new');
+  // 根据地图选择模式决定是单人还是双人
+  if(G._mapSelectMode === 'coop'){
+    openSaveSelect('coop');
+  } else {
+    openSaveSelect('new');
+  }
+  G._mapSelectMode = null;
 });
 document.getElementById('closeMapSelectBtn').addEventListener('click', ()=>{
   playSound('click');
   document.getElementById('mapSelectPanel').style.display = 'none';
+  G._mapSelectMode = null;
 });
 document.getElementById('menuSettingsBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click');
