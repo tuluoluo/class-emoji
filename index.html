@@ -614,6 +614,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn" id="nitroBtn" style="display:none;background:#ff4500">🚀</button>
       <button class="skillBtn" id="carBtn" style="display:none;background:#ff6347">🚗</button>
       <button class="skillBtn" id="enterBtn" style="display:none;background:#4a90d9">🏢</button>
+      <button class="skillBtn" id="diveBtn" style="display:none;background:#4ecdc4">🤿</button>
       <button class="skillBtn" id="reviveBtn" style="display:none;background:#ff69b4">💉</button>
     </div>
   </div>
@@ -648,6 +649,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn2" id="nitroBtn2" style="display:none;background:#ff4500">🚀</button>
       <button class="skillBtn2" id="carBtn2" style="display:none;background:#ff6347">🚗</button>
       <button class="skillBtn2" id="enterBtn2" style="display:none;background:#4a90d9">🏢</button>
+      <button class="skillBtn2" id="diveBtn2" style="display:none;background:#4ecdc4">🤿</button>
       <button class="skillBtn2" id="reviveBtn2" style="display:none;background:#ff69b4">💉</button>
     </div>
   </div>
@@ -4023,12 +4025,32 @@ function updateDiving(){
       // 玩家在水域边缘附近
       const inWater = pCenterX > w.x && pCenterX < w.x + w.w && 
                       pCenterY > w.y && pCenterY < w.y + w.h;
-      const nearEdge = (Math.abs(pCenterX - w.x) < 30 || Math.abs(pCenterX - w.x - w.w) < 30 ||
-                        Math.abs(pCenterY - w.y) < 30 || Math.abs(pCenterY - w.y - w.h) < 30);
+      const nearEdge = (Math.abs(pCenterX - w.x) < 40 || Math.abs(pCenterX - w.x - w.w) < 40 ||
+                        Math.abs(pCenterY - w.y) < 40 || Math.abs(pCenterY - w.y - w.h) < 40);
       if(inWater || nearEdge){
         G._nearWater = true;
         break;
       }
+    }
+  }
+  
+  // 控制潜水按钮显示
+  const diveBtn = document.getElementById('diveBtn');
+  const diveBtn2 = document.getElementById('diveBtn2');
+  if(diveBtn){
+    if(G._nearWater || G.isUnderwater){
+      diveBtn.style.display = 'flex';
+      diveBtn.textContent = G.isUnderwater ? '🌊' : '🤿';
+    } else {
+      diveBtn.style.display = 'none';
+    }
+  }
+  if(diveBtn2 && G.isCoop){
+    if(G._nearWater || G.isUnderwater){
+      diveBtn2.style.display = 'flex';
+      diveBtn2.textContent = G.isUnderwater ? '🌊' : '🤿';
+    } else {
+      diveBtn2.style.display = 'none';
     }
   }
   
@@ -7696,6 +7718,7 @@ function drawPlayer2(){
   // 2P死亡后只显示尸体，不绘制玩家本身
   if(G.coopP2Dead) return;
   ctx.save();
+  ctx.globalAlpha = 1; // 强制重置透明度
   ctx.translate(p.x+p.w/2, p.y+p.h/2);
   // 角色使用原始比例
   const scale = 1;
@@ -7763,6 +7786,7 @@ function drawPlayer(){
   // 双人模式：1P死亡后只显示尸体，不绘制玩家本身
   if(G.isCoop && G.coopP1Dead) return;
   ctx.save();
+  ctx.globalAlpha = 1; // 强制重置透明度
   ctx.translate(p.x+p.w/2, p.y+p.h/2);
   // 角色使用原始比例
   const scale = 1;
@@ -8515,6 +8539,8 @@ document.getElementById('grenadeBtn').addEventListener('click', throwGrenade);
 document.getElementById('dashBtn').addEventListener('click', playerDash);
 document.getElementById('carBtn').addEventListener('click', ()=>toggleCar(1));
 document.getElementById('carBtn2').addEventListener('click', ()=>toggleCar(2));
+document.getElementById('diveBtn').addEventListener('click', ()=>toggleDive());
+document.getElementById('diveBtn2').addEventListener('click', ()=>toggleDive());
 document.getElementById('enterBtn').addEventListener('click', ()=>handleEKey(1));
 document.getElementById('enterBtn2').addEventListener('click', ()=>handleEKey(2));
 document.getElementById('nitroBtn').addEventListener('click', ()=>activateCarNitro(1));
