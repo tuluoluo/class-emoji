@@ -3589,40 +3589,51 @@ function drawIndoor(){
     }
   }
   
-  // ===== 楼层NPC（非人类，废弃城市氛围）=====
+  // ===== 楼层NPC（全部用🙂，杀手有红色光晕）=====
   if(G.indoorNPCs && G.indoorNPCs.npcs){
     G.indoorNPCs.npcs.forEach(npc => {
-      // 幽灵漂浮效果（上下浮动）
-      const floatY = npc.emoji === '👻' ? Math.sin(npc.floatOffset) * 8 : 0;
       // 绘制NPC阴影
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.beginPath();
       ctx.ellipse(npc.x, npc.y + 18, 16, 6, 0, 0, Math.PI * 2);
       ctx.fill();
-      // 绘制NPC
+      // 杀手：红色光晕背景
+      if(npc.isKiller){
+        ctx.fillStyle = 'rgba(255,0,0,0.2)';
+        ctx.beginPath();
+        ctx.arc(npc.x, npc.y, 28, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,0,0,0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(npc.x, npc.y, 28, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      // 绘制NPC（全部用🙂）
       ctx.font = '36px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      // 幽灵半透明效果
-      if(npc.emoji === '👻'){
-        ctx.globalAlpha = 0.7;
+      ctx.fillText(npc.emoji, npc.x, npc.y);
+      // 杀手标记：头顶红色感叹号
+      if(npc.isKiller){
+        ctx.fillStyle = '#ff0000';
+        ctx.font = 'bold 16px serif';
+        ctx.fillText('❗', npc.x, npc.y - 28);
       }
-      ctx.fillText(npc.emoji, npc.x, npc.y + floatY);
-      ctx.globalAlpha = 1;
-      // 对话气泡（只显示前60帧）
+      // 对话气泡
       if(npc.talkText && npc.talkTimer > 120){
+        ctx.font = '12px serif';
         const textWidth = ctx.measureText(npc.talkText).width + 16;
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.fillRect(npc.x - textWidth/2, npc.y - 50 + floatY, textWidth, 24);
+        ctx.fillStyle = npc.isKiller ? 'rgba(255,200,200,0.95)' : 'rgba(255,255,255,0.9)';
+        ctx.fillRect(npc.x - textWidth/2, npc.y - 55, textWidth, 24);
         // 气泡小三角
         ctx.beginPath();
-        ctx.moveTo(npc.x - 6, npc.y - 26 + floatY);
-        ctx.lineTo(npc.x + 6, npc.y - 26 + floatY);
-        ctx.lineTo(npc.x, npc.y - 18 + floatY);
+        ctx.moveTo(npc.x - 6, npc.y - 31);
+        ctx.lineTo(npc.x + 6, npc.y - 31);
+        ctx.lineTo(npc.x, npc.y - 23);
         ctx.fill();
         ctx.fillStyle = '#333';
-        ctx.font = '12px serif';
-        ctx.fillText(npc.talkText, npc.x, npc.y - 34 + floatY);
+        ctx.fillText(npc.talkText, npc.x, npc.y - 40);
       }
     });
   }
@@ -3734,44 +3745,145 @@ function updateIndoor(){
   
   // ===== 更新楼层NPC（非人类，废弃城市氛围）=====
   if(!G.indoorNPCs || G.indoorNPCs.floor !== G.buildingFloor || G.indoorNPCs.building !== G.inBuilding){
-    // 生成当前楼层的NPC（非人类：幽灵、蝙蝠、蜘蛛、蟑螂、老鼠、尸体）
+    // 生成当前楼层的NPC（全部用🙂，其中一部分是杀手）
     G.indoorNPCs = {
       floor: G.buildingFloor,
       building: G.inBuilding,
       npcs: []
     };
-    const npcCount = 2 + Math.floor(Math.random() * 3);
-    const npcEmojis = ['🦇', '🕷️', '🪳', '🐀', '🙂', '💀', '🧟'];
+    const npcCount = 3 + Math.floor(Math.random() * 4);
+    const maxFloor = G.cityBuildings[G.inBuilding] ? G.cityBuildings[G.inBuilding].floors : 10;
     for(let i = 0; i < npcCount; i++){
+      // 30%概率是杀手
+      const isKiller = Math.random() < 0.3;
       G.indoorNPCs.npcs.push({
         x: 220 + Math.random() * (W - 440),
         y: 170 + Math.random() * (H - 360),
-        emoji: npcEmojis[Math.floor(Math.random() * npcEmojis.length)],
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
+        emoji: '🙂',
+        isKiller: isKiller,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
         talkTimer: Math.random() * 300,
         talkText: '',
-        floatOffset: Math.random() * Math.PI * 2 // 用于幽灵漂浮动画
+        changeFloorTimer: 600 + Math.random() * 1200, // 10-30秒后换楼层
+        atkCd: 0,
+        maxFloor: maxFloor
       });
     }
   }
   // 更新NPC移动和对话
-  G.indoorNPCs.npcs.forEach(npc => {
+  G.indoorNPCs.npcs.forEach((npc, idx) => {
+    // 杀手：追击附近的玩家
+    if(npc.isKiller){
+      // 找到最近的玩家
+      let target = null;
+      let minDist = 200;
+      const p1x = G.player.x + G.player.w/2, p1y = G.player.y + G.player.h/2;
+      const d1 = Math.hypot(p1x - npc.x, p1y - npc.y);
+      if(!G.player.dead && d1 < minDist){ minDist = d1; target = G.player; }
+      if(G.isCoop && G.player2 && !G.coopP2Dead){
+        const p2x = G.player2.x + G.player2.w/2, p2y = G.player2.y + G.player2.h/2;
+        const d2 = Math.hypot(p2x - npc.x, p2y - npc.y);
+        if(d2 < minDist){ minDist = d2; target = G.player2; }
+      }
+      if(target){
+        const dx = (target.x + target.w/2) - npc.x;
+        const dy = (target.y + target.h/2) - npc.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        npc.vx = dx / dist * 1.5;
+        npc.vy = dy / dist * 1.5;
+        // 攻击玩家
+        if(npc.atkCd > 0) npc.atkCd--;
+        if(dist < 40 && npc.atkCd <= 0){
+          npc.atkCd = 60;
+          if(target === G.player){
+            target.hp -= 8;
+            target.hurtFlash = 10;
+          } else {
+            target.hp -= 8;
+            target.hurtFlash = 10;
+          }
+          spawnParticles(target.x+target.w/2, target.y+target.h/2, '#ff0000', 8);
+          playSound('hurt');
+          showToast((target === G.player ? '1P' : '2P') + ' 被室内杀手🙂攻击了！-8HP');
+        }
+      } else {
+        // 没有目标，随机走动
+        if(Math.random() < 0.01){
+          npc.vx = (Math.random() - 0.5) * 0.6;
+          npc.vy = (Math.random() - 0.5) * 0.6;
+        }
+      }
+    } else {
+      // 普通人：随机走动，偶尔改变方向
+      if(Math.random() < 0.01){
+        npc.vx = (Math.random() - 0.5) * 0.6;
+        npc.vy = (Math.random() - 0.5) * 0.6;
+      }
+    }
     // 移动
     npc.x += npc.vx;
     npc.y += npc.vy;
-    npc.floatOffset += 0.05;
     // 边界反弹（确保在走廊范围内）
     if(npc.x < 200){ npc.x = 200; npc.vx = Math.abs(npc.vx); }
     if(npc.x > W - 200){ npc.x = W - 200; npc.vx = -Math.abs(npc.vx); }
     if(npc.y < 160){ npc.y = 160; npc.vy = Math.abs(npc.vy); }
     if(npc.y > H - 180){ npc.y = H - 180; npc.vy = -Math.abs(npc.vy); }
+    // 换楼层逻辑：走到楼梯/电梯/出口位置后消失，在下一层重新生成
+    npc.changeFloorTimer--;
+    if(npc.changeFloorTimer <= 0){
+      // 决定走楼梯还是电梯
+      const useElevator = Math.random() < 0.3;
+      let targetX, targetY;
+      if(useElevator){
+        // 电梯位置（右下角）
+        targetX = W - 130;
+        targetY = H - 150;
+      } else {
+        // 随机走上楼或下楼楼梯
+        if(Math.random() < 0.5 && G.buildingFloor < npc.maxFloor){
+          targetX = 130; targetY = H - 150; // 上楼楼梯
+        } else if(G.buildingFloor > 1){
+          targetX = 130; targetY = 150; // 下楼楼梯
+        } else {
+          targetX = W/2; targetY = H - 60; // 出口
+        }
+      }
+      // 向目标移动
+      const dx = targetX - npc.x;
+      const dy = targetY - npc.y;
+      const dist = Math.hypot(dx, dy);
+      if(dist < 30){
+        // 到达目标，换楼层
+        if(useElevator){
+          // 电梯：随机去一个楼层
+          G.buildingFloor = 1 + Math.floor(Math.random() * npc.maxFloor);
+        } else if(Math.random() < 0.5 && G.buildingFloor < npc.maxFloor){
+          G.buildingFloor++;
+        } else if(G.buildingFloor > 1){
+          G.buildingFloor--;
+        } else {
+          // 一楼，走到出口离开建筑
+          G.indoorNPCs.npcs.splice(idx, 1);
+          return;
+        }
+        // 重新生成NPC（在新楼层）
+        G.indoorNPCs = null;
+        return;
+      } else {
+        npc.vx = dx / dist * 1.5;
+        npc.vy = dy / dist * 1.5;
+      }
+    }
     // 对话计时器
     npc.talkTimer--;
     if(npc.talkTimer <= 0){
       npc.talkTimer = 180 + Math.random() * 180;
-      const ghostTalks = ['...', '呜呜呜...', '救救我...', '这里好黑...', '别过来...', '我死得好惨...', '电梯...电梯在哪...', '有人吗...'];
-      npc.talkText = ghostTalks[Math.floor(Math.random() * ghostTalks.length)];
+      const normalTalks = ['...', '今天天气不错', '电梯怎么这么慢', '这楼真高', '你好啊', '别随便进别人家', '下班了...', '好饿啊'];
+      const killerTalks = ['...', '别过来', '哼哼...', '看到你了...', '嘘...', '你跑不掉的'];
+      npc.talkText = npc.isKiller 
+        ? killerTalks[Math.floor(Math.random() * killerTalks.length)]
+        : normalTalks[Math.floor(Math.random() * normalTalks.length)];
     }
   });
 }
@@ -6119,6 +6231,8 @@ function explode(x, y, radius, dmg){
 function damagePlayer(dmg){
   const p = G.player;
   if(p.invincible>0 || G.cheat.infHp) return;
+  // 室内是绝对安全区，室外伤害无法穿墙
+  if(G.inBuilding !== null) return;
   playSound('hurt');
   playVoice('hurt', 'male'); // 😡 男声受击"饿"
   const actual = calcIncomingDmg(dmg);
@@ -6139,6 +6253,8 @@ function damagePlayer(dmg){
 function damagePlayer2(dmg){
   const p = G.player2;
   if(!p || p.invincible>0 || G.cheat.infHp) return;
+  // 室内是绝对安全区，室外伤害无法穿墙
+  if(G.inBuilding !== null) return;
   playSound('hurt');
   playVoice('hurt', 'male');
   const actual = calcIncomingDmg(dmg);
