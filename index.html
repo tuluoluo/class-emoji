@@ -613,6 +613,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn" id="dashBtn">💨</button>
       <button class="skillBtn" id="nitroBtn" style="display:none;background:#ff4500">🚀</button>
       <button class="skillBtn" id="carBtn" style="display:none;background:#ff6347">🚗</button>
+      <button class="skillBtn" id="enterBtn" style="display:none;background:#4a90d9">🏢</button>
       <button class="skillBtn" id="reviveBtn" style="display:none;background:#ff69b4">💉</button>
     </div>
   </div>
@@ -646,6 +647,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button class="skillBtn2" id="dashBtn2">💨</button>
       <button class="skillBtn2" id="nitroBtn2" style="display:none;background:#ff4500">🚀</button>
       <button class="skillBtn2" id="carBtn2" style="display:none;background:#ff6347">🚗</button>
+      <button class="skillBtn2" id="enterBtn2" style="display:none;background:#4a90d9">🏢</button>
       <button class="skillBtn2" id="reviveBtn2" style="display:none;background:#ff69b4">💉</button>
     </div>
   </div>
@@ -1914,8 +1916,12 @@ function loadGame(slot){
     G.killCount = d.killCount || 0;
     G.mobs = []; G.bosses = []; G.projectiles = []; G.corpses = []; G.particles = [];
     G.fireGrounds = [];
-    // 重置城市地图状态
-    G.currentMap = d.currentMap || 'grassland';
+    // 重置城市地图状态（双人模式强制用草原地图）
+    if(d.isCoop){
+      G.currentMap = 'grassland';
+    } else {
+      G.currentMap = d.currentMap || 'grassland';
+    }
     G.killers = [];
     G.cityCorpses = [];
     G.cityRoads = [];
@@ -2095,6 +2101,9 @@ function loadGame(slot){
     const carBtn2 = document.getElementById('carBtn2');
     const nitroBtn = document.getElementById('nitroBtn');
     const nitroBtn2 = document.getElementById('nitroBtn2');
+    const enterBtn = document.getElementById('enterBtn');
+    const enterBtn2 = document.getElementById('enterBtn2');
+    // 有车时显示上车按钮和氮气按钮
     if(G.carOwned){
       if(carBtn) carBtn.style.display = 'flex';
       if(carBtn2 && G.isCoop) carBtn2.style.display = 'flex';
@@ -2105,6 +2114,26 @@ function loadGame(slot){
       if(carBtn2) carBtn2.style.display = 'none';
       if(nitroBtn) nitroBtn.style.display = 'none';
       if(nitroBtn2) nitroBtn2.style.display = 'none';
+    }
+    // 城市地图中显示进入建筑按钮（单人模式）
+    if(G.currentMap === 'city' && !G.isCoop){
+      if(enterBtn) enterBtn.style.display = 'flex';
+      // 根据情况切换按钮文字：靠近建筑入口显示进入，室内显示退出/上下楼
+      if(enterBtn){
+        if(G.inBuilding !== null){
+          if(G._nearExit) enterBtn.textContent = '🚪退出';
+          else if(G._nearStair) enterBtn.textContent = '⬆上楼';
+          else if(G._nearElevator) enterBtn.textContent = '🛗电梯';
+          else enterBtn.textContent = '🏢';
+        } else if(G._nearBuildingIndex !== null && G._nearBuildingIndex !== undefined){
+          enterBtn.textContent = '🏢进入';
+        } else {
+          enterBtn.textContent = '🏢';
+        }
+      }
+    } else {
+      if(enterBtn) enterBtn.style.display = 'none';
+      if(enterBtn2) enterBtn2.style.display = 'none';
     }
     // 处理2P蛊按钮和整蛊面板
     const guiBtn2 = document.getElementById('guiBtn2');
@@ -7754,6 +7783,8 @@ document.getElementById('grenadeBtn').addEventListener('click', throwGrenade);
 document.getElementById('dashBtn').addEventListener('click', playerDash);
 document.getElementById('carBtn').addEventListener('click', ()=>toggleCar(1));
 document.getElementById('carBtn2').addEventListener('click', ()=>toggleCar(2));
+document.getElementById('enterBtn').addEventListener('click', ()=>handleEKey(1));
+document.getElementById('enterBtn2').addEventListener('click', ()=>handleEKey(2));
 document.getElementById('nitroBtn').addEventListener('click', ()=>activateCarNitro(1));
 document.getElementById('nitroBtn2').addEventListener('click', ()=>activateCarNitro(2));
 
@@ -9196,6 +9227,11 @@ function startGame(){
     const carBtn2 = document.getElementById('carBtn2');
     if(carBtn2) carBtn2.style.display = 'flex';
   }
+  // 城市地图单人模式显示进入建筑按钮
+  if(G.currentMap === 'city' && !G.isCoop){
+    const enterBtn = document.getElementById('enterBtn');
+    if(enterBtn) enterBtn.style.display = 'flex';
+  }
   document.getElementById('mainMenu').style.display = 'none';
   document.getElementById('saveSelectPanel').style.display = 'none';
   document.getElementById('endPanel').style.display = 'none';
@@ -9214,9 +9250,9 @@ function startCoopGame(){
   G.state = 'playing';
   G.running = true;
   G.isCoop = true;
-  // 设置当前地图（如果没有选择，默认草原）—— 关键修复！
-  if(!G.selectedMap) G.selectedMap = 'grassland';
-  G.currentMap = G.selectedMap;
+  // 双人模式强制只能用草原地图
+  G.selectedMap = 'grassland';
+  G.currentMap = 'grassland';
   // 重置城市地图相关变量
   G.killers = [];
   G.cityCorpses = [];
@@ -9294,6 +9330,11 @@ function startCoopGame(){
     if(carBtn) carBtn.style.display = 'flex';
     const carBtn2 = document.getElementById('carBtn2');
     if(carBtn2) carBtn2.style.display = 'flex';
+  }
+  // 城市地图单人模式显示进入建筑按钮
+  if(G.currentMap === 'city' && !G.isCoop){
+    const enterBtn = document.getElementById('enterBtn');
+    if(enterBtn) enterBtn.style.display = 'flex';
   }
   // 确保1P摇杆显示
   document.getElementById('joystick').style.display = 'block';
