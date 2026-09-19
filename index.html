@@ -4048,6 +4048,8 @@ function updateCoins(){
 function drawCoins(){
   G.coins.forEach(coin=>{
     ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     // 金币发光效果
     ctx.shadowColor = '#ffd700';
     ctx.shadowBlur = 10;
@@ -6658,6 +6660,8 @@ function renderWorld(){
   }
   // 树
   G.woods.forEach(w=>{
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = w.h+'px serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(w.face, w.x+w.w/2, w.y+w.h/2);
@@ -6665,6 +6669,7 @@ function renderWorld(){
   // 尸体
   G.corpses.forEach(c=>{
     ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#000000';
     ctx.font = c.w+'px serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(c.face, c.x+c.w/2, c.y+c.h/2);
@@ -6705,8 +6710,12 @@ function renderWorld(){
 }
 
 function render(){
-  // 每帧开始时强制重置透明度，防止上一帧残留
+  // 每帧开始时强制重置绘制状态，防止上一帧残留透明度或半透明颜色
   ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000000';
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 1;
+  ctx.globalCompositeOperation = 'source-over';
   // 错误信息显示（画在最开头，确保即使后面渲染出错也能看到）
   if(window._gameError){
     try {
@@ -7252,11 +7261,15 @@ function drawKillers(){
       ctx.translate(-k.x - k.w/2, -k.y - k.h/2);
     }
     // 绘制杀手本体emoji
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = k.w + 'px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(k.face, k.x + k.w/2, k.y + k.h/2);
     // 绘制武器（在杀手的手上，根据朝向）
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = (k.w * 0.6) + 'px serif';
     const weaponOffsetX = k.facing > 0 ? k.w * 0.5 : -k.w * 0.5;
     const weaponOffsetY = k.h * 0.1;
@@ -7287,6 +7300,7 @@ function drawCityCorpses(){
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.globalAlpha = 0.7; // 半透明
+    ctx.fillStyle = '#000000';
     ctx.fillText(c.face, 0, 0);
     ctx.restore();
   });
@@ -7487,6 +7501,8 @@ function drawBankGuards(){
   G.bankGuards.forEach(guard=>{
     if(guard.dead) return;
     // 守卫身体
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = guard.w + 'px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -7542,11 +7558,15 @@ function drawPoliceOfficers(){
   G.policeOfficers.forEach(officer=>{
     if(officer.dead) return;
     // 警察身体
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = officer.w + 'px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(officer.face, officer.x + officer.w/2, officer.y + officer.h/2);
     // 武器
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = (officer.w*0.6) + 'px serif';
     ctx.fillText(officer.weapon, officer.x + officer.w + 5, officer.y + officer.h/2);
     // 血条
@@ -7573,6 +7593,8 @@ function drawCityBoss(){
   // 潜伏状态：伪装成普通NPC🙂，和路人混在一起
   if(boss.mode === 'lurk'){
     // 普通NPC尺寸略小，混在人群里
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = (boss.w*0.8) + 'px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -7587,6 +7609,8 @@ function drawCityBoss(){
   ctx.fillRect(boss.x + 4, boss.y + 4, boss.w, boss.h);
   
   // Boss本体
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000000';
   ctx.font = boss.w + 'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -7598,6 +7622,8 @@ function drawCityBoss(){
   ctx.save();
   ctx.translate(boss.x + boss.w, boss.y + boss.h/2);
   ctx.rotate(knifeAngle);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000000';
   ctx.font = (boss.w*0.7) + 'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -7733,7 +7759,9 @@ function drawEntity(e, showHp){
     ctx.fillStyle = 'rgba(255,0,0,0.5)';
     ctx.fillRect(e.x, e.y, e.w, e.h);
   }
-  // 绘制emoji角色
+  // 绘制emoji角色（显式设置纯黑色，防止残留的半透明fillStyle导致角色变透明）
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000000';
   ctx.font = e.w + 'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -7780,6 +7808,8 @@ function drawBoss(b){
   ctx.scale(scale, scale);
 
   // 根据阶段显示图片或emoji
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000000';
   if(b.useImage && b.face==='stage2'){
     const img = document.getElementById('bossStage2Img');
     if(img && img.complete) ctx.drawImage(img, -b.w/2, -b.h/2, b.w, b.h);
@@ -7856,8 +7886,9 @@ function drawPlayer2(){
     ctx.arc(0, 0, p.w*0.7, 0, Math.PI*2);
     ctx.stroke();
   }
-  // 绘制玩家脸之前强制重置透明度
+  // 绘制玩家脸之前强制重置透明度 + 颜色（防半透明残留）
   ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000000';
   ctx.font = p.w + 'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -7866,6 +7897,8 @@ function drawPlayer2(){
   // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转（枪和火焰弹，光线不需要）
   if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'){
     ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     // 武器emoji
     let weaponEmoji = '🔫';
     if(p.weapon==='fire'||p.weapon==='chargeFire') weaponEmoji = '🔥';
@@ -7933,8 +7966,9 @@ function drawPlayer(){
     ctx.stroke();
   }
 
-  // 绘制玩家脸之前强制重置透明度
+  // 绘制玩家脸之前强制重置透明度 + 颜色（防半透明残留）
   ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000000';
   ctx.font = p.w + 'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -7943,6 +7977,8 @@ function drawPlayer(){
   // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转（枪和火焰弹，光线不需要）
   if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'){
     ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     // 武器emoji
     let weaponEmoji = '🔫';
     if(p.weapon==='fire'||p.weapon==='chargeFire') weaponEmoji = '🔥';
@@ -7979,6 +8015,8 @@ function drawPlayer(){
 
 function drawProjectile(pr){
   ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000000';
   ctx.font = (pr.w*1.2)+'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -7993,6 +8031,8 @@ function drawCorpse(c){
   // 尸体完全不透明，变暗表示已死亡
   ctx.fillStyle = 'rgba(60,60,60,0.35)';
   ctx.fillRect(-c.w/2, -c.h/2, c.w, c.h);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000000';
   ctx.font = c.w + 'px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -10044,12 +10084,16 @@ function renderMenuScene(){
   }
   // 树
   menuScene.woods.forEach(w=>{
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = w.h+'px serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(w.face, w.x+w.w/2, w.y+w.h/2);
   });
   // NPC
   menuScene.npcs.forEach(n=>{
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = n.w+'px serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(n.face, n.x+n.w/2, n.y+n.h/2);
@@ -10059,6 +10103,8 @@ function renderMenuScene(){
     m.x += m.dx; m.y += m.dy;
     if(m.x<100||m.x>WORLD_W-100) m.dx*=-1;
     if(m.y<100||m.y>WORLD_H-100) m.dy*=-1;
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
     ctx.font = m.w+'px serif';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(m.face, m.x+m.w/2, m.y+m.h/2);
