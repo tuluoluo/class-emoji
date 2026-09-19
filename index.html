@@ -2447,7 +2447,7 @@ function createFinalBoss(){
   };
 }
 
-// 城市地图Boss🥺：跟😌同体型，速度更快，拿刀，秒杀玩家，有AI
+// 城市地图Boss🥺：潜伏猎手，平时混在城市里不追击，察觉玩家后突然爆发追击，秒杀
 function createCityBoss(){
   const p = G.player;
   return {
@@ -2460,6 +2460,15 @@ function createCityBoss(){
     targetPlayer:1, // 当前追逐的玩家（1或2）
     inBuilding:null, // 当前在哪个建筑内
     buildingFloor:1, // 当前楼层
+    // 潜伏猎手状态
+    mode:'lurk', // 'lurk'潜伏 / 'hunt'追击
+    lurkDir:{x:rand(-1,1), y:rand(-1,1)}, // 潜伏游荡方向
+    lurkTimer:rand(60,180), // 游荡方向切换计时
+    detectRange:380, // 室外察觉范围
+    detectRangeIndoor:650, // 室内察觉范围（主场，更容易发现玩家）
+    breakRange:820, // 脱战范围
+    breakTimer:0, // 脱战计时
+    lurkPause:false, // 潜伏时是否停住（不动，混在阴影里）
   };
 }
 
@@ -3059,7 +3068,9 @@ function updatePoliceOfficers(){
   });
 }
 
-// 城市地图Boss🥺更新：追逐玩家，秒杀攻击，躲避攻击（不是愣头青）
+// 城市地图Boss🥺更新：潜伏猎手
+// lurk阶段：混在城市里游荡，不追击，玩家靠太近才察觉
+// hunt阶段：爆发追击，秒杀攻击，躲避攻击
 function updateCityBoss(){
   if(G.currentMap !== 'city' || !G.cityBoss || G.cityBoss.hp <= 0) return;
   const boss = G.cityBoss;
@@ -3083,10 +3094,9 @@ function updateCityBoss(){
   }
   
   // 寻找最近的玩家作为目标
+  const sameFloor = (G.inBuilding !== null && boss.inBuilding !== null && boss.buildingFloor === G.buildingFloor) || (G.inBuilding === null && boss.inBuilding === null);
   let target = null;
   let minDist = Infinity;
-  // 室内时只追逐同一层的玩家
-  const sameFloor = (G.inBuilding !== null && boss.inBuilding !== null && boss.buildingFloor === G.buildingFloor) || (G.inBuilding === null && boss.inBuilding === null);
   if(G.player && !G.player.dead && sameFloor){
     const d = dist(boss, G.player);
     if(d < minDist){ minDist = d; target = G.player; boss.targetPlayer = 1; }
@@ -3096,8 +3106,68 @@ function updateCityBoss(){
     if(d < minDist){ minDist = d; target = G.player2; boss.targetPlayer = 2; }
   }
   
-  if(!target) return;
+  // ===== 潜伏阶段：不追击，游荡，只在察觉范围内才锁定目标 =====
+  if(boss.mode === 'lurk'){
+    // 潜伏时的察觉范围（室内是她的主场，更容易发现玩家）
+    const detectRange = boss.inBuilding !== null ? boss.detectRangeIndoor : boss.detectRange;
+    
+    // 1. 如果玩家进入察觉范围 → 进入追击模式！突然爆发
+    if(target && minDist < detectRange){
+      boss.mode = 'hunt';
+      boss.breakTimer = 0;
+      // 爆发特效和提示
+      spawnParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#ff4444', 15);
+      showToast('🥺 察觉到了你！');
+      playSound('boss');
+      return;
+    }
+    
+    // 2. 如果玩家攻击了Boss（受伤闪烁说明被打到）→ 立刻进入追击模式
+    if(boss.hurtFlash > 0){
+      boss.mode = 'hunt';
+      boss.breakTimer = 0;
+      spawnParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#ff4444', 10);
+      showToast('🥺 被激怒了！');
+      playSound('boss');
+      return;
+    }
+    
+    // 3. 潜伏游荡：像普通NPC一样慢慢走，偶尔停住（混在阴影里）
+    if(boss.lurkPause){
+      // 停住不动（混在阴影里）
+      boss.lurkPauseTimer = (boss.lurkPauseTimer || 0) - 1;
+      if(boss.lurkPauseTimer <= 0){
+        boss.lurkPause = false;
+        boss.lurkTimer = rand(60, 180);
+      }
+    } else {
+      boss.lurkTimer--;
+      if(boss.lurkTimer <= 0){
+        // 换方向，或者停住不动
+        if(Math.random() < 0.3){
+          boss.lurkPause = true;
+          boss.lurkPauseTimer = rand(40, 100);
+        } else {
+          boss.lurkDir = {x:rand(-1,1), y:rand(-1,1)};
+          boss.lurkTimer = rand(60, 180);
+        }
+      }
+      // 缓慢游荡（速度只有追击的40%，像普通路人）
+      const oldX = boss.x, oldY = boss.y;
+      boss.x += boss.lurkDir.x * boss.speed * 0.4;
+      boss.y += boss.lurkDir.y * boss.speed * 0.4;
+      boss.x = clamp(boss.x, 0, WORLD_W - boss.w);
+      boss.y = clamp(boss.y, 0, WORLD_H - boss.h);
+      // 撞到高楼就随机换方向
+      if(handleBuildingCollision(boss, oldX, oldY)){
+        boss.lurkDir = {x:rand(-1,1), y:rand(-1,1)};
+        boss.lurkTimer = rand(30, 90);
+      }
+    }
+    return;
+  }
   
+  // ===== 追击阶段（hunt）：爆发追击 =====
   // 检测玩家是否在攻击（有投射物飞向Boss），如果有就躲避
   if(boss.dodgeCd <= 0){
     for(let pi = 0; pi < G.projectiles.length; pi++){
@@ -3119,6 +3189,32 @@ function updateCityBoss(){
         }
       }
     }
+  }
+  
+  // 没有目标（比如玩家全死了或不在同一层）→ 回到潜伏状态
+  if(!target){
+    boss.mode = 'lurk';
+    boss.lurkTimer = rand(60, 180);
+    return;
+  }
+  
+  // 脱战机制：玩家跑出脱战范围，持续一段时间后，Boss放弃追击，重新潜伏
+  if(minDist > boss.breakRange){
+    boss.breakTimer++;
+    if(boss.breakTimer > 120){ // 持续2秒脱离范围
+      boss.mode = 'lurk';
+      boss.lurkTimer = rand(60, 180);
+      // 重新潜伏：瞬移到远处，保持"她消失了"的未知感
+      const angle = Math.random() * Math.PI * 2;
+      const teleDist = 600;
+      boss.x = clamp(target.x + Math.cos(angle) * teleDist, 50, WORLD_W - 114);
+      boss.y = clamp(target.y + Math.sin(angle) * teleDist, 50, WORLD_H - 114);
+      spawnParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#999999', 8);
+      showToast('🥺 消失了...她还在某个地方');
+      return;
+    }
+  } else {
+    boss.breakTimer = 0;
   }
   
   // 追逐玩家
@@ -5247,12 +5343,12 @@ function update(){
   if(G.currentMap === 'city') updatePoliceOfficers();
   // 更新城市Boss🥺
   if(G.currentMap === 'city') updateCityBoss();
-  // 城市Boss生成：击杀数达到60时生成
+  // 城市Boss生成：击杀数达到120时生成（潜伏，不通报，伪装成普通NPC）
   if(G.currentMap === 'city' && G.killCount >= 120 && !G.cityBossSpawned){
     G.cityBossSpawned = true;
     G.cityBoss = createCityBoss();
-    showToast('⚠ 城市屠夫 🥺 出现了！1000血量，一刀秒杀，小心！');
-    playSound('boss');
+    // 隐晦提示：不暴露Boss身份，让玩家自己察觉
+    showToast('城市里好像混进了什么...');
   }
   // 室内场景系统
   if(G.currentMap === 'city'){
@@ -7462,7 +7558,7 @@ function drawPoliceOfficers(){
   });
 }
 
-// 城市地图Boss🥺渲染：拿刀，攻击动画，血条
+// 城市地图Boss🥺渲染：潜伏时伪装成普通NPC🙂（无血条无名字无刀），追击时露出真身
 function drawCityBoss(){
   if(G.currentMap !== 'city' || !G.cityBoss || G.cityBoss.hp <= 0) return;
   const boss = G.cityBoss;
@@ -7474,6 +7570,18 @@ function drawCityBoss(){
     boss.hurtFlash--;
   }
   
+  // 潜伏状态：伪装成普通NPC🙂，和路人混在一起
+  if(boss.mode === 'lurk'){
+    // 普通NPC尺寸略小，混在人群里
+    ctx.font = (boss.w*0.8) + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🙂', boss.x + boss.w/2, boss.y + boss.h/2);
+    ctx.restore();
+    return; // 不显示血条、名字、刀
+  }
+  
+  // 追击状态：露出真身🥺
   // Boss阴影
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
   ctx.fillRect(boss.x + 4, boss.y + 4, boss.w, boss.h);
@@ -7505,7 +7613,7 @@ function drawCityBoss(){
   
   ctx.restore();
   
-  // Boss血条（在头顶）
+  // 追击状态才显示Boss血条和名字
   const hpRatio = boss.hp / boss.maxHp;
   ctx.fillStyle = '#333';
   ctx.fillRect(boss.x - 10, boss.y - 20, boss.w + 20, 8);
