@@ -4189,9 +4189,9 @@ function drawUnderwater(){
 function drawWaters(){
   if(G.isUnderwater || G.inBuilding !== null) return;
   G.waters.forEach(w => {
-    // 水面
+    // 水面（已经在世界坐标中，不需要再减camera）
     ctx.fillStyle = 'rgba(30, 144, 255, 0.5)';
-    ctx.fillRect(w.x - camera.x, w.y - camera.y, w.w, w.h);
+    ctx.fillRect(w.x, w.y, w.w, w.h);
     // 水面波纹
     ctx.strokeStyle = 'rgba(135, 206, 250, 0.6)';
     ctx.lineWidth = 2;
@@ -4199,8 +4199,8 @@ function drawWaters(){
     for(let i = 0; i < 3; i++){
       const offset = Math.sin(time + i) * 10;
       ctx.beginPath();
-      ctx.moveTo(w.x - camera.x + 50, w.y - camera.y + 20 + i * 30 + offset);
-      ctx.lineTo(w.x - camera.x + w.w - 50, w.y - camera.y + 20 + i * 30 + offset);
+      ctx.moveTo(w.x + 50, w.y + 20 + i * 30 + offset);
+      ctx.lineTo(w.x + w.w - 50, w.y + 20 + i * 30 + offset);
       ctx.stroke();
     }
     // 在水里时提示
@@ -4208,7 +4208,7 @@ function drawWaters(){
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.font = '14px serif';
       ctx.textAlign = 'center';
-      ctx.fillText('按 🤿 潜水', w.x + w.w/2 - camera.x, w.y - camera.y + 30);
+      ctx.fillText('按 🤿 潜水', w.x + w.w/2, w.y + 30);
     }
   });
 }
