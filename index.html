@@ -922,6 +922,7 @@ const G = {
   underwaterFish: [], // 水下鱼群
   underwaterDecor: [], // 水下装饰物（珊瑚、海草、石头）
   _nearWater: false, // 是否靠近水域
+  _inWater: false, // 是否在水域里面
 };
 
 // ==================== 声音系统 ====================
@@ -4013,42 +4014,44 @@ function createWaters(){
 function updateDiving(){
   if(!G.player || G.player.dead) return;
   
-  // 检测是否靠近水域
+  // 检测是否在水域里面（而不是边缘）
   const pCenterX = G.player.x + G.player.w/2;
   const pCenterY = G.player.y + G.player.h/2;
-  G._nearWater = false;
+  G._inWater = false;
   
   if(!G.isUnderwater && G.inBuilding === null){
-    // 检测玩家是否在水域附近
+    // 检测玩家是否在水域范围内
     for(let i = 0; i < G.waters.length; i++){
       const w = G.waters[i];
-      // 玩家在水域边缘附近
-      const inWater = pCenterX > w.x && pCenterX < w.x + w.w && 
-                      pCenterY > w.y && pCenterY < w.y + w.h;
-      const nearEdge = (Math.abs(pCenterX - w.x) < 40 || Math.abs(pCenterX - w.x - w.w) < 40 ||
-                        Math.abs(pCenterY - w.y) < 40 || Math.abs(pCenterY - w.y - w.h) < 40);
-      if(inWater || nearEdge){
-        G._nearWater = true;
+      if(pCenterX > w.x && pCenterX < w.x + w.w && 
+         pCenterY > w.y && pCenterY < w.y + w.h){
+        G._inWater = true;
         break;
       }
     }
   }
   
-  // 控制潜水按钮显示
+  // 控制潜水按钮显示：只有在水里或者在水下才显示
   const diveBtn = document.getElementById('diveBtn');
   const diveBtn2 = document.getElementById('diveBtn2');
   if(diveBtn){
-    if(G._nearWater || G.isUnderwater){
+    if(G.isUnderwater){
       diveBtn.style.display = 'flex';
-      diveBtn.textContent = G.isUnderwater ? '🌊' : '🤿';
+      diveBtn.textContent = '🌊'; // 在水下显示上浮
+    } else if(G._inWater){
+      diveBtn.style.display = 'flex';
+      diveBtn.textContent = '🤿'; // 在水里显示潜水
     } else {
-      diveBtn.style.display = 'none';
+      diveBtn.style.display = 'none'; // 不在水里隐藏
     }
   }
   if(diveBtn2 && G.isCoop){
-    if(G._nearWater || G.isUnderwater){
+    if(G.isUnderwater){
       diveBtn2.style.display = 'flex';
-      diveBtn2.textContent = G.isUnderwater ? '🌊' : '🤿';
+      diveBtn2.textContent = '🌊';
+    } else if(G._inWater){
+      diveBtn2.style.display = 'flex';
+      diveBtn2.textContent = '🤿';
     } else {
       diveBtn2.style.display = 'none';
     }
@@ -4098,7 +4101,7 @@ function toggleDive(){
     G.oxygen = G.maxOxygen;
     showToast('浮上水面！');
     playSound('jump');
-  } else if(G._nearWater && G.inBuilding === null){
+  } else if(G._inWater && G.inBuilding === null){
     // 潜入水中
     G.isUnderwater = true;
     G.oxygen = G.maxOxygen;
@@ -4200,12 +4203,12 @@ function drawWaters(){
       ctx.lineTo(w.x - camera.x + w.w - 50, w.y - camera.y + 20 + i * 30 + offset);
       ctx.stroke();
     }
-    // 靠近时提示
-    if(G._nearWater){
+    // 在水里时提示
+    if(G._inWater && !G.isUnderwater){
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.font = '14px serif';
       ctx.textAlign = 'center';
-      ctx.fillText('按 E 潜水', w.x + w.w/2 - camera.x, w.y - camera.y + 30);
+      ctx.fillText('按 🤿 潜水', w.x + w.w/2 - camera.x, w.y - camera.y + 30);
     }
   });
 }
@@ -8972,8 +8975,8 @@ function handleEKey(playerNum){
   }
   
   if(G.currentMap !== 'city'){
-    // 非城市地图：先检查是否靠近水域，是则潜水，否则上车/下车
-    if(G._nearWater && playerNum === 1){
+    // 非城市地图：先检查是否在水里，是则潜水，否则上车/下车
+    if(G._inWater && playerNum === 1){
       toggleDive();
       return;
     }
