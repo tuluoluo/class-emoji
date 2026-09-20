@@ -875,6 +875,7 @@ const G = {
   finalBossSpawned: false,
   medUseCount: 0, // 药物使用次数
   usedCheat: false, // 是否使用过外挂
+  gunBaseAngle: -1.0926, // 🔫枪口默认方向角（运行时自动校准）
   bossStage: 1, // 最终Boss当前阶段
   bossStageTransition: 0, // 阶段切换暂停计时
   bossRedScreen: false, // 第四阶段红色场景
@@ -4274,12 +4275,13 @@ function createFinalBoss(){
 function createCityBoss(){
   const p = G.player;
   return {
-    x:clamp(p.x, 100, WORLD_W-164), y:clamp(p.y-250, 80, WORLD_H-144), w:64, h:64, hp:1000, maxHp:1000,
-    face:'🥺', dmg:999, speed:2.5, atkRange:70, atkCd:0, maxAtkCd:60,
+    x:clamp(p.x, 100, WORLD_W-164), y:clamp(p.y-250, 80, WORLD_H-144), w:64, h:64, hp:2500, maxHp:2500,
+    face:'🥺', dmg:999, speed:3.5, atkRange:70, atkCd:0, maxAtkCd:60,
     ranged:false, type:'cityBoss', isBoss:true, hurtFlash:0, attackAnim:0,
     weapon:'🔪', // 手里拿着刀
     dodgeCd:0, // 躲避冷却
     isDodging:false, dodgeTimer:0, dodgeDir:{x:0,y:0}, // 躲避状态
+    weaveT:0, // 追击绕行摆动相位
     targetPlayer:1, // 当前追逐的玩家（1或2）
     inBuilding:null, // 当前在哪个建筑内
     buildingFloor:1, // 当前楼层
@@ -5006,7 +5008,7 @@ function updateCityBoss(){
           boss.dodgeDir = {x: Math.cos(dodgeAngle), y: Math.sin(dodgeAngle)};
           boss.isDodging = true;
           boss.dodgeTimer = 15;
-          boss.dodgeCd = 60; // 1秒冷却
+          boss.dodgeCd = 40; // 0.67秒冷却，躲得更频繁
           spawnParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#aaaaff', 8);
           return;
         }
@@ -5046,10 +5048,13 @@ function updateCityBoss(){
   const len = Math.hypot(dx, dy) || 1;
   
   if(len > boss.atkRange){
-    // 还没到攻击范围，继续追
+    // 还没到攻击范围，继续追（带绕行摆动，不直线冲）
     const oldX = boss.x, oldY = boss.y;
-    boss.x += (dx/len) * boss.speed;
-    boss.y += (dy/len) * boss.speed;
+    boss.weaveT = (boss.weaveT || 0) + 0.09;
+    const weave = Math.sin(boss.weaveT) * 0.5;
+    const px = -dy/len, py = dx/len; // 垂直方向的单位向量
+    boss.x += (dx/len + px*weave) * boss.speed;
+    boss.y += (dy/len + py*weave) * boss.speed;
     handleBuildingCollision(boss, oldX, oldY);
   } else {
     // 到攻击范围了，攻击！秒杀！
@@ -5064,6 +5069,12 @@ function updateCityBoss(){
       playSound('death');
       makeCorpse(target);
       spawnParticles(target.x+target.w/2, target.y+target.h/2, '#ff0000', 20);
+      // 攻击后跳开（狡猾猎手，打完就跑）
+      const awayX = boss.x - target.x, awayY = boss.y - target.y;
+      const awayLen = Math.hypot(awayX, awayY) || 1;
+      boss.dodgeDir = {x: awayX/awayLen, y: awayY/awayLen};
+      boss.isDodging = true;
+      boss.dodgeTimer = 12;
       
       // 处理玩家死亡
       if(boss.targetPlayer === 1){
@@ -6531,6 +6542,8 @@ function hitAllMobs(hitBox, dmg){
             value: 10,
           });
         }
+        // 城市地图胜利结算
+        gameOver(true, 'beatCityBoss');
       }
     }
   }
@@ -7258,7 +7271,7 @@ function checkUnlocks(){
     saveGame();
     showToast(t('gotChargeFire'));
   }
-  if(k>=120 && !G.finalBossSpawned){
+  if(k>=120 && !G.finalBossSpawned && G.currentMap === 'grass'){
     G.finalBossSpawned = true;
     G.bosses.push(createFinalBoss());
     playSound('boss');
@@ -8266,6 +8279,8 @@ function updateProjectiles(){
                 value: 10,
               });
             }
+            // 城市地图胜利结算
+            gameOver(true, 'beatCityBoss');
           }
         }
       }
@@ -9680,8 +9695,57 @@ function drawBossHpBar(){
   ctx.fillText(b.face+' Boss '+b.hp+'/'+b.maxHp+stageText, W/2, 20);
 }
 
+// 🔫 枪头方向自校准：不同平台emoji渲染方向不同，启动时画到离屏canvas
+// 分析绿色枪头像素质心，算出该平台的枪口默认角度，绘制时自动补偿
+function detectGunBaseAngle(){
+  try{
+    const cv = document.createElement('canvas');
+    cv.width = 200; cv.height = 200;
+    const ctx2 = cv.getContext('2d');
+    ctx2.fillStyle = '#000000';
+    ctx2.fillRect(0, 0, 200, 200);
+    ctx2.font = '110px serif';
+    ctx2.textAlign = 'center';
+    ctx2.textBaseline = 'middle';
+    ctx2.fillText('🔫', 100, 100);
+    const d = ctx2.getImageData(0, 0, 200, 200).data;
+    let gx = 0, gy = 0, n = 0;
+    for(let y = 0; y < 200; y++){
+      for(let x = 0; x < 200; x++){
+        const i = (y*200 + x) * 4;
+        const r = d[i], g = d[i+1], b = d[i+2];
+        // 绿色像素=枪头（Noto水枪等）；若平台没有绿色枪头，退而求其次找最远的饱和像素
+        if(g > 80 && g > r + 25 && g > b + 25){
+          gx += x; gy += y; n++;
+        }
+      }
+    }
+    if(n > 10){
+      G.gunBaseAngle = Math.atan2(gy/n - 100, gx/n - 100);
+    } else {
+      // 没有绿色枪头（如蓝色手枪）：找离中心最远的非黑像素作为枪口
+      let bestD = 0, bx = 0, by = 0;
+      for(let y = 0; y < 200; y++){
+        for(let x = 0; x < 200; x++){
+          const i = (y*200 + x) * 4;
+          if(d[i] > 30 || d[i+1] > 30 || d[i+2] > 30){
+            const dx = x - 100, dy = y - 100;
+            const dist = Math.hypot(dx, dy);
+            if(dist > bestD){ bestD = dist; bx = dx; by = dy; }
+          }
+        }
+      }
+      if(bestD > 20){
+        G.gunBaseAngle = Math.atan2(by, bx);
+      }
+    }
+  }catch(e){
+    // 检测失败保持默认
+  }
+  if(isNaN(G.gunBaseAngle)) G.gunBaseAngle = -1.0926; // 兜底-62.6°（Noto橙色水枪枪头）
+}
+
 function drawPlayer2(){
-  const p = G.player2;
   if(!p) return;
   // 2P死亡后只显示尸体，不绘制玩家本身
   if(G.coopP2Dead) return;
@@ -9728,13 +9792,16 @@ function drawPlayer2(){
     // 根据瞄准轮盘方向计算旋转角度
     const aimX = p.aimX || p.facing;
     const aimY = p.aimY || 0;
-    // 朝右：直接旋转到目标角度
-    // 朝左：先水平镜像emoji，再按镜像坐标系内的角度旋转（否则旋转π会把镜像抵消，枪口反而朝右）
+    // 用自校准的枪头基准角补偿：不同平台🔫渲染方向不同，启动时已实测
+    const aimAngle = Math.atan2(aimY, aimX);
+    const base = G.gunBaseAngle;
     if(aimX < 0){
+      // 水平镜像后枪头角度变为 mirrorAngle(base)，再转到瞄准方向
+      const mirrored = base > 0 ? Math.PI - base : -Math.PI - base;
       ctx.scale(-1, 1);
-      ctx.rotate(Math.atan2(aimY, -aimX));
+      ctx.rotate(aimAngle - mirrored);
     } else {
-      ctx.rotate(Math.atan2(aimY, aimX));
+      ctx.rotate(aimAngle - base);
     }
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
@@ -9811,13 +9878,16 @@ function drawPlayer(){
     // 根据瞄准轮盘方向计算旋转角度
     const aimX = p.aimX || p.facing;
     const aimY = p.aimY || 0;
-    // 朝右：直接旋转到目标角度
-    // 朝左：先水平镜像emoji，再按镜像坐标系内的角度旋转（否则旋转π会把镜像抵消，枪口反而朝右）
+    // 用自校准的枪头基准角补偿：不同平台🔫渲染方向不同，启动时已实测
+    const aimAngle = Math.atan2(aimY, aimX);
+    const base = G.gunBaseAngle;
     if(aimX < 0){
+      // 水平镜像后枪头角度变为 mirrorAngle(base)，再转到瞄准方向
+      const mirrored = base > 0 ? Math.PI - base : -Math.PI - base;
       ctx.scale(-1, 1);
-      ctx.rotate(Math.atan2(aimY, -aimX));
+      ctx.rotate(aimAngle - mirrored);
     } else {
-      ctx.rotate(Math.atan2(aimY, aimX));
+      ctx.rotate(aimAngle - base);
     }
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
@@ -10101,7 +10171,7 @@ function showClearBadge(){
   }catch(e){ badge.style.display = 'none'; }
 }
 
-function gameOver(win){
+function gameOver(win, winMsgKey){
   G.running = false;
   G.state = 'gameover'; // 关键：设置游戏状态为gameover，停止游戏循环
   stopWandererMusic(); // 停止游离乐子人音乐
@@ -10129,7 +10199,7 @@ function gameOver(win){
       statsHtml += '<div class="badge-cheat">'+t('cheatWarning')+'</div>';
     }
     statsHtml += '</div>';
-    statsHtml += t('beatFinalBoss');
+    statsHtml += t(winMsgKey || 'beatFinalBoss');
   } else {
     // 根据死亡原因显示不同的抽象提示
     let deathReason = t('defeatedByMob');
@@ -11938,6 +12008,7 @@ function startGame(){
   applyLanguage();
   buildRulesContent();
   initAudio();
+  detectGunBaseAngle(); // 校准🔫枪头方向（不同平台emoji朝向不同）
   G.state = 'playing';
   G.running = true;
   // 设置当前地图（如果没有选择，默认草原）
@@ -12026,6 +12097,7 @@ function startCoopGame(){
   resize();
   applyLanguage();
   initAudio();
+  detectGunBaseAngle(); // 校准🔫枪头方向（双人模式同样需要）
   G.state = 'playing';
   G.running = true;
   G.isCoop = true;
