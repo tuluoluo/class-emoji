@@ -7604,8 +7604,10 @@ function updateBosses(){
       G.shake = 30;
       G.bossRedScreen = false;
       if(b.type==='finalBoss'){
-        unlockCity(); // 通关草原，解锁城市地图
-        showToast(t('cityUnlocked'));
+        if(!G.usedCheat){
+          unlockCity(); // 无外挂通关草原，解锁城市地图
+          showToast(t('cityUnlocked'));
+        }
         gameOver(true);
       } else {
         showToast(t('beatMiniBoss'));
@@ -12281,9 +12283,24 @@ function exitToMenu(){
   closeDialog();
 }
 
-// 城市地图解锁检查
+// 城市地图解锁检查：读取存档中的通关记录，存在任一无外挂通关记录（单人/双人，不限时间）即解锁
 function isCityUnlocked(){
-  return localStorage.getItem('cityUnlocked') === 'true';
+  let hasAnyRecord = false;
+  try{
+    const r1 = JSON.parse(localStorage.getItem('pixelClearRecord'));
+    if(r1){
+      hasAnyRecord = true;
+      if(!r1.usedCheat) return true;
+    }
+    const r2 = JSON.parse(localStorage.getItem('pixelCoopClearRecord'));
+    if(r2){
+      hasAnyRecord = true;
+      if(!r2.usedCheat) return true;
+    }
+  }catch(e){}
+  // 完全没有通关记录时，才兼容旧版本解锁标志（老玩家升级不误锁）
+  if(!hasAnyRecord) return localStorage.getItem('cityUnlocked') === 'true';
+  return false;
 }
 function unlockCity(){
   localStorage.setItem('cityUnlocked', 'true');
