@@ -561,21 +561,21 @@ input:checked + .slider:before{transform:translateX(24px)}
   <!-- 作弊面板 -->
   <div id="cheatPanel">
     <button id="closeCheat">X</button>
-    <h3 style="text-align:center;margin-top:18px">功能面板</h3>
-    <div class="cheatRow"><span>玩家无限血量</span><label><input type="checkbox" id="infHp">ON</label></div>
-    <div class="cheatRow"><span>攻击伤害无限</span><label><input type="checkbox" id="infDmg">ON</label></div>
-    <div class="cheatRow"><span>怪海</span><label><input type="checkbox" id="mobSea">ON</label></div>
-    <div class="cheatRow"><span>我是阿拉斯基(变弱)</span><label><input type="checkbox" id="alaskey">ON</label></div>
-    <div class="cheatRow"><span>防滑</span><label><input type="checkbox" id="noSlip">ON</label></div>
-    <div class="cheatRow"><span>冲刺无冷却</span><label><input type="checkbox" id="dashNoCd">ON</label></div>
-    <div class="cheatRow"><span>无限金币</span><label><input type="checkbox" id="infGold">ON</label></div>
+    <h3 style="text-align:center;margin-top:18px" id="cheatPanelTitle">功能面板</h3>
+    <div class="cheatRow"><span id="cheatInfHpText">玩家无限血量</span><label><input type="checkbox" id="infHp">ON</label></div>
+    <div class="cheatRow"><span id="cheatInfDmgText">攻击伤害无限</span><label><input type="checkbox" id="infDmg">ON</label></div>
+    <div class="cheatRow"><span id="cheatMobSeaText">怪海</span><label><input type="checkbox" id="mobSea">ON</label></div>
+    <div class="cheatRow"><span id="cheatAlaskeyText">我是阿拉斯基(变弱)</span><label><input type="checkbox" id="alaskey">ON</label></div>
+    <div class="cheatRow"><span id="cheatNoSlipText">防滑</span><label><input type="checkbox" id="noSlip">ON</label></div>
+    <div class="cheatRow"><span id="cheatDashCdText">冲刺无冷却</span><label><input type="checkbox" id="dashNoCd">ON</label></div>
+    <div class="cheatRow"><span id="cheatInfGoldText">无限金币</span><label><input type="checkbox" id="infGold">ON</label></div>
     <div class="cheatRow" style="gap:6px"><button id="skipDay" style="flex:1;padding:4px;font-size:12px;cursor:pointer">跳过白天</button><button id="skipNight" style="flex:1;padding:4px;font-size:12px;cursor:pointer">跳过夜晚</button></div>
   </div>
 
   <!-- 整蛊面板（双人模式） -->
   <div id="prankPanel">
     <button id="closePrank">X</button>
-    <h3 style="text-align:center;margin-top:18px">🃏 整蛊面板</h3>
+    <h3 style="text-align:center;margin-top:18px" id="prankPanelTitle">🃏 整蛊面板</h3>
     <div class="cheatRow"><button id="prankKill" style="flex:1;padding:6px;font-size:12px;cursor:pointer">💀 直接杀死对方</button></div>
     <div class="cheatRow"><button id="prankFly" style="flex:1;padding:6px;font-size:12px;cursor:pointer">🚀 击飞对方（飞起来）</button></div>
     <div class="cheatRow"><button id="prankMob" style="flex:1;padding:6px;font-size:12px;cursor:pointer">👾 对方身边召唤怪物</button></div>
@@ -662,7 +662,7 @@ input:checked + .slider:before{transform:translateX(24px)}
   <button id="talkBtn">💬 对话</button>
   <!-- 作者NPC交互面板 -->
   <div id="authorPanel">
-    <div style="text-align:center;font-weight:bold;margin-bottom:8px;color:#2ecc71">👤 作者</div>
+    <div style="text-align:center;font-weight:bold;margin-bottom:8px;color:#2ecc71" id="authorPanelTitle">👤 作者</div>
     <button id="authorKillBtn" style="width:100%;padding:6px;margin:3px 0;background:#e74c3c;color:#fff;border:2px solid #333;border-radius:4px;font-size:12px;font-weight:bold;cursor:pointer">💀 秒杀怪物</button>
     <button id="authorTipBtn" style="width:100%;padding:6px;margin:3px 0;background:#3498db;color:#fff;border:2px solid #333;border-radius:4px;font-size:12px;font-weight:bold;cursor:pointer">💡 游戏提示</button>
     <button id="authorGoldBtn" style="width:100%;padding:6px;margin:3px 0;background:#f1c40f;color:#333;border:2px solid #333;border-radius:4px;font-size:12px;font-weight:bold;cursor:pointer">💰 给金币</button>
@@ -1056,6 +1056,152 @@ const LANGS = {
     npcTroubleText:'（😝只是冲你做了个鬼脸，然后一脚踹过来——这家伙只会用拳头说话。）',
     // 存档面板按钮
     overwriteNewGame:'🆕 覆盖新游戏',
+    bankRobbed:'🏦 银行被抢了！满地都是金币！',
+    policeCarKill1:'1P 被警车撞死了！',
+    policeCarKill2:'2P 被警车撞死了！',
+    bossDetect:'🥺 察觉到了你！',
+    bossEnrage:'🥺 被激怒了！',
+    bossVanished:'🥺 消失了...她还在某个地方',
+    bossKill:'被🥺一刀秒杀了！',
+    enterBuilding:'进入建筑！第1层，小心Boss！',
+    exitBuilding:'退出建筑！',
+    alreadyTopFloor:'已经是顶楼了！',
+    upToFloor:'上到第',
+    downToFloor:'下到第',
+    floorSuffix:'层！',
+    coinPickup1:'1P 拾取',
+    coinPickup2:'2P 拾取',
+    coinSuffix:'金币！',
+    surface:'浮上水面！',
+    dive:'潜入水下！氧气：',
+    beatCityBoss:'🎉 击败城市屠夫🥺！获得100金币！',
+    revive1:'1P 复活了！半血',
+    revive2:'2P 复活了！半血',
+    fellUnknown1:'1P 不知道为什么就倒下了...',
+    fellUnknown2:'2P 不知道为什么就倒下了...',
+    cityMixed:'城市里好像混进了什么...',
+    bossStage2:'😈 Boss进入第二阶段！',
+    bossStage3:'😈 Boss进入第三阶段！会冲刺了！',
+    bossStage4:'😈 Boss进入最终阶段！！红色警戒！',
+    eliteAppear:'👾 精英怪出现！',
+    cityUnlocked:'🎉 城市地图已解锁！',
+    indoorAttack:'被室内杀手🙂攻击了！-8HP',
+    elevatorTop:'🛗 电梯直达顶楼！第',
+    indoorHint:'靠近上楼/下楼楼梯/电梯/出口按E交互',
+    prankFly:'被整蛊飞起来了！',
+    prankMob:'身边被整蛊召唤了怪物！',
+    prankStun:'被整蛊眩晕了！',
+    prankSlip:'被整蛊打滑摔倒了！',
+    prankBleed:'被整蛊持续流血！',
+    prankTeleport:'被整蛊随机传送了！',
+    prankWeak:'被整蛊变弱了！',
+    prankInfGold:'被整蛊获得无限金币！',
+    prankRevive:'被整蛊复活了！（半血+3秒无敌）',
+    prankNoNeed:'还活着，不需要复活！',
+    buyRescuer:'💉 购买了救助器！',
+    alreadyCar:'🚗 已经有车了！',
+    buyCar:'🚗 购买了越野车！按E上车/下车',
+    alreadyScuba:'🤿 已经有潜水装备了！',
+    buyScuba:'🤿 购买了潜水装备！氧气消耗减半，最大氧气增加！',
+    carHandover:'下车了，',
+    carTakeOver:'接管驾驶！',
+    carExit:'下车了',
+    carFull:'车已满，无法上车！',
+    carDrive:'上车了，开始驾驶！WASD/方向键控制，撞击秒杀怪物',
+    carPassenger:'上车了，坐在乘客位',
+    carTooFar:'离车太远，无法上车',
+    carNitroDriverOnly:'只有驾驶员才能使用氮气加速！',
+    carNitroNeedCar:'必须在车里才能使用氮气加速！',
+    carNitroCooldown:'氮气加速冷却中：',
+    carNitroActive:'🚀 氮气加速激活！',
+    carKill1:'1P 被车撞死了！',
+    carKill2:'2P 被车撞死了！',
+    deathLightning:'老天不公啊！',
+    deathBleeding:'不知道为什么就没了...',
+    deathPrank:'ÿþüøõñðáç',
+    deathAuthor:'你被未知杀死了',
+    rescueStart1:'1P 开始救助2P！7秒后复活',
+    rescueStart2:'2P 开始救助1P！7秒后复活',
+    nitroEnd:'氮气加速结束',
+    cityLocked:'🔒 需要先通关草原（打败最终Boss🥺）才能解锁城市地图！',
+    btnUp:'⬆上楼',
+    btnDown:'⬇下楼',
+    btnExit:'🚪退出',
+    btnElevator:'🛗电梯',
+    btnEnterBld:'🏢进入',
+    btnEnter:'🏢',
+    cityName:'城市',
+    cityLockedName:'🔒 城市',
+    cheatPanelTitle:'功能面板',
+    cheatInfHp:'玩家无限血量',
+    cheatInfDmg:'攻击伤害无限',
+    cheatMobSea:'怪海',
+    cheatAlaskey:'我是阿拉斯基(变弱)',
+    cheatNoSlip:'防滑',
+    cheatDashCd:'冲刺无冷却',
+    cheatInfGold:'无限金币',
+    cheatSkipDay:'跳过白天',
+    cheatSkipNight:'跳过夜晚',
+    prankPanelTitle:'🃏 整蛊面板',
+    prankBtnKill:'💀 直接杀死对方',
+    prankBtnFly:'🚀 击飞对方（飞起来）',
+    prankBtnMob:'👾 对方身边召唤怪物',
+    prankBtnStun:'😵 眩晕对方3秒',
+    prankBtnSlip:'🤸 让对方打滑摔倒',
+    prankBtnBleed:'🩸 让对方持续流血',
+    prankBtnTeleport:'🌀 把对方随机传送',
+    prankBtnWeak:'🐢 对方变弱10秒',
+    prankBtnGold:'💰 对方获得无限金币',
+    prankBtnRevive:'❤️ 复活对方',
+    authorPanelTitle:'👤 作者',
+    authorBtnKill:'💀 秒杀怪物',
+    authorBtnTip:'💡 游戏提示',
+    authorBtnGold:'💰 给金币',
+    authorBtnHeal:'❤️ 恢复血量',
+    authorBtnMob:'👾 召唤怪物',
+    switchWeaponBtn:'切换武器',
+    shopRevive:'💉 救助器 (复活队友，7秒)',
+    shopCar:'🚗 越野车 (撞怪秒杀+速度快+可撞树)',
+    shopScuba:'🤿 潜水装备 (氧气消耗减半)',
+    floorUpTag:'⬆ 上楼',
+    floorDownTag:'⬇ 下楼',
+    elevatorTag:'🛗 电梯（直达顶楼）',
+    exitTag:'🚪 EXIT 出口',
+    floorInfoA:'第 ',
+    floorInfoB:' 层 / 共 ',
+    floorInfoC:' 层',
+    buildingHint:'⬆上楼楼梯(左下) ⬇下楼楼梯(左上) 🛗电梯(右下) 🚪出口(一楼中下)',
+    oxygenText:'💧 氧气: ',
+    surfaceKey:'按 E 上浮',
+    diveKey:'按 🤿 潜水',
+    deathFallen:'倒下了！',
+    errDisplay:'❌ 游戏错误（把这个截图发给作者）',
+    unknownErr:'未知错误',
+    errFatal:'❌ 严重错误！',
+    enterBld1:'🏢 按E进入高楼',
+    enterBld2:'🏢 按6进入高楼',
+    enterBld3:'🏢 靠近高楼入口，按E进入室内',
+    cityBossName:'🥺 城市屠夫',
+    bossStageX:' [阶段',
+    treeGold:'撞树获得5金币！',
+    carKillKiller:'开车撞死了杀手！',
+    driving1:'1P驾驶',
+    driving2:'2P驾驶',
+    authorName:'作者',
+    authorCooldownA:'作者冷却中，还需 ',
+    authorCooldownB:' 秒',
+    authorKillAll:'作者帮你秒杀了所有怪物！',
+    authorTips:['提示：10杀获得盾牌，30杀打小Boss，50杀获得火焰弹！','提示：70杀获得蓄力火焰弹，120杀打最终Boss！','提示：下雨地面会滑，小心摔倒！打雷会劈死人！','提示：大太阳会让状态下降，晴天和阴天没效果！','提示：车可以撞怪物秒杀，还能挖树！500金币购买！','提示：氮气加速可以让车速度翻倍，持续3秒！','提示：双人模式下，第一个上车的是驾驶员！','提示：靠近😊可以索要金币，靠近😎会播放音乐！','提示：受伤后会流血，每5秒流失1点血量！','提示：商店可以买医疗包、绷带、救助器等道具！','提示：作者NPC是无敌的，打他会被反杀！','提示：双人模式下可以用整蛊功能整蛊对方！','提示：城市地图需要通关草原才能解锁！'],
+    npcTalksIdle:['...','今天天气不错','电梯怎么这么慢','这楼真高','你好啊','别随便进别人家','下班了...','好饿啊'],
+    npcTalksKiller:['...','别过来','哼哼...','看到你了...','嘘...','你跑不掉的'],
+    dupTag:'[双人] ',
+    dupRecordTag:'[双人模式] ',
+    errPrefix:'错误: ',
+    authorGold:'作者给了你 ',
+    authorHeal:'作者恢复了你 ',
+    authorMobJoke:'作者开玩笑，召唤了一群怪物！',
+    coopStart:'👥 双人合作模式开始！1P:WASD+J  2P:方向键+1',
+    hpPoints:'点血量',
   },
   en: {
     name:'English', start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings',
@@ -1074,7 +1220,7 @@ const LANGS = {
     robotExplode:'💥 Robot exploded! Revives in 30s', robotDown:'😊 Down... revives in 30s',
     troubleRevive:'😝 Troublemaker revived!', troubleKick:'😝 Kicked you! Spin 90°, 2s stun',
     troubleDown:'😝 Taken down! Revives in 30s', wandererRevive:'😎 Wanderer is back!',
-    wandererMusic:'🎵 Heard the wanderer\'s music', wandererDown:'😎 Wanderer down... revives in 30s',
+    wandererMusic:'🎵 Heard the wanderer\'s music',
     bleeding:'🩸 You\'re bleeding! -1 HP every 5s, use bandage/medkit to stop',
     switchWeapon:'Switched weapon: ', alaskey:'🐕 I\'m Alaskan! Got weaker...',
     robotGive:'😊 Gave you 25 gold!', buyKnife:'🔪 Bought Knife!', buyGun:'🔫 Bought Gun! Aim joystick at bottom right',
@@ -1133,6 +1279,187 @@ const LANGS = {
     npcTroubleName:'😝 Troublemaker',
     npcTroubleText:'(😝 just made a face at you, then kicked you — this guy only speaks with his fists.)',
     overwriteNewGame:'🆕 Overwrite New Game',
+    bankRobbed:'🏦 Bank got robbed! Coins everywhere!',
+    policeCarKill1:'1P was run over by police car!',
+    policeCarKill2:'2P was run over by police car!',
+    bossDetect:'🥺 She noticed you!',
+    bossEnrage:'🥺 She got enraged!',
+    bossVanished:'🥺 She vanished... she is still somewhere',
+    bossKill:'was sliced by 🥺!',
+    enterBuilding:'Entered building! Floor 1, watch out for the Boss!',
+    exitBuilding:'Left the building!',
+    alreadyTopFloor:'Already on the top floor!',
+    upToFloor:'Went up to floor ',
+    downToFloor:'Went down to floor ',
+    floorSuffix:'!',
+    coinPickup1:'1P picked up ',
+    coinPickup2:'2P picked up ',
+    coinSuffix:' gold!',
+    surface:'Surfaced!',
+    dive:'Dived underwater! Oxygen: ',
+    beatCityBoss:'🎉 Defeated City Butcher 🥺! +100 gold!',
+    revive1:'1P revived! Half HP',
+    revive2:'2P revived! Half HP',
+    fellUnknown1:'1P fell for unknown reasons...',
+    fellUnknown2:'2P fell for unknown reasons...',
+    cityMixed:'Something seems mixed into the city...',
+    bossStage2:'😈 Boss entered Phase 2!',
+    bossStage3:'😈 Boss entered Phase 3! It dashes now!',
+    bossStage4:'😈 Boss entered FINAL phase!! Red alert!',
+    eliteAppear:'👾 Elite mob appeared!',
+    cityUnlocked:'🎉 City map unlocked!',
+    indoorAttack:'was attacked by indoor killer 🙂! -8HP',
+    elevatorTop:'🛗 Elevator to the top floor! Floor ',
+    indoorHint:'Near stairs/elevator/exit, press E to interact',
+    prankFly:'was pranked and flew up!',
+    prankMob:'monsters were summoned beside by prank!',
+    prankStun:'was pranked and stunned!',
+    prankSlip:'was pranked and slipped!',
+    prankBleed:'was pranked and bleeds!',
+    prankTeleport:'was pranked and teleported!',
+    prankWeak:'was pranked and weakened!',
+    prankInfGold:'was pranked and got infinite gold!',
+    prankRevive:'was pranked and revived! (Half HP + 3s invincible)',
+    prankNoNeed:'still alive, no revive needed!',
+    buyRescuer:'💉 Bought a rescuer!',
+    alreadyCar:'🚗 Already have a car!',
+    buyCar:'🚗 Bought an off-road car! Press E to enter/exit',
+    alreadyScuba:'🤿 Already have scuba gear!',
+    buyScuba:'🤿 Bought scuba gear! Oxygen drain halved, max oxygen increased!',
+    carHandover:'got off, ',
+    carTakeOver:'took over driving!',
+    carExit:'got off the car',
+    carFull:'Car is full, can\'t board!',
+    carDrive:'boarded, start driving! WASD/Arrows to control, ram kills monsters',
+    carPassenger:'boarded, sitting as passenger',
+    carTooFar:'Too far from the car to board',
+    carNitroDriverOnly:'Only the driver can use nitro!',
+    carNitroNeedCar:'Must be in a car to use nitro!',
+    carNitroCooldown:'Nitro cooling down: ',
+    carNitroActive:'🚀 Nitro activated!',
+    carKill1:'1P was run over by car!',
+    carKill2:'2P was run over by car!',
+    deathLightning:'The heavens are unjust!',
+    deathBleeding:'Gone for no reason...',
+    deathPrank:'ÿþüøõñðáç',
+    deathAuthor:'You were killed by the unknown',
+    rescueStart1:'1P started rescuing 2P! Revive in 7s',
+    rescueStart2:'2P started rescuing 1P! Revive in 7s',
+    nitroEnd:'Nitro ended',
+    cityLocked:'🔒 Clear the grassland (defeat final Boss 🥺) to unlock the city map!',
+    btnUp:'⬆ Up',
+    btnDown:'⬇ Down',
+    btnExit:'🚪 Exit',
+    btnElevator:'🛗 Elevator',
+    btnEnterBld:'🏢 Enter',
+    btnEnter:'🏢',
+    cityName:'City',
+    cityLockedName:'🔒 City',
+    cheatPanelTitle:'Cheat Panel',
+    cheatInfHp:'Player Infinite HP',
+    cheatInfDmg:'Infinite Attack Damage',
+    cheatMobSea:'Mob Sea',
+    cheatAlaskey:'I am Alaskan (weakened)',
+    cheatNoSlip:'No Slip',
+    cheatDashCd:'No Dash Cooldown',
+    cheatInfGold:'Infinite Gold',
+    cheatSkipDay:'Skip Day',
+    cheatSkipNight:'Skip Night',
+    prankPanelTitle:'🃏 Prank Panel',
+    prankBtnKill:'💀 Kill Opponent Directly',
+    prankBtnFly:'🚀 Launch Opponent (fly up)',
+    prankBtnMob:'👾 Summon Mobs Beside Opponent',
+    prankBtnStun:'😵 Stun Opponent 3s',
+    prankBtnSlip:'🤸 Make Opponent Slip',
+    prankBtnBleed:'🩸 Make Opponent Bleed',
+    prankBtnTeleport:'🌀 Teleport Opponent Randomly',
+    prankBtnWeak:'🐢 Weaken Opponent 10s',
+    prankBtnGold:'💰 Opponent Gets Infinite Gold',
+    prankBtnRevive:'❤️ Revive Opponent',
+    authorPanelTitle:'👤 Author',
+    authorBtnKill:'💀 Kill All Mobs',
+    authorBtnTip:'💡 Game Tips',
+    authorBtnGold:'💰 Give Gold',
+    authorBtnHeal:'❤️ Heal HP',
+    authorBtnMob:'👾 Summon Mobs',
+    switchWeaponBtn:'Switch Weapon',
+    shopRevive:'💉 Rescuer (revive teammate, 7s)',
+    shopCar:'🚗 Off-road Car (ram kills + fast + can dig trees)',
+    shopScuba:'🤿 Scuba Gear (oxygen drain halved)',
+    floorUpTag:'⬆ Up',
+    floorDownTag:'⬇ Down',
+    elevatorTag:'🛗 Elevator (straight to top)',
+    exitTag:'🚪 EXIT',
+    floorInfoA:'Floor ',
+    floorInfoB:' / ',
+    floorInfoC:'',
+    buildingHint:'⬆Up stairs(bottom-left) ⬇Down stairs(top-left) 🛗Elevator(bottom-right) 🚪Exit(ground floor center)',
+    oxygenText:'💧 Oxygen: ',
+    surfaceKey:'Press E to surface',
+    diveKey:'Press 🤿 to dive',
+    deathFallen:'fell!',
+    errDisplay:'❌ Game error (screenshot this to the author)',
+    unknownErr:'Unknown error',
+    errFatal:'❌ FATAL ERROR!',
+    enterBld1:'🏢 Press E to enter building',
+    enterBld2:'🏢 Press 6 to enter building',
+    enterBld3:'🏢 Near building entrance, press E to go inside',
+    cityBossName:'🥺 City Butcher',
+    bossStageX:' [Phase ',
+    treeGold:'rammed a tree, +5 gold!',
+    carKillKiller:'ran over a killer!',
+    driving1:'1P driving',
+    driving2:'2P driving',
+    authorName:'Author',
+    authorCooldownA:'Author cooldown, wait ',
+    authorCooldownB:'s',
+    authorKillAll:'The author killed all mobs for you!',
+    authorTips:['Tip: 10 kills get shield, 30 kills mini Boss, 50 kills fireball!','Tip: 70 kills charged fireball, 120 kills final Boss!','Tip: Rain makes ground slippery, be careful! Lightning kills!','Tip: Hot sun lowers stats, clear and cloudy have no effect!','Tip: Cars insta-kill monsters and dig trees! Buy for 500 gold!','Tip: Nitro doubles car speed for 3 seconds!','Tip: In 2P mode, the first to board is the driver!','Tip: Ask 😊 for gold, get music near 😎!','Tip: Bleeding loses 1 HP every 5 seconds!','Tip: Shop sells medkits, bandages, rescuers!','Tip: Author NPC is invincible, attacking him backfires!','Tip: In 2P mode you can prank your opponent!','Tip: City map unlocks after clearing the grassland!'],
+    npcTalksIdle:['...','Nice weather today','Why is the elevator so slow','This building is tall','Hello','Do not enter others homes','Off work...','So hungry'],
+    npcTalksKiller:['...','Stay back','Heh heh...','I see you...','Shh...','You cannot escape'],
+    dupTag:'[2P] ',
+    dupRecordTag:'[2P Mode] ',
+    errPrefix:'Error: ',
+    authorGold:'The author gave you ',
+    authorHeal:'The author healed you ',
+    authorMobJoke:'The author joked and summoned a mob of monsters!',
+    coopStart:'👥 Co-op mode started! 1P:WASD+J  2P:Arrows+1',
+    hpPoints:' HP',
+    authorEmail:'📧 Author Email',
+    cheatWarning:'⚠ This person used cheats',
+    clearRating:'🏆 Clear Rating',
+    clearRecord:'🏆 Clear Record',
+    dashNoCdOn:'💨 No dash cooldown enabled',
+    feedback:'Send feedback to',
+    fullHp:'Full HP',
+    infGoldOn:'💰 Infinite gold enabled',
+    lightningHit:'⚡ Struck by lightning! -8HP',
+    lowHp:'Low HP',
+    medUse:'Medicine used',
+    noSlipOn:'🧊 Anti-slip enabled, no more slipping in rain',
+    r38:'😎 The wanderer music attracts nearby monsters',
+    r39:'💨 New dash skill (Shift/💨 button), 3s cooldown, invincible while dashing',
+    r40:'🌤️ New weather system: sunny/cloudy/rain/thunder/hot sun',
+    r41:'🌧️ Rain makes ground slippery, players/NPCs/monsters all slip (rotate 90° for 2s)',
+    r42:'⛈️ Thunder kills nearby creatures, hot sun slows and causes heat damage',
+    rDash:'💨 Dash skill',
+    rDashDesc:'Press Shift or tap 💨 to dash toward movement, briefly invincible, 3s cooldown',
+    rWeather:'🌤️ Weather system',
+    rWeatherCloudy:'Cloudy: darker sky, no other effects',
+    rWeatherHot:'Hot sun: speed -20%, heat damage 1 HP every 10s',
+    rWeatherRain:'Rain: slippery ground, chance to slip while moving (rotate 90°, 2s immobile), players/NPCs/monsters all slip',
+    rWeatherSunny:'Sunny: no special effects',
+    rWeatherThunder:'Thunder: rain + lightning, lightning kills nearby mobs/NPCs/players (Boss immune)',
+    skipDay:'🌙 Skipped day, night falls',
+    skipNight:'☀ Skipped night, day breaks',
+    slipFall:'💦 Slipped! 2s immobile',
+    times:' times',
+    wandererDown:'😎 Wanderer down... revives in 30s',
+    weatherCloudy:'☁️ Cloudy now',
+    weatherHot:'🔥 Hot sun! Watch out for heat!',
+    weatherRain:'🌧️ Rain! Ground slippery, be careful!',
+    weatherSunny:'☀️ Sunny now',
+    weatherThunder:'⛈️ Thunder! Watch out for lightning!',
   },
   ja: {
     name:'日本語', start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定',
@@ -1204,6 +1531,194 @@ const LANGS = {
     npcRobotText:'戦闘力は強いけど、一番気性が荒いよ。ちょっとしたことですぐ喧嘩する。直したほうがいいよ。',
     npcTroubleName:'😝 いたずらっ子',
     npcTroubleText:'（😝はただ変顔をして、そして蹴ってきた——こいつは拳でしか話さない。）',
+    bankRobbed:'🏦 銀行が強盗された！金貨だらけ！',
+    policeCarKill1:'1P がパトカーに轢かれた！',
+    policeCarKill2:'2P がパトカーに轢かれた！',
+    bossDetect:'🥺 気づかれた！',
+    bossEnrage:'🥺 怒らせた！',
+    bossVanished:'🥺 消えた...まだどこかにいる',
+    bossKill:'🥺に一刀両断された！',
+    enterBuilding:'建物に入った！1階、ボスに注意！',
+    exitBuilding:'建物から出た！',
+    alreadyTopFloor:'もう最上階だ！',
+    upToFloor:'',
+    downToFloor:'下に移動、',
+    floorSuffix:'階！',
+    coinPickup1:'1P が',
+    coinPickup2:'2P が',
+    coinSuffix:'金貨拾得！',
+    surface:'水面に浮上！',
+    dive:'潜水！酸素：',
+    beatCityBoss:'🎉 都市の屠殺者🥺を倒した！100金貨獲得！',
+    revive1:'1P 復活！HP半分',
+    revive2:'2P 復活！HP半分',
+    fellUnknown1:'1P なぜか倒れた...',
+    fellUnknown2:'2P なぜか倒れた...',
+    cityMixed:'街に何かが混ざっている気がする...',
+    bossStage2:'😈 ボス第2段階突入！',
+    bossStage3:'😈 ボス第3段階！ダッシュしてくる！',
+    bossStage4:'😈 ボス最終段階！！レッドアラート！',
+    eliteAppear:'👾 エリートモンスター出現！',
+    cityUnlocked:'🎉 都市マップ解放！',
+    indoorAttack:'室内の殺し屋🙂に攻撃された！-8HP',
+    elevatorTop:'🛗 エレベーターで最上階へ！',
+    indoorHint:'階段/エレベーター/出口の近くでEキーで操作',
+    prankFly:'イタズラで飛ばされた！',
+    prankMob:'イタズラでモンスターが召喚された！',
+    prankStun:'イタズラでスタンした！',
+    prankSlip:'イタズラで滑った！',
+    prankBleed:'イタズラで出血中！',
+    prankTeleport:'イタズラでランダム転送！',
+    prankWeak:'イタズラで弱体化！',
+    prankInfGold:'イタズラで無限ゴールド！',
+    prankRevive:'イタズラで復活！（HP半分+3秒無敵）',
+    prankNoNeed:'まだ生きてる、復活不要！',
+    buyRescuer:'💉 救助セット購入！',
+    alreadyCar:'🚗 もう車を持ってる！',
+    buyCar:'🚗 オフロード車購入！Eで乗降',
+    alreadyScuba:'🤿 もう潜水装備を持ってる！',
+    buyScuba:'🤿 潜水装備購入！酸素消費半減、最大酸素増加！',
+    carHandover:'降りた、',
+    carTakeOver:'が運転を引き継いだ！',
+    carExit:'車から降りた',
+    carFull:'車は満席、乗れない！',
+    carDrive:'乗車、運転開始！WASD/矢印で操作、衝突でモンスター即死',
+    carPassenger:'乗車、助手席に座った',
+    carTooFar:'車から遠すぎて乗れない',
+    carNitroDriverOnly:'運転手しかニトロを使えない！',
+    carNitroNeedCar:'車に乗らないとニトロは使えない！',
+    carNitroCooldown:'ニトロ冷却中：',
+    carNitroActive:'🚀 ニトロ発動！',
+    carKill1:'1P が車に轢かれた！',
+    carKill2:'2P が車に轢かれた！',
+    deathLightning:'天が不公平だ！',
+    deathBleeding:'なぜか消えた...',
+    deathPrank:'ÿþüøõñðáç',
+    deathAuthor:'未知の存在に殺された',
+    rescueStart1:'1P が2Pを救助開始！7秒後に復活',
+    rescueStart2:'2P が1Pを救助開始！7秒後に復活',
+    nitroEnd:'ニトロ終了',
+    cityLocked:'🔒 草原クリア（最終ボス🥺撃破）で都市マップ解放！',
+    btnUp:'⬆ 上へ',
+    btnDown:'⬇ 下へ',
+    btnExit:'🚪 退出',
+    btnElevator:'🛗 エレベーター',
+    btnEnterBld:'🏢 入る',
+    btnEnter:'🏢',
+    cityName:'都市',
+    cityLockedName:'🔒 都市',
+    cheatPanelTitle:'機能パネル',
+    cheatInfHp:'プレイヤー無限HP',
+    cheatInfDmg:'攻撃力無限',
+    cheatMobSea:'モブ海',
+    cheatAlaskey:'アラスカンだ(弱体化)',
+    cheatNoSlip:'滑り止め',
+    cheatDashCd:'ダッシュCTなし',
+    cheatInfGold:'無限ゴールド',
+    cheatSkipDay:'昼スキップ',
+    cheatSkipNight:'夜スキップ',
+    prankPanelTitle:'🃏 イタズラパネル',
+    prankBtnKill:'💀 相手を即死',
+    prankBtnFly:'🚀 相手を飛ばす',
+    prankBtnMob:'👾 相手の隣にモンスター召喚',
+    prankBtnStun:'😵 相手を3秒スタン',
+    prankBtnSlip:'🤸 相手を滑らせる',
+    prankBtnBleed:'🩸 相手を出血させる',
+    prankBtnTeleport:'🌀 相手をランダム転送',
+    prankBtnWeak:'🐢 相手を10秒弱体化',
+    prankBtnGold:'💰 相手が無限ゴールド',
+    prankBtnRevive:'❤️ 相手を復活',
+    authorPanelTitle:'👤 作者',
+    authorBtnKill:'💀 モンスター全滅',
+    authorBtnTip:'💡 ゲームヒント',
+    authorBtnGold:'💰 ゴールドを与える',
+    authorBtnHeal:'❤️ HP回復',
+    authorBtnMob:'👾 モンスター召喚',
+    switchWeaponBtn:'武器切替',
+    shopRevive:'💉 救助セット (味方復活、7秒)',
+    shopCar:'🚗 オフロード車 (衝突即死+速い+木を掘れる)',
+    shopScuba:'🤿 潜水装備 (酸素消費半減)',
+    floorUpTag:'⬆ 上へ',
+    floorDownTag:'⬇ 下へ',
+    elevatorTag:'🛗 エレベーター（最上階直行）',
+    exitTag:'🚪 EXIT 出口',
+    floorInfoA:'第 ',
+    floorInfoB:' 階 / 全',
+    floorInfoC:' 階',
+    buildingHint:'⬆上り階段(左下) ⬇下り階段(左上) 🛗エレベーター(右下) 🚪出口(1階中央下)',
+    oxygenText:'💧 酸素: ',
+    surfaceKey:'Eで浮上',
+    diveKey:'🤿で潜水',
+    deathFallen:'倒れた！',
+    errDisplay:'❌ ゲームエラー（このスクショを作者へ）',
+    unknownErr:'不明なエラー',
+    errFatal:'❌ 重大エラー！',
+    enterBld1:'🏢 Eでビルに入る',
+    enterBld2:'🏢 6でビルに入る',
+    enterBld3:'🏢 ビル入口の近くでEを押して入る',
+    cityBossName:'🥺 都市の屠殺者',
+    bossStageX:' [段階',
+    treeGold:'木に激突、5ゴールド獲得！',
+    carKillKiller:'殺し屋を轢いた！',
+    driving1:'1P運転',
+    driving2:'2P運転',
+    authorName:'作者',
+    authorCooldownA:'作者クールダウン、あと ',
+    authorCooldownB:' 秒',
+    authorKillAll:'作者がモンスターを全滅させた！',
+    authorTips:['ヒント：10キルで盾、30キルでミニボス、50キルで火炎弾！','ヒント：70キルで溜め火炎弾、120キルで最終ボス！','ヒント：雨の日は滑る、注意！雷は人を殺す！','ヒント：大太陽はステータス低下、晴れと曇りは効果なし！','ヒント：車はモンスター即死、木も掘れる！500ゴールド！','ヒント：ニトロで車速2倍、3秒間！','ヒント：双人モードでは最初に乗った人が運転手！','ヒント：😊に近づいて金貨をねだれる、😎の近くで音楽！','ヒント：出血で5秒ごとに1HP減少！','ヒント：ショップでメディキット、包帯、救助セット！','ヒント：作者NPCは無敵、攻撃すると反撃される！','ヒント：双人モードで相手にイタズラできる！','ヒント：都市マップは草原クリアで解放！'],
+    npcTalksIdle:['...','今日はいい天気','エレベーター遅すぎ','このビル高いね','こんにちは','他人の家に入らないで','仕事終わり...','お腹すいた'],
+    npcTalksKiller:['...','来るな','ふふ...','見つけた...','シー...','逃げられない'],
+    dupTag:'[双人] ',
+    dupRecordTag:'[双人モード] ',
+    errPrefix:'エラー: ',
+    authorGold:'作者があなたに ',
+    authorHeal:'作者があなたを ',
+    authorMobJoke:'作者が冗談でモンスター軍団を召喚した！',
+    coopStart:'👥 協力モード開始！1P:WASD+J  2P:矢印+1',
+    hpPoints:'点のHP',
+    authorEmail:'📧 作者メール',
+    cheatWarning:'⚠ この人はチートを使った',
+    clearRating:'🏆 クリア評価',
+    clearRecord:'🏆 クリア記録',
+    dashNoCdOn:'💨 ダッシュCTなしON',
+    feedback:'意見はメールで',
+    fullHp:'非残血',
+    infGoldOn:'💰 無限ゴールドON',
+    lightningHit:'⚡ 雷に撃たれた！-8HP',
+    lowHp:'残血',
+    medUse:'薬品使用',
+    noSlipOn:'🧊 滑り止めON、雨でも滑らない',
+    overwriteNewGame:'🆕 新規ゲームを上書き',
+    r38:'😎 放浪者の音楽が近くのモンスターを引き寄せる',
+    r39:'💨 ダッシュスキル追加（Shift/💨ボタン）、3秒CT、ダッシュ中無敵',
+    r40:'🌤️ 天気システム追加：晴れ/曇り/雨/雷/大太陽',
+    r41:'🌧️ 雨の日は地面が滑る、プレイヤー/NPC/モンスター全員転ぶ（90度回転2秒）',
+    r42:'⛈️ 雷は近くの生物を殺す、大太陽は減速と熱中症ダメージ',
+    r43:'🚗 オフロード車システム、500ゴールド購入、衝突で即死、木を掘れる',
+    r44:'🚀 ニトロ加速、Shift/2キーで発動、速度2倍3秒、10秒CT',
+    r45:'💺 車の座席システム：最初に乗った人が運転手、次が助手席、運転手が降りると自動交代',
+    r46:'👤 作者NPC追加、無敵、近づくと操作可能（モンスター全滅/ヒント/金貨/回復）、攻撃すると反撃',
+    r47:'💀 死亡メッセージ抽象化：雷=天の不条理、出血=理由不明、イタズラ=文字化け、作者=未知に殺された',
+    r48:'📂 セーブ読み込みのフリーズ修正、車両状態を完全保存/読込、シングルのセーブから双人CSSを自動除去',
+    rDash:'💨 ダッシュスキル',
+    rDashDesc:'Shiftまたは💨ボタンで移動方向にダッシュ、短時間無敵、3秒CT',
+    rWeather:'🌤️ 天気システム',
+    rWeatherCloudy:'曇り：空が暗くなる、他に効果なし',
+    rWeatherHot:'大太陽：速度20%減、10秒ごとに熱中症で1ダメージ',
+    rWeatherRain:'雨：地面が滑る、移動中に転ぶことがある（90度回転、2秒動けない）、プレイヤー/NPC/モンスター全員転ぶ',
+    rWeatherSunny:'晴れ：特殊効果なし',
+    rWeatherThunder:'雷：雨+雷、雷が近くの小モンスター/NPC/プレイヤーを殺す（ボス免疫）',
+    skipDay:'🌙 昼をスキップ、夜になった',
+    skipNight:'☀ 夜をスキップ、昼になった',
+    slipFall:'💦 滑った！2秒動けない',
+    times:'回',
+    wandererDown:'😎 放浪者ダウン...30秒後復活',
+    weatherCloudy:'☁️ 曇った',
+    weatherHot:'🔥 大太陽！熱中症注意！',
+    weatherRain:'🌧️ 雨だ！地面が滑る、注意！',
+    weatherSunny:'☀️ 晴れた',
+    weatherThunder:'⛈️ 雷だ！落雷注意！',
   },
   ko: {
     name:'한국어', start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정',
@@ -1242,6 +1757,253 @@ const LANGS = {
     npcRobotText:'전투력은 강하지만, 성질이 가장 더러워. 작은 일에도 바로 싸움을 걸어. 고쳤으면 좋겠다.',
     npcTroubleName:'😝 말썽꾸러기',
     npcTroubleText:'(😝는 그냥 얼굴을 찡그리더니 발로 차버렸다——이 녀석은 주먹으로만 말한다.)',
+    bankRobbed:'🏦 은행이 털렸다! 금화 천지!',
+    policeCarKill1:'1P가 경찰차에 치였다!',
+    policeCarKill2:'2P가 경찰차에 치였다!',
+    bossDetect:'🥺 널 눈치챘다!',
+    bossEnrage:'🥺 화가 났다!',
+    bossVanished:'🥺 사라졌다... 아직 어딘가에 있다',
+    bossKill:'🥺에게 한 방에 베였다!',
+    enterBuilding:'건물 입장! 1층, 보스 조심!',
+    exitBuilding:'건물에서 나왔다!',
+    alreadyTopFloor:'이미 최상층이다!',
+    upToFloor:'위로 ',
+    downToFloor:'아래로 ',
+    floorSuffix:'층!',
+    coinPickup1:'1P가 ',
+    coinPickup2:'2P가 ',
+    coinSuffix:'금화 획득!',
+    surface:'수면 위로 떠올랐다!',
+    dive:'잠수! 산소: ',
+    beatCityBoss:'🎉 도시 도살자🥺 처치! 금화 100 획득!',
+    revive1:'1P 부활! 체력 절반',
+    revive2:'2P 부활! 체력 절반',
+    fellUnknown1:'1P가 왠지 쓰러졌다...',
+    fellUnknown2:'2P가 왠지 쓰러졌다...',
+    cityMixed:'도시에 뭔가 섞여 있는 것 같다...',
+    bossStage2:'😈 보스 2단계 진입!',
+    bossStage3:'😈 보스 3단계! 돌진한다!',
+    bossStage4:'😈 보스 최종 단계!! 레드 알람!',
+    eliteAppear:'👾 정예 몬스터 등장!',
+    cityUnlocked:'🎉 도시 맵 해금!',
+    indoorAttack:'실내 킬러🙂에게 공격받았다! -8HP',
+    elevatorTop:'🛗 엘리베이터로 최상층 직행! ',
+    indoorHint:'계단/엘리베이터/출구 근처에서 E로 상호작용',
+    prankFly:'장난으로 하늘로 날아갔다!',
+    prankMob:'장난으로 옆에 몬스터가 소환됐다!',
+    prankStun:'장난으로 기절했다!',
+    prankSlip:'장난으로 미끄러졌다!',
+    prankBleed:'장난으로 계속 출혈 중!',
+    prankTeleport:'장난으로 랜덤 이동됐다!',
+    prankWeak:'장난으로 약해졌다!',
+    prankInfGold:'장난으로 무한 금화 획득!',
+    prankRevive:'장난으로 부활했다! (체력 절반+3초 무적)',
+    prankNoNeed:'아직 살아있어서 부활 불필요!',
+    buyRescuer:'💉 구조 키트 구매!',
+    alreadyCar:'🚗 이미 차가 있다!',
+    buyCar:'🚗 오프로드 차 구매! E로 승하차',
+    alreadyScuba:'🤿 이미 잠수 장비가 있다!',
+    buyScuba:'🤿 잠수 장비 구매! 산소 소모 절반, 최대 산소 증가!',
+    carHandover:'내렸다, ',
+    carTakeOver:'운전을 인계받았다!',
+    carExit:'차에서 내렸다',
+    carFull:'차가 꽉 찼다, 탈 수 없다!',
+    carDrive:'탑승, 운전 시작! WASD/방향키로 조작, 충돌로 몬스터 즉사',
+    carPassenger:'탑승, 조수석에 앉았다',
+    carTooFar:'차에서 너무 멀어서 탈 수 없다',
+    carNitroDriverOnly:'운전자만 니트로를 쓸 수 있다!',
+    carNitroNeedCar:'차 안에서만 니트로 사용 가능!',
+    carNitroCooldown:'니트로 쿨다운: ',
+    carNitroActive:'🚀 니트로 발동!',
+    carKill1:'1P가 차에 치였다!',
+    carKill2:'2P가 차에 치였다!',
+    deathLightning:'하늘이 불공평해!',
+    deathBleeding:'왠지 사라졌다...',
+    deathPrank:'ÿþüøõñðáç',
+    deathAuthor:'미지의 존재에게 죽었다',
+    rescueStart1:'1P가 2P를 구조 시작! 7초 후 부활',
+    rescueStart2:'2P가 1P를 구조 시작! 7초 후 부활',
+    nitroEnd:'니트로 종료',
+    cityLocked:'🔒 초원 클리어(최종 보스🥺 처치)로 도시 맵 해금!',
+    btnUp:'⬆ 위로',
+    btnDown:'⬇ 아래로',
+    btnExit:'🚪 나가기',
+    btnElevator:'🛗 엘리베이터',
+    btnEnterBld:'🏢 입장',
+    btnEnter:'🏢',
+    cityName:'도시',
+    cityLockedName:'🔒 도시',
+    cheatPanelTitle:'기능 패널',
+    cheatInfHp:'플레이어 무한 HP',
+    cheatInfDmg:'공격력 무한',
+    cheatMobSea:'몹 홍수',
+    cheatAlaskey:'알래스칸이다(약화)',
+    cheatNoSlip:'미끄럼 방지',
+    cheatDashCd:'대시 쿨 없음',
+    cheatInfGold:'무한 골드',
+    cheatSkipDay:'낮 건너뛰기',
+    cheatSkipNight:'밤 건너뛰기',
+    prankPanelTitle:'🃏 장난 패널',
+    prankBtnKill:'💀 상대 즉사',
+    prankBtnFly:'🚀 상대를 날려보냄',
+    prankBtnMob:'👾 상대 옆에 몬스터 소환',
+    prankBtnStun:'😵 상대 3초 기절',
+    prankBtnSlip:'🤸 상대 미끄러뜨림',
+    prankBtnBleed:'🩸 상대 출혈',
+    prankBtnTeleport:'🌀 상대 랜덤 이동',
+    prankBtnWeak:'🐢 상대 10초 약화',
+    prankBtnGold:'💰 상대 무한 골드',
+    prankBtnRevive:'❤️ 상대 부활',
+    authorPanelTitle:'👤 작가',
+    authorBtnKill:'💀 몬스터 전멸',
+    authorBtnTip:'💡 게임 힌트',
+    authorBtnGold:'💰 골드 지급',
+    authorBtnHeal:'❤️ HP 회복',
+    authorBtnMob:'👾 몬스터 소환',
+    switchWeaponBtn:'무기 전환',
+    shopRevive:'💉 구조 키트 (팀원 부활, 7초)',
+    shopCar:'🚗 오프로드 차 (충돌 즉사+빠름+나무 파기)',
+    shopScuba:'🤿 잠수 장비 (산소 소모 절반)',
+    floorUpTag:'⬆ 위로',
+    floorDownTag:'⬇ 아래로',
+    elevatorTag:'🛗 엘리베이터 (최상층 직행)',
+    exitTag:'🚪 EXIT 출구',
+    floorInfoA:'',
+    floorInfoB:' 층 / 전체 ',
+    floorInfoC:' 층',
+    buildingHint:'⬆올라가는 계단(좌하) ⬇내려가는 계단(좌상) 🛗엘리베이터(우하) 🚪출구(1층 중앙 아래)',
+    oxygenText:'💧 산소: ',
+    surfaceKey:'E로 부상',
+    diveKey:'🤿로 잠수',
+    deathFallen:'쓰러졌다!',
+    errDisplay:'❌ 게임 오류 (이 스샷을 작가에게 보내세요)',
+    unknownErr:'알 수 없는 오류',
+    errFatal:'❌ 치명적 오류!',
+    enterBld1:'🏢 E를 눌러 건물 입장',
+    enterBld2:'🏢 6을 눌러 건물 입장',
+    enterBld3:'🏢 건물 입구 근처에서 E를 눌러 입장',
+    cityBossName:'🥺 도시 도살자',
+    bossStageX:' [단계',
+    treeGold:'나무 충돌, 골드 5 획득!',
+    carKillKiller:'킬러를 치었다!',
+    driving1:'1P 운전',
+    driving2:'2P 운전',
+    authorName:'작가',
+    authorCooldownA:'작가 쿨다운, ',
+    authorCooldownB:' 초',
+    authorKillAll:'작가가 모든 몬스터를 전멸시켰다!',
+    authorTips:['힌트: 10킬 방패, 30킬 미니보스, 50킬 파이어볼!','힌트: 70킬 차지 파이어볼, 120킬 최종 보스!','힌트: 비 오면 미끄러움, 조심! 번개는 사람을 죽인다!','힌트: 강한 태양은 스탯 저하, 맑음과 흐림은 효과 없음!','힌트: 차는 몬스터 즉사, 나무도 팜! 500골드!','힌트: 니트로로 차 속도 2배, 3초!','힌트: 2인 모드에선 먼저 탄 사람이 운전자!','힌트: 😊에게 골드를 요구하자, 😎 근처에선 음악!','힌트: 출혈은 5초마다 HP 1 감소!','힌트: 상점에 메디킷, 붕대, 구조 키트!','힌트: 작가 NPC는 무적, 공격하면 반격당한다!','힌트: 2인 모드에서 상대를 장난칠 수 있다!','힌트: 도시 맵은 초원 클리어로 해금!'],
+    npcTalksIdle:['...','오늘 날씨 좋다','엘리베이터 왜 이렇게 느려','이 건물 높다','안녕하세요','남의 집에 들어가지 마','퇴근...','배고파'],
+    npcTalksKiller:['...','오지 마','흠흠...','보였다...','쉿...','도망 못 간다'],
+    dupTag:'[2인] ',
+    dupRecordTag:'[2인 모드] ',
+    errPrefix:'오류: ',
+    authorGold:'작가가 당신에게 ',
+    authorHeal:'작가가 당신을 ',
+    authorMobJoke:'작가가 농담으로 몬스터 떼를 소환했다!',
+    coopStart:'👥 협동 모드 시작! 1P:WASD+J  2P:방향키+1',
+    hpPoints:'체력',
+    authorEmail:'📧 작가 메일',
+    autoSaved:'진행 상황이 자동 저장됨',
+    beatFinalBoss:'최종 보스 😈를 물리쳤다!',
+    cheatWarning:'⚠ 이 사람은 치트를 썼다',
+    clearRating:'🏆 클리어 평가',
+    clearRecord:'🏆 클리어 기록',
+    confirmClearAll:'모든 로컬 세이브를 지우시겠습니까? 되돌릴 수 없습니다.',
+    confirmDelete:'다음을 삭제하시겠습니까? ',
+    confirmDelete2:' 되돌릴 수 없습니다.',
+    confirmOverwrite:'다음을 덮어쓰시겠습니까? ',
+    confirmOverwrite2:' 기존 진행 상황이 사라집니다.',
+    dashNoCdOn:'💨 대시 쿨 없음 켜짐',
+    defeatTitle:'💀 게임 종료',
+    defeatedByMob:'몬스터에게 패배했다...',
+    deleteBtn:'🗑 삭제',
+    emptySave:'빈 세이브',
+    emptySaveDesc:'이 슬롯은 비어 있습니다',
+    feedback:'의견은 메일로 보내주세요',
+    fullHp:'비잔혈',
+    gameTitle:'픽셀 초원 배틀',
+    infGoldOn:'💰 무한 골드 켜짐',
+    killCount:'킬 수: ',
+    landscapeHint:'가로 화면 후 자동으로 게임 계속',
+    lightningHit:'⚡ 번개에 맞았다! -8HP',
+    loadBtn:'▶ 불러오기',
+    lowHp:'잔혈',
+    medUse:'약물 사용',
+    newGameBtn:'🆕 새 게임 시작',
+    noSlipOn:'🧊 미끄럼 방지 켜짐, 비에 안 미끄러짐',
+    overwriteNewGame:'🆕 새 게임 덮어쓰기',
+    r1:'왼쪽 아래 조이스틱 이동, 오른쪽 아래 버튼 공격/채굴/수류탄',
+    r10:'원거리 6피해, 50킬 해금',
+    r11:'원거리 8피해, 70킬 해금',
+    r12:'범위 피해, 상점 40골드/3개',
+    r13:'근접 3피해, 빠름',
+    r14:'원거리 음파 2피해',
+    r15:'근접 3피해, 가장 빠름',
+    r16:'30킬 등장, 👾 군단 동반',
+    r17:'120킬 등장, 다단계, 👾 군단 동반',
+    r18:'25골드 요구 가능(쿨다운), 60초 후 폭발, 사망 후 30초 부활',
+    r19:'무적, 가까이 가면 상점 자동 오픈, 무기와 약 판매',
+    r2:'방향키 이동, J 공격, K 채굴, L 수류탄, Q 무기 변경',
+    r20:'발로 차 2초 기절, 처치 가능, 사망 후 30초 부활',
+    r21:'랜덤 배회, 150픽셀 내에서 음악 재생, 처치 가능, 사망 후 30초 부활',
+    r22:'🤬 상인 제외 모든 생물 공격 가능',
+    r23:'낮 60초: 안전, 몬스터 없음, 탐험과 NPC 찾기에 좋음',
+    r24:'밤 60초: 몬스터 출현, 처음 30초는 적고 이후 최대 20마리(보스전 35마리 👾)',
+    r25:'몬스터 처치 시 35% 확률로 3골드 드랍',
+    r26:'🤬 상인 근처에서 자동 오픈, 상품 위아래 스크롤 가능',
+    r27:'5 HP 회복+지혈',
+    r28:'전체 HP 회복+지혈',
+    r29:'킬 해금, 피해 1/3 감소',
+    r3:'오른쪽 아래 주황색 조준 조이스틱, 왼손 이동 오른손 조준, 달리면서 공격 가능',
+    r30:'킬 등장, 👾 군단 동반',
+    r31:'킬 해금, 원거리 6피해',
+    r32:'킬 해금, 원거리 8피해',
+    r33:'킬 강림, 다단계, 👾 군단 동반',
+    r34:'보스 등장 시 많은 👾 동반 및 지속 리젠',
+    r35:'8개국 언어 지원(설정에서 전환)',
+    r36:'화염구/차지 화염구는 조준 조이스틱 사용',
+    r37:'조준 조이스틱 위치 최적화, 크기 축소',
+    r38:'😎 방랑자의 음악이 근처 몬스터를 유인',
+    r39:'💨 대시 스킬 추가(Shift/💨 버튼), 3초 쿨, 대시 중 무적',
+    r4:'초기 15 HP, 주먹 2피해, 이동 속도 2.8',
+    r40:'🌤️ 날씨 시스템 추가: 맑음/흐림/비/번개/강한 태양',
+    r41:'🌧️ 비 오면 미끄러움, 플레이어/NPC/몬스터 모두 넘어짐(90도 회전 2초)',
+    r42:'⛈️ 번개는 근처 생물을 죽이고, 강한 태양은 감속과 열사병 피해',
+    r43:'🚗 오프로드 차 시스템, 500골드 구매, 충돌 즉사, 나무 채굴',
+    r44:'🚀 니트로 가속, Shift/2키 발동, 속도 2배 3초, 10초 쿨',
+    r45:'💺 차 좌석 시스템: 먼저 탄 사람이 운전자, 다음이 조수석, 운전자가 내리면 자동 교대',
+    r46:'👤 작가 NPC 추가, 무적, 가까이 가면 상호작용(몬스터 전멸/힌트/골드/회복), 공격하면 반격',
+    r47:'💀 사망 메시지 추상화: 번개=하늘이 불공평, 출혈=이유 불명, 장난=깨진 글자, 작가=미지에 의해 사망',
+    r48:'📂 세이브 로딩 멈춤 수정, 차량 상태 완전 저장/로드, 싱글 세이브에서 듀오 CSS 자동 제거',
+    rDash:'💨 대시 스킬',
+    rDashDesc:'Shift 또는 💨 버튼으로 이동 방향 대시, 잠시 무적, 3초 쿨',
+    rWeather:'🌤️ 날씨 시스템',
+    rWeatherCloudy:'흐림: 하늘이 어두워짐, 다른 효과 없음',
+    rWeatherHot:'강한 태양: 속도 20% 감소, 10초마다 열사병 1피해',
+    rWeatherRain:'비: 미끄러운 땅, 이동 중 넘어질 확률(90도 회전, 2초 움직임 불가), 플레이어/NPC/몬스터 모두 넘어짐',
+    rWeatherSunny:'맑음: 특수 효과 없음',
+    rWeatherThunder:'번개: 비+번개, 번개가 근처 몬스터/NPC/플레이어를 죽임(보스 면역)',
+    save1:'세이브 1',
+    save2:'세이브 2',
+    save3:'세이브 3',
+    skipDay:'🌙 낮 스킵, 밤이 됨',
+    skipNight:'☀ 밤 스킵, 낮이 됨',
+    slipFall:'💦 미끄러졌다! 2초 움직임 불가',
+    times:'회',
+    unknownTime:'알 수 없는 시간',
+    victoryTitle:'🏆 승리!',
+    weaponLabel:'무기:',
+    weatherCloudy:'☁️ 흐려졌다',
+    weatherHot:'🔥 강한 태양! 더위 조심!',
+    weatherRain:'🌧️ 비가 온다! 미끄러움 주의!',
+    weatherSunny:'☀️ 맑아졌다',
+    weatherThunder:'⛈️ 번개가 친다! 낙뢰 주의!',
+    r5:'피격 후 잠시 무적(연속 피해 방지)',
+    r6:'30% 확률 출혈: 5초마다 1 HP 감소, 붕대/메디킷으로 지혈',
+    r7:'근접 2피해, 시작 보유',
+    r8:'근접 4피해, 상점 50골드',
+    r9:'원거리 5피해, 상점 120골드, 조준 조이스틱',
   },
   fr: {
     name:'Français', start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres',
@@ -1280,6 +2042,253 @@ const LANGS = {
     npcRobotText:'Ta force de combat est grande, mais tu as le pire caractère, tu te bats toujours pour un rien. J\'espère que tu pourras changer.',
     npcTroubleName:'😝 Fauteur de trouble',
     npcTroubleText:'(😝 vient de faire une grimace, puis t\'a donné un coup de pied — ce type ne parle qu\'avec ses poings.)',
+    bankRobbed:'🏦 La banque a été braquée ! Des pièces partout !',
+    policeCarKill1:'1P écrasé par une voiture de police !',
+    policeCarKill2:'2P écrasé par une voiture de police !',
+    bossDetect:'🥺 Elle t\'a remarqué !',
+    bossEnrage:'🥺 Elle est enragée !',
+    bossVanished:'🥺 Elle a disparu... elle est encore quelque part',
+    bossKill:'a été tranché par 🥺 !',
+    enterBuilding:'Bâtiment entré ! Étage 1, attention au Boss !',
+    exitBuilding:'Bâtiment quitté !',
+    alreadyTopFloor:'Déjà au dernier étage !',
+    upToFloor:'Monté à l\'étage ',
+    downToFloor:'Descendu à l\'étage ',
+    floorSuffix:' !',
+    coinPickup1:'1P a ramassé ',
+    coinPickup2:'2P a ramassé ',
+    coinSuffix:' pièces !',
+    surface:'Remonté à la surface !',
+    dive:'Plongé sous l\'eau ! Oxygène : ',
+    beatCityBoss:'🎉 Boucher de la ville 🥺 vaincu ! +100 pièces !',
+    revive1:'1P ressuscité ! Demi-PV',
+    revive2:'2P ressuscité ! Demi-PV',
+    fellUnknown1:'1P est tombé sans raison...',
+    fellUnknown2:'2P est tombé sans raison...',
+    cityMixed:'Quelque chose semble se mêler à la ville...',
+    bossStage2:'😈 Boss en phase 2 !',
+    bossStage3:'😈 Boss en phase 3 ! Il fonce maintenant !',
+    bossStage4:'😈 Boss en PHASE FINALE !! Alerte rouge !',
+    eliteAppear:'👾 Monstre d\'élite apparu !',
+    cityUnlocked:'🎉 Carte ville débloquée !',
+    indoorAttack:'attaqué par le tueur intérieur 🙂 ! -8PV',
+    elevatorTop:'🛗 Ascenseur direct au dernier étage ! Étage ',
+    indoorHint:'Près des escaliers/ascenseur/sortie, appuie sur E',
+    prankFly:'a été piégé et envoyé voler !',
+    prankMob:'des monstres ont été invoqués à côté par la blague !',
+    prankStun:'a été piégé et étourdi !',
+    prankSlip:'a été piégé et a glissé !',
+    prankBleed:'a été piégé et saigne !',
+    prankTeleport:'a été piégé et téléporté !',
+    prankWeak:'a été piégé et affaibli !',
+    prankInfGold:'a été piégé et a reçu des pièces infinies !',
+    prankRevive:'a été piégé et ressuscité ! (Demi-PV + 3s invincible)',
+    prankNoNeed:'encore en vie, pas besoin de ressusciter !',
+    buyRescuer:'💉 Acheté un kit de secours !',
+    alreadyCar:'🚗 Tu as déjà une voiture !',
+    buyCar:'🚗 Voiture tout-terrain achetée ! Appuie sur E pour monter/descendre',
+    alreadyScuba:'🤿 Tu as déjà un équipement de plongée !',
+    buyScuba:'🤿 Équipement de plongée acheté ! Consommation d\'oxygène réduite de moitié, oxygène max augmenté !',
+    carHandover:'est descendu, ',
+    carTakeOver:'a repris le volant !',
+    carExit:'est descendu de la voiture',
+    carFull:'Voiture pleine, impossible de monter !',
+    carDrive:'est monté, commence à conduire ! WASD/Flèches pour contrôler, écrase les monstres',
+    carPassenger:'est monté, assis comme passager',
+    carTooFar:'Trop loin de la voiture pour monter',
+    carNitroDriverOnly:'Seul le conducteur peut utiliser le nitro !',
+    carNitroNeedCar:'Il faut être dans une voiture pour utiliser le nitro !',
+    carNitroCooldown:'Nitro en recharge : ',
+    carNitroActive:'🚀 Nitro activé !',
+    carKill1:'1P écrasé par une voiture !',
+    carKill2:'2P écrasé par une voiture !',
+    deathLightning:'Le ciel est injuste !',
+    deathBleeding:'Disparu sans raison...',
+    deathPrank:'ÿþüøõñðáç',
+    deathAuthor:'Tu as été tué par l\'inconnu',
+    rescueStart1:'1P commence à secourir 2P ! Résurrection dans 7s',
+    rescueStart2:'2P commence à secourir 1P ! Résurrection dans 7s',
+    nitroEnd:'Nitro terminé',
+    cityLocked:'🔒 Terminez la prairie (vainquez le Boss final 🥺) pour débloquer la ville !',
+    btnUp:'⬆ Monter',
+    btnDown:'⬇ Descendre',
+    btnExit:'🚪 Sortir',
+    btnElevator:'🛗 Ascenseur',
+    btnEnterBld:'🏢 Entrer',
+    btnEnter:'🏢',
+    cityName:'Ville',
+    cityLockedName:'🔒 Ville',
+    cheatPanelTitle:'Panneau de triche',
+    cheatInfHp:'PV infinis joueur',
+    cheatInfDmg:'Dégâts infinis',
+    cheatMobSea:'Mer de monstres',
+    cheatAlaskey:'Je suis Alaskien (affaibli)',
+    cheatNoSlip:'Anti-glisse',
+    cheatDashCd:'Dash sans recharge',
+    cheatInfGold:'Pièces infinies',
+    cheatSkipDay:'Sauter le jour',
+    cheatSkipNight:'Sauter la nuit',
+    prankPanelTitle:'🃏 Panneau farce',
+    prankBtnKill:'💀 Tuer ladversaire',
+    prankBtnFly:'🚀 Envoyer voler ladversaire',
+    prankBtnMob:'👾 Invoquer des monstres à côté',
+    prankBtnStun:'😵 Étourdir ladversaire 3s',
+    prankBtnSlip:'🤸 Faire glisser ladversaire',
+    prankBtnBleed:'🩸 Faire saigner ladversaire',
+    prankBtnTeleport:'🌀 Téléporter ladversaire',
+    prankBtnWeak:'🐢 Affaiblir ladversaire 10s',
+    prankBtnGold:'💰 Pièces infinies pour ladversaire',
+    prankBtnRevive:'❤️ Ressusciter ladversaire',
+    authorPanelTitle:'👤 Auteur',
+    authorBtnKill:'💀 Tuer tous les monstres',
+    authorBtnTip:'💡 Astuces',
+    authorBtnGold:'💰 Donner des pièces',
+    authorBtnHeal:'❤️ Soigner les PV',
+    authorBtnMob:'👾 Invoquer des monstres',
+    switchWeaponBtn:'Changer darme',
+    shopRevive:'💉 Kit de secours (ressuscite, 7s)',
+    shopCar:'🚗 4x4 (écrase + rapide + creuse)',
+    shopScuba:'🤿 Équipement de plongée (oxygène ÷2)',
+    floorUpTag:'⬆ Monter',
+    floorDownTag:'⬇ Descendre',
+    elevatorTag:'🛗 Ascenseur (direct au dernier)',
+    exitTag:'🚪 SORTIE',
+    floorInfoA:'Étage ',
+    floorInfoB:' / ',
+    floorInfoC:'',
+    buildingHint:'⬆Escalier montée(bas-gauche) ⬇Escalier descente(haut-gauche) 🛗Ascenseur(bas-droite) 🚪Sortie(centre RDC)',
+    oxygenText:'💧 Oxygène : ',
+    surfaceKey:'E pour remonter',
+    diveKey:'🤿 pour plonger',
+    deathFallen:'est tombé !',
+    errDisplay:'❌ Erreur de jeu (envoie cette capture à lauteur)',
+    unknownErr:'Erreur inconnue',
+    errFatal:'❌ ERREUR FATALE !',
+    enterBld1:'🏢 Appuie sur E pour entrer',
+    enterBld2:'🏢 Appuie sur 6 pour entrer',
+    enterBld3:'🏢 Près de lentrée, appuie sur E',
+    cityBossName:'🥺 Boucher de la ville',
+    bossStageX:' [Phase ',
+    treeGold:'a percuté un arbre, +5 pièces !',
+    carKillKiller:'a écrasé un tueur !',
+    driving1:'1P conduit',
+    driving2:'2P conduit',
+    authorName:'Auteur',
+    authorCooldownA:'Auteur en recharge, ',
+    authorCooldownB:'s',
+    authorKillAll:'Lauteur a tué tous les monstres pour toi !',
+    authorTips:['Astuce : 10 kills = bouclier, 30 = mini boss, 50 = boule de feu !','Astuce : 70 kills = boule chargée, 120 = boss final !','Astuce : la pluie rend le sol glissant, attention ! La foudre tue !','Astuce : le grand soleil baisse les stats, nuage et clair sans effet !','Astuce : les voitures écrasent les monstres et creusent ! 500 pièces !','Astuce : le nitro double la vitesse 3s !','Astuce : en mode duo, le premier monté conduit !','Astuce : demande des pièces à 😊, musique près de 😎 !','Astuce : le saignement enlève 1 PV toutes les 5s !','Astuce : la boutique vend des kits, bandages, secours !','Astuce : le NPC auteur est invincible, lattaquer se retourne !','Astuce : en duo tu peux piéger ton adversaire !','Astuce : la carte ville se débloque après la prairie !'],
+    npcTalksIdle:['...','Il fait beau aujourdhui','Pourquoi lascenseur est si lent','Ce bâtiment est haut','Bonjour','Nentre pas chez les autres','Fin de service...','Jai faim'],
+    npcTalksKiller:['...','Ne tavance pas','Hé hé...','Je te vois...','Chut...','Tu ne techapperas pas'],
+    dupTag:'[2J] ',
+    dupRecordTag:'[Mode duo] ',
+    errPrefix:'Erreur : ',
+    authorGold:'Lauteur ta donné ',
+    authorHeal:'Lauteur ta soigné ',
+    authorMobJoke:'Lauteur a plaisanté et invoqué une horde de monstres !',
+    coopStart:'👥 Mode coop lancé ! 1P:WASD+J  2P:Flèches+1',
+    hpPoints:' PV',
+    authorEmail:'📧 Email de lauteur',
+    autoSaved:'Progression sauvegardée',
+    beatFinalBoss:'Tu as vaincu le Boss final 😈 !',
+    cheatWarning:'⚠ Cette personne a triché',
+    clearRating:'🏆 Évaluation de fin',
+    clearRecord:'🏆 Record de fin',
+    confirmClearAll:'Effacer toutes les sauvegardes locales ? Irréversible.',
+    confirmDelete:'Supprimer ',
+    confirmDelete2:' ? Irréversible.',
+    confirmOverwrite:'Écraser ',
+    confirmOverwrite2:' ? La progression sera perdue.',
+    dashNoCdOn:'💨 Dash sans recharge activé',
+    defeatTitle:'💀 Fin de partie',
+    defeatedByMob:'Tu as été vaincu par les monstres...',
+    deleteBtn:'🗑 Supprimer',
+    emptySave:'Sauvegarde vide',
+    emptySaveDesc:'Ce slot est vide',
+    feedback:'Envoie tes retours à',
+    fullHp:'PV pleins',
+    gameTitle:'Bataille de la Prairie Pixel',
+    infGoldOn:'💰 Pièces infinies activées',
+    killCount:'Tués : ',
+    landscapeHint:'Continue automatiquement après rotation',
+    lightningHit:'⚡ Frappé par la foudre ! -8PV',
+    loadBtn:'▶ Charger',
+    lowHp:'PV bas',
+    medUse:'Médicaments utilisés',
+    newGameBtn:'🆕 Nouvelle partie',
+    noSlipOn:'🧊 Anti-glisse activé, plus de glissade sous la pluie',
+    overwriteNewGame:'🆕 Écraser la nouvelle partie',
+    r1:'Joystick bas-gauche pour bouger, boutons bas-droite pour attaquer/creuser/grenade',
+    r10:'6 dégâts à distance, débloqué à 50 tués',
+    r11:'8 dégâts à distance, débloqué à 70 tués',
+    r12:'Dégâts de zone, 40 or/3 en boutique',
+    r13:'3 dégâts au corps à corps, rapide',
+    r14:'Onde sonore 2 dégâts à distance',
+    r15:'3 dégâts au corps à corps, très rapide',
+    r16:'Apparaît à 30 tués, avec armée 👾',
+    r17:'Apparaît à 120 tués, multi-phases, avec armée 👾',
+    r18:'Peut demander 25 or (recharge), explose après 60s, réanimation 30s',
+    r19:'Invincible, ouvre la boutique près de lui, vend armes et soins',
+    r2:'Flèches pour bouger, J attaque, K creuser, L grenade, Q changer darme',
+    r20:'Donne un coup de pied, étourdit 2s, tuable, réanimation 30s',
+    r21:'Erre au hasard, musique dans 150px, tuable, réanimation 30s',
+    r22:'Peut attaquer toute créature sauf 🤬',
+    r23:'Jour 60s : sûr, pas de monstres, idéal pour explorer',
+    r24:'Nuit 60s : monstres, peu les 30 premières secondes, max 20 (35 👾 en boss)',
+    r25:'35% de chance de 3 or par monstre tué',
+    r26:'Souvre près de 🤬, objets défilables',
+    r27:'+5 PV + arrêt saignement',
+    r28:'PV complets + arrêt saignement',
+    r29:'débloqué à  tués, dégâts -1/3',
+    r3:'Joystick orange bas-droite pour viser, bouge à gauche, vise à droite, tire en courant',
+    r30:'apparaît à  tués, avec armée 👾',
+    r31:'débloqué à  tués, 6 dégâts à distance',
+    r32:'débloqué à  tués, 8 dégâts à distance',
+    r33:'arrive à  tués, multi-phases, avec armée 👾',
+    r34:'Le Boss arrive avec beaucoup de 👾 et en réapparaît sans cesse',
+    r35:'Support de 8 langues (à changer dans les réglages)',
+    r36:'Boule de feu / chargée utilise le joystick de visée',
+    r37:'Position du joystick optimisée, taille réduite',
+    r38:'😎 La musique du vagabond attire les monstres proches',
+    r39:'💨 Nouveau dash (Shift/bouton 💨), 3s de recharge, invincible en dash',
+    r4:'15 PV, poing 2 dégâts, vitesse 2.8',
+    r40:'🌤️ Nouveau système météo : soleil/nuage/pluie/orage/gros soleil',
+    r41:'🌧️ La pluie rend le sol glissant, joueurs/NPC/monstres tombent (rotation 90° 2s)',
+    r42:'⛈️ La foudre tue les créatures proches, le gros soleil ralentit et fait des dégâts',
+    r43:'🚗 Nouveau système de 4x4, 500 or, écrase les monstres, creuse les arbres',
+    r44:'🚀 Nitro, Shift/2 pour activer, vitesse x2 3s, 10s de recharge',
+    r45:'💺 Sièges de voiture : le premier monté conduit, le second est passager, le conducteur descend, le passager reprend',
+    r46:'👤 Nouveau NPC auteur, invincible, interactif (tuer les monstres/conseils/or/soin), attaque = contre-attaque',
+    r47:'💀 Messages de mort abstraits : foudre = injustice, saignement = sans raison, farce = brouillage, auteur = tué par linconnu',
+    r48:'📂 Correction du blocage de chargement, état du véhicule sauvegardé, CSS duo retiré des saves solo',
+    rDash:'💨 Compétence dash',
+    rDashDesc:'Shift ou 💨 pour foncer, brièvement invincible, 3s de recharge',
+    rWeather:'🌤️ Système météo',
+    rWeatherCloudy:'Nuageux : ciel sombre, aucun autre effet',
+    rWeatherHot:'Gros soleil : vitesse -20%, coup de chaleur 1 PV toutes les 10s',
+    rWeatherRain:'Pluie : sol glissant, risque de tomber en bougeant (rotation 90°, 2s immobile), joueurs/NPC/monstres tombent',
+    rWeatherSunny:'Soleil : aucun effet spécial',
+    rWeatherThunder:'Orage : pluie + foudre, la foudre tue les monstres/NPC/joueurs proches (Boss immunisé)',
+    save1:'Sauvegarde 1',
+    save2:'Sauvegarde 2',
+    save3:'Sauvegarde 3',
+    skipDay:'🌙 Jour sauté, nuit tombe',
+    skipNight:'☀ Nuit sautée, jour se lève',
+    slipFall:'💦 Glissé ! 2s immobile',
+    times:' fois',
+    unknownTime:'Heure inconnue',
+    victoryTitle:'🏆 Victoire !',
+    weaponLabel:'Arme :',
+    weatherCloudy:'☁️ Il se couvre',
+    weatherHot:'🔥 Gros soleil ! Attention à la chaleur !',
+    weatherRain:'🌧️ Il pleut ! Sol glissant, attention !',
+    weatherSunny:'☀️ Il fait beau',
+    weatherThunder:'⛈️ Orage ! Attention à la foudre !',
+    r5:'Invincibilité brève après dégâts',
+    r6:'30% de chance de saignement : -1 PV toutes les 5s, bandage/kit',
+    r7:'2 dégâts corps à corps, de départ',
+    r8:'4 dégâts corps à corps, 50 or en boutique',
+    r9:'5 dégâts à distance, 120 or en boutique, joystick de visée',
   },
   de: {
     name:'Deutsch', start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen',
@@ -1318,6 +2327,253 @@ const LANGS = {
     npcRobotText:'Deine Kampfkraft ist stark, aber du hast den schlimmsten Charakter, du kämpfst wegen jeder Kleinigkeit. Ich hoffe, du kannst dich ändern.',
     npcTroubleName:'😝 Unruhestifter',
     npcTroubleText:'(😝 hat dir nur eine Grimasse geschnitten, dann dich getreten — dieser Typ spricht nur mit seinen Fäusten.)',
+    bankRobbed:'🏦 Bank ausgeraubt! Überall Münzen!',
+    policeCarKill1:'1P wurde von Polizeiauto überfahren!',
+    policeCarKill2:'2P wurde von Polizeiauto überfahren!',
+    bossDetect:'🥺 Sie hat dich bemerkt!',
+    bossEnrage:'🥺 Sie ist wütend geworden!',
+    bossVanished:'🥺 Sie ist verschwunden... sie ist noch irgendwo',
+    bossKill:'wurde von 🥺 aufgeschlitzt!',
+    enterBuilding:'Gebäude betreten! Etage 1, Achtung vor dem Boss!',
+    exitBuilding:'Gebäude verlassen!',
+    alreadyTopFloor:'Schon im obersten Stock!',
+    upToFloor:'Hoch zu Etage ',
+    downToFloor:'Runter zu Etage ',
+    floorSuffix:'!',
+    coinPickup1:'1P hat ',
+    coinPickup2:'2P hat ',
+    coinSuffix:' Münzen aufgesammelt!',
+    surface:'Aufgetaucht!',
+    dive:'Abgetaucht! Sauerstoff: ',
+    beatCityBoss:'🎉 Stadtmetzger 🥺 besiegt! +100 Münzen!',
+    revive1:'1P wiederbelebt! Halbes HP',
+    revive2:'2P wiederbelebt! Halbes HP',
+    fellUnknown1:'1P fiel aus unerklärlichen Gründen um...',
+    fellUnknown2:'2P fiel aus unerklärlichen Gründen um...',
+    cityMixed:'Etwas scheint sich in die Stadt gemischt zu haben...',
+    bossStage2:'😈 Boss in Phase 2!',
+    bossStage3:'😈 Boss in Phase 3! Er stürmt jetzt!',
+    bossStage4:'😈 Boss in ENDPHASE!! Roter Alarm!',
+    eliteAppear:'👾 Elite-Monster erschienen!',
+    cityUnlocked:'🎉 Stadtkarte freigeschaltet!',
+    indoorAttack:'von Innenkiller 🙂 angegriffen! -8HP',
+    elevatorTop:'🛗 Aufzug direkt in den obersten Stock! Etage ',
+    indoorHint:'In der Nähe von Treppe/Aufzug/Ausgang E drücken',
+    prankFly:'wurde reingelegt und flog hoch!',
+    prankMob:'Monster wurden daneben beschworen!',
+    prankStun:'wurde reingelegt und betäubt!',
+    prankSlip:'wurde reingelegt und rutschte!',
+    prankBleed:'wurde reingelegt und blutet!',
+    prankTeleport:'wurde reingelegt und teleportiert!',
+    prankWeak:'wurde reingelegt und geschwächt!',
+    prankInfGold:'wurde reingelegt und bekam unendlich Münzen!',
+    prankRevive:'wurde reingelegt und wiederbelebt! (Halbes HP + 3s unverwundbar)',
+    prankNoNeed:'noch am Leben, keine Wiederbelebung nötig!',
+    buyRescuer:'💉 Rettungsset gekauft!',
+    alreadyCar:'🚗 Du hast schon ein Auto!',
+    buyCar:'🚗 Geländewagen gekauft! E zum Ein-/Aussteigen',
+    alreadyScuba:'🤿 Du hast schon Tauchausrüstung!',
+    buyScuba:'🤿 Tauchausrüstung gekauft! Sauerstoffverbrauch halbiert, max. Sauerstoff erhöht!',
+    carHandover:'stieg aus, ',
+    carTakeOver:'übernahm das Fahren!',
+    carExit:'stieg aus dem Auto',
+    carFull:'Auto ist voll, kann nicht einsteigen!',
+    carDrive:'stieg ein, Fahren beginnt! WASD/Pfeile zum Steuern, Rammen tötet Monster',
+    carPassenger:'stieg ein, sitzt als Beifahrer',
+    carTooFar:'Zu weit vom Auto zum Einsteigen',
+    carNitroDriverOnly:'Nur der Fahrer kann Nitro benutzen!',
+    carNitroNeedCar:'Man muss im Auto sein, um Nitro zu benutzen!',
+    carNitroCooldown:'Nitro lädt ab: ',
+    carNitroActive:'🚀 Nitro aktiviert!',
+    carKill1:'1P wurde von Auto überfahren!',
+    carKill2:'2P wurde von Auto überfahren!',
+    deathLightning:'Der Himmel ist ungerecht!',
+    deathBleeding:'Ohne Grund verschwunden...',
+    deathPrank:'ÿþüøõñðáç',
+    deathAuthor:'Du wurdest vom Unbekannten getötet',
+    rescueStart1:'1P beginnt 2P zu retten! Wiederbelebung in 7s',
+    rescueStart2:'2P beginnt 1P zu retten! Wiederbelebung in 7s',
+    nitroEnd:'Nitro beendet',
+    cityLocked:'🔒 Schließe die Wiese ab (besiege Endboss 🥺) um die Stadt freizuschalten!',
+    btnUp:'⬆ Hoch',
+    btnDown:'⬇ Runter',
+    btnExit:'🚪 Raus',
+    btnElevator:'🛗 Aufzug',
+    btnEnterBld:'🏢 Rein',
+    btnEnter:'🏢',
+    cityName:'Stadt',
+    cityLockedName:'🔒 Stadt',
+    cheatPanelTitle:'Cheat-Panel',
+    cheatInfHp:'Spieler unendlich HP',
+    cheatInfDmg:'Unendlicher Schaden',
+    cheatMobSea:'Monsterflut',
+    cheatAlaskey:'Ich bin Alaskaner (geschwächt)',
+    cheatNoSlip:'Rutschfest',
+    cheatDashCd:'Dash ohne Abklingzeit',
+    cheatInfGold:'Unendlich Münzen',
+    cheatSkipDay:'Tag überspringen',
+    cheatSkipNight:'Nacht überspringen',
+    prankPanelTitle:'🃏 Streich-Panel',
+    prankBtnKill:'💀 Gegner direkt töten',
+    prankBtnFly:'🚀 Gegner wegschleudern',
+    prankBtnMob:'👾 Monster neben Gegner beschwören',
+    prankBtnStun:'😵 Gegner 3s betäuben',
+    prankBtnSlip:'🤸 Gegner ausrutschen lassen',
+    prankBtnBleed:'🩸 Gegner bluten lassen',
+    prankBtnTeleport:'🌀 Gegner teleportieren',
+    prankBtnWeak:'🐢 Gegner 10s schwächen',
+    prankBtnGold:'💰 Gegner bekommt unendlich Münzen',
+    prankBtnRevive:'❤️ Gegner wiederbeleben',
+    authorPanelTitle:'👤 Autor',
+    authorBtnKill:'💀 Alle Monster töten',
+    authorBtnTip:'💡 Tipps',
+    authorBtnGold:'💰 Münzen geben',
+    authorBtnHeal:'❤️ HP heilen',
+    authorBtnMob:'👾 Monster beschwören',
+    switchWeaponBtn:'Waffe wechseln',
+    shopRevive:'💉 Rettungsset (Teamkollege wiederbeleben, 7s)',
+    shopCar:'🚗 Geländewagen (Rammen tötet + schnell + gräbt)',
+    shopScuba:'🤿 Tauchausrüstung (Sauerstoff ÷2)',
+    floorUpTag:'⬆ Hoch',
+    floorDownTag:'⬇ Runter',
+    elevatorTag:'🛗 Aufzug (direkt nach oben)',
+    exitTag:'🚪 AUSGANG',
+    floorInfoA:'Etage ',
+    floorInfoB:' / ',
+    floorInfoC:'',
+    buildingHint:'⬆Treppe hoch(links unten) ⬇Treppe runter(links oben) 🛗Aufzug(rechts unten) 🚪Ausgang(EG Mitte)',
+    oxygenText:'💧 Sauerstoff: ',
+    surfaceKey:'E zum Auftauchen',
+    diveKey:'🤿 zum Tauchen',
+    deathFallen:'ist gefallen!',
+    errDisplay:'❌ Spielfehler (schick diesen Screenshot dem Autor)',
+    unknownErr:'Unbekannter Fehler',
+    errFatal:'❌ FATALER FEHLER!',
+    enterBld1:'🏢 Drücke E zum Betreten',
+    enterBld2:'🏢 Drücke 6 zum Betreten',
+    enterBld3:'🏢 Nahe dem Eingang, drücke E',
+    cityBossName:'🥺 Stadtmetzger',
+    bossStageX:' [Phase ',
+    treeGold:'rammte einen Baum, +5 Münzen!',
+    carKillKiller:'überfuhr einen Killer!',
+    driving1:'1P fährt',
+    driving2:'2P fährt',
+    authorName:'Autor',
+    authorCooldownA:'Autor-Abklingzeit, ',
+    authorCooldownB:'s',
+    authorKillAll:'Der Autor hat alle Monster für dich getötet!',
+    authorTips:['Tipp: 10 Kills = Schild, 30 = Mini-Boss, 50 = Feuerball!','Tipp: 70 Kills = Ladefeuerball, 120 = Endboss!','Tipp: Regen macht den Boden rutschig, Vorsicht! Blitz tötet!','Tipp: Große Sonne senkt Status, klar und bewölkt ohne Effekt!','Tipp: Autos töten Monster und graben Bäume! 500 Münzen!','Tipp: Nitro verdoppelt die Geschwindigkeit 3s!','Tipp: Im Duo-Modus fährt, wer zuerst einsteigt!','Tipp: Bitte 😊 um Münzen, Musik bei 😎!','Tipp: Blutung kostet 1 HP alle 5s!','Tipp: Der Laden verkauft Medikits, Bandagen, Retter!','Tipp: Der Autor-NPC ist unbesiegbar, Angriffe prallen ab!','Tipp: Im Duo kannst du deinen Gegner reinlegen!','Tipp: Stadtkarte wird nach der Wiese freigeschaltet!'],
+    npcTalksIdle:['...','Schönes Wetter heute','Warum ist der Aufzug so langsam','Dieses Gebäude ist hoch','Hallo','Geh nicht in fremde Häuser','Feierabend...','So hungrig'],
+    npcTalksKiller:['...','Bleib zurück','Hehe...','Ich sehe dich...','Pssst...','Du entkommst nicht'],
+    dupTag:'[2P] ',
+    dupRecordTag:'[2P-Modus] ',
+    errPrefix:'Fehler: ',
+    authorGold:'Der Autor gab dir ',
+    authorHeal:'Der Autor heilte dich ',
+    authorMobJoke:'Der Autor scherzte und beschwor eine Monsterhorde!',
+    coopStart:'👥 Koop-Modus gestartet! 1P:WASD+J  2P:Pfeile+1',
+    hpPoints:' HP',
+    authorEmail:'📧 E-Mail des Autors',
+    autoSaved:'Fortschritt automatisch gespeichert',
+    beatFinalBoss:'Du hast den Endboss 😈 besiegt!',
+    cheatWarning:'⚠ Diese Person hat gecheatet',
+    clearRating:'🏆 Abschlussbewertung',
+    clearRecord:'🏆 Abschlussrekord',
+    confirmClearAll:'Alle lokalen Speicher löschen? Unwiderruflich.',
+    confirmDelete:'Löschen ',
+    confirmDelete2:' ? Unwiderruflich.',
+    confirmOverwrite:'Überschreiben ',
+    confirmOverwrite2:' ? Alter Fortschritt geht verloren.',
+    dashNoCdOn:'💨 Dash ohne Abklingzeit aktiviert',
+    defeatTitle:'💀 Spielende',
+    defeatedByMob:'Du wurdest von Monstern besiegt...',
+    deleteBtn:'🗑 Löschen',
+    emptySave:'Leerer Speicher',
+    emptySaveDesc:'Dieser Slot ist leer',
+    feedback:'Sende Feedback an',
+    fullHp:'Volle HP',
+    gameTitle:'Pixel Prairie Battle',
+    infGoldOn:'💰 Unendlich Gold aktiviert',
+    killCount:'Kills: ',
+    landscapeHint:'Setzt automatisch nach Drehung fort',
+    lightningHit:'⚡ Vom Blitz getroffen! -8HP',
+    loadBtn:'▶ Laden',
+    lowHp:'Niedrige HP',
+    medUse:'Medikamente benutzt',
+    newGameBtn:'🆕 Neues Spiel',
+    noSlipOn:'🧊 Rutschfest aktiviert, kein Rutschen im Regen',
+    overwriteNewGame:'🆕 Neues Spiel überschreiben',
+    r1:'Joystick unten-links bewegen, Tasten unten-rechts angreifen/graben/Granate',
+    r10:'6 Schaden auf Distanz, freigeschaltet bei 50 Kills',
+    r11:'8 Schaden auf Distanz, freigeschaltet bei 70 Kills',
+    r12:'Flächenschaden, 40 Gold/3 im Laden',
+    r13:'3 Schaden im Nahkampf, schnell',
+    r14:'Schallwelle 2 Schaden auf Distanz',
+    r15:'3 Schaden im Nahkampf, am schnellsten',
+    r16:'Erscheint bei 30 Kills, mit 👾 Armee',
+    r17:'Erscheint bei 120 Kills, mehrstufig, mit 👾 Armee',
+    r18:'Kann 25 Gold verlangen (Abklingzeit), explodiert nach 60s, Wiederbelebung 30s',
+    r19:'Unbesiegbar, öffnet Laden in der Nähe, verkauft Waffen und Heilung',
+    r2:'Pfeile bewegen, J Angriff, K graben, L Granate, Q Waffe wechseln',
+    r20:'Tritt dich, 2s Betäubung, besiegbar, Wiederbelebung 30s',
+    r21:'Streift zufällig, Musik in 150px, besiegbar, Wiederbelebung 30s',
+    r22:'Kann alle Kreaturen angreifen außer 🤬',
+    r23:'Tag 60s: sicher, keine Monster, ideal zum Erkunden',
+    r24:'Nacht 60s: Monster, erste 30s weniger, danach max 20 (35 👾 beim Boss)',
+    r25:'35% Chance auf 3 Gold pro Monster-Kill',
+    r26:'Öffnet sich nahe 🤬, Artikel scrollbar',
+    r27:'+5 HP + Blutung stoppen',
+    r28:'Volle HP + Blutung stoppen',
+    r29:'freigeschaltet bei  Kills, Schaden -1/3',
+    r3:'Oranger Ziel-Joystick unten-rechts, links bewegen, rechts zielen, im Laufen schießen',
+    r30:'erscheint bei  Kills, mit 👾 Armee',
+    r31:'freigeschaltet bei  Kills, 6 Schaden Distanz',
+    r32:'freigeschaltet bei  Kills, 8 Schaden Distanz',
+    r33:'kommt bei  Kills, mehrstufig, mit 👾 Armee',
+    r34:'Boss erscheint mit vielen 👾 und lässt sie nachspawnen',
+    r35:'8 Sprachen unterstützt (in Einstellungen wechseln)',
+    r36:'Feuerball/aufgeladener Feuerball nutzt Ziel-Joystick',
+    r37:'Ziel-Joystick-Position optimiert, Größe verkleinert',
+    r38:'😎 Die Musik des Wanderers lockt Monster an',
+    r39:'💨 Neuer Dash (Shift/💨-Button), 3s Abklingzeit, unverwundbar beim Dash',
+    r4:'15 HP, Faust 2 Schaden, Geschwindigkeit 2.8',
+    r40:'🌤️ Neues Wettersystem: sonnig/bewölkt/Regen/Donner/große Sonne',
+    r41:'🌧️ Regen macht Boden rutschig, Spieler/NPC/Monster fallen (90° Drehung 2s)',
+    r42:'⛈️ Blitz tötet Kreaturen in der Nähe, große Sonne verlangsamt und schadet',
+    r43:'🚗 Neues Geländewagen-System, 500 Gold, Rammen tötet, Bäume graben',
+    r44:'🚀 Nitro, Shift/2 aktivieren, Geschwindigkeit x2 3s, 10s Abklingzeit',
+    r45:'💺 Sitzplätze: erster Einsteiger fährt, zweiter ist Beifahrer, Fahrer aussteigen = Übernahme',
+    r46:'👤 Neuer Autor-NPC, unbesiegbar, interaktiv (Monster töten/Tipps/Gold/Heilen), Angriff = Konter',
+    r47:'💀 Abstrakte Todesmeldungen: Blitz = Ungerechtigkeit, Blutung = ohne Grund, Streich = Kauderwelsch, Autor = vom Unbekannten getötet',
+    r48:'📂 Lade-Hänger behoben, Fahrzeugzustand gespeichert, Duo-CSS aus Solo-Speichern entfernt',
+    rDash:'💨 Dash-Fähigkeit',
+    rDashDesc:'Shift oder 💨 zum Vorwärtssturm, kurz unverwundbar, 3s Abklingzeit',
+    rWeather:'🌤️ Wettersystem',
+    rWeatherCloudy:'Bewölkt: dunkler Himmel, keine anderen Effekte',
+    rWeatherHot:'Große Sonne: Geschwindigkeit -20%, Hitzschlag 1 HP alle 10s',
+    rWeatherRain:'Regen: rutschiger Boden, Sturzrisiko beim Bewegen (90° Drehung, 2s bewegungsunfähig), Spieler/NPC/Monster fallen',
+    rWeatherSunny:'Sonnig: keine besonderen Effekte',
+    rWeatherThunder:'Donner: Regen + Blitz, Blitz tötet nahe Monster/NPC/Spieler (Boss immun)',
+    save1:'Speicher 1',
+    save2:'Speicher 2',
+    save3:'Speicher 3',
+    skipDay:'🌙 Tag übersprungen, Nacht bricht an',
+    skipNight:'☀ Nacht übersprungen, Tag bricht an',
+    slipFall:'💦 Ausgerutscht! 2s bewegungsunfähig',
+    times:' Mal',
+    unknownTime:'Unbekannte Zeit',
+    victoryTitle:'🏆 Sieg!',
+    weaponLabel:'Waffe:',
+    weatherCloudy:'☁️ Bewölkt',
+    weatherHot:'🔥 Große Sonne! Achtung Hitze!',
+    weatherRain:'🌧️ Regen! Boden rutschig, Vorsicht!',
+    weatherSunny:'☀️ Sonnig',
+    weatherThunder:'⛈️ Donner! Vorsicht vor Blitzen!',
+    r5:'Kurze Unverwundbarkeit nach Schaden',
+    r6:'30% Blutungschance: -1 HP alle 5s, Verband/Medikit',
+    r7:'2 Schaden Nahkampf, Startausrüstung',
+    r8:'4 Schaden Nahkampf, 50 Gold im Laden',
+    r9:'5 Schaden Distanz, 120 Gold im Laden, Ziel-Joystick',
   },
   es: {
     name:'Español', start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes',
@@ -1356,6 +2612,253 @@ const LANGS = {
     npcRobotText:'Tu poder de combate es fuerte, pero tienes el peor carácter, siempre peleas por cualquier cosa. Espero que puedas cambiar.',
     npcTroubleName:'😝 Alborotador',
     npcTroubleText:'(😝 solo te hizo una mueca, luego te pateó — este tipo solo habla con sus puños.)',
+    bankRobbed:'🏦 ¡Banco asaltado! ¡Monedas por todas partes!',
+    policeCarKill1:'¡1P atropellado por coche de policía!',
+    policeCarKill2:'¡2P atropellado por coche de policía!',
+    bossDetect:'🥺 ¡Te notó!',
+    bossEnrage:'🥺 ¡Se enfureció!',
+    bossVanished:'🥺 Desapareció... sigue en algún lugar',
+    bossKill:'fue cortado por 🥺!',
+    enterBuilding:'¡Edificio entrado! Piso 1, ¡cuidado con el Boss!',
+    exitBuilding:'¡Edificio salido!',
+    alreadyTopFloor:'¡Ya estás en el último piso!',
+    upToFloor:'Subió al piso ',
+    downToFloor:'Bajó al piso ',
+    floorSuffix:'!',
+    coinPickup1:'1P recogió ',
+    coinPickup2:'2P recogió ',
+    coinSuffix:' monedas!',
+    surface:'¡Saliste a la superficie!',
+    dive:'¡Buceado bajo el agua! Oxígeno: ',
+    beatCityBoss:'🎉 ¡Carnicero de la ciudad 🥺 derrotado! +100 monedas!',
+    revive1:'¡1P revivido! Media vida',
+    revive2:'¡2P revivido! Media vida',
+    fellUnknown1:'1P cayó sin razón aparente...',
+    fellUnknown2:'2P cayó sin razón aparente...',
+    cityMixed:'Algo parece mezclarse en la ciudad...',
+    bossStage2:'😈 ¡Boss en fase 2!',
+    bossStage3:'😈 ¡Boss en fase 3! ¡Ahora embiste!',
+    bossStage4:'😈 ¡Boss en FASE FINAL!! ¡Alerta roja!',
+    eliteAppear:'👾 ¡Monstruo de élite apareció!',
+    cityUnlocked:'🎉 ¡Mapa ciudad desbloqueado!',
+    indoorAttack:'atacado por el asesino interior 🙂! -8PV',
+    elevatorTop:'🛗 ¡Ascensor directo al último piso! Piso ',
+    indoorHint:'Cerca de escaleras/ascensor/salida, pulsa E',
+    prankFly:'fue engañado y voló por los aires!',
+    prankMob:'¡monstruos fueron invocados a su lado por la broma!',
+    prankStun:'fue engañado y aturdido!',
+    prankSlip:'fue engañado y resbaló!',
+    prankBleed:'fue engañado y sangra!',
+    prankTeleport:'fue engañado y teletransportado!',
+    prankWeak:'fue engañado y debilitado!',
+    prankInfGold:'fue engañado y recibió monedas infinitas!',
+    prankRevive:'fue engañado y revivido! (Media vida + 3s invencible)',
+    prankNoNeed:'sigue vivo, ¡no necesita revivir!',
+    buyRescuer:'💉 ¡Comprado kit de rescate!',
+    alreadyCar:'🚗 ¡Ya tienes un coche!',
+    buyCar:'🚗 ¡Coche todoterreno comprado! Pulsa E para subir/bajar',
+    alreadyScuba:'🤿 ¡Ya tienes equipo de buceo!',
+    buyScuba:'🤿 ¡Equipo de buceo comprado! Consumo de oxígeno a la mitad, oxígeno máximo aumentado!',
+    carHandover:'se bajó, ',
+    carTakeOver:'tomó el volante!',
+    carExit:'se bajó del coche',
+    carFull:'¡Coche lleno, no se puede subir!',
+    carDrive:'subió, ¡empieza a conducir! WASD/Flechas para controlar, atropella monstruos',
+    carPassenger:'subió, sentado como pasajero',
+    carTooFar:'Demasiado lejos del coche para subir',
+    carNitroDriverOnly:'¡Solo el conductor puede usar nitro!',
+    carNitroNeedCar:'¡Debes estar en un coche para usar nitro!',
+    carNitroCooldown:'Nitro recargando: ',
+    carNitroActive:'🚀 ¡Nitro activado!',
+    carKill1:'¡1P atropellado por un coche!',
+    carKill2:'¡2P atropellado por un coche!',
+    deathLightning:'¡El cielo es injusto!',
+    deathBleeding:'Desapareció sin razón...',
+    deathPrank:'ÿþüøõñðáç',
+    deathAuthor:'Fuiste asesinado por lo desconocido',
+    rescueStart1:'¡1P empieza a rescatar a 2P! Revive en 7s',
+    rescueStart2:'¡2P empieza a rescatar a 1P! Revive en 7s',
+    nitroEnd:'Nitro terminado',
+    cityLocked:'🔒 ¡Completa la pradera (vence al Boss final 🥺) para desbloquear la ciudad!',
+    btnUp:'⬆ Subir',
+    btnDown:'⬇ Bajar',
+    btnExit:'🚪 Salir',
+    btnElevator:'🛗 Ascensor',
+    btnEnterBld:'🏢 Entrar',
+    btnEnter:'🏢',
+    cityName:'Ciudad',
+    cityLockedName:'🔒 Ciudad',
+    cheatPanelTitle:'Panel de trucos',
+    cheatInfHp:'PV infinitos jugador',
+    cheatInfDmg:'Daño infinito',
+    cheatMobSea:'Mar de monstruos',
+    cheatAlaskey:'Soy Alaskan (debilitado)',
+    cheatNoSlip:'Antideslizante',
+    cheatDashCd:'Dash sin enfriamiento',
+    cheatInfGold:'Monedas infinitas',
+    cheatSkipDay:'Saltar día',
+    cheatSkipNight:'Saltar noche',
+    prankPanelTitle:'🃏 Panel de bromas',
+    prankBtnKill:'💀 Matar al rival',
+    prankBtnFly:'🚀 Lanzar al rival',
+    prankBtnMob:'👾 Invocar monstruos junto al rival',
+    prankBtnStun:'😵 Aturdir al rival 3s',
+    prankBtnSlip:'🤸 Hacer resbalar al rival',
+    prankBtnBleed:'🩸 Hacer sangrar al rival',
+    prankBtnTeleport:'🌀 Teletransportar al rival',
+    prankBtnWeak:'🐢 Debilitar al rival 10s',
+    prankBtnGold:'💰 Monedas infinitas para el rival',
+    prankBtnRevive:'❤️ Revivir al rival',
+    authorPanelTitle:'👤 Autor',
+    authorBtnKill:'💀 Matar todos los monstruos',
+    authorBtnTip:'💡 Consejos',
+    authorBtnGold:'💰 Dar monedas',
+    authorBtnHeal:'❤️ Curar PV',
+    authorBtnMob:'👾 Invocar monstruos',
+    switchWeaponBtn:'Cambiar arma',
+    shopRevive:'💉 Rescatador (revive a tu compañero, 7s)',
+    shopCar:'🚗 Todoterreno (atropella + rápido + cava)',
+    shopScuba:'🤿 Equipo de buceo (oxígeno ÷2)',
+    floorUpTag:'⬆ Subir',
+    floorDownTag:'⬇ Bajar',
+    elevatorTag:'🛗 Ascensor (directo al último)',
+    exitTag:'🚪 SALIDA',
+    floorInfoA:'Piso ',
+    floorInfoB:' / ',
+    floorInfoC:'',
+    buildingHint:'⬆Subir escaleras(abajo-izq) ⬇Bajar escaleras(arriba-izq) 🛗Ascensor(abajo-der) 🚪Salida(planta baja centro)',
+    oxygenText:'💧 Oxígeno: ',
+    surfaceKey:'E para subir',
+    diveKey:'🤿 para bucear',
+    deathFallen:'cayó!',
+    errDisplay:'❌ Error del juego (envía esta captura al autor)',
+    unknownErr:'Error desconocido',
+    errFatal:'❌ ERROR FATAL!',
+    enterBld1:'🏢 Pulsa E para entrar',
+    enterBld2:'🏢 Pulsa 6 para entrar',
+    enterBld3:'🏢 Cerca de la entrada, pulsa E',
+    cityBossName:'🥺 Carnicero de la ciudad',
+    bossStageX:' [Fase ',
+    treeGold:'chocó con un árbol, +5 monedas!',
+    carKillKiller:'atropelló a un asesino!',
+    driving1:'1P conduce',
+    driving2:'2P conduce',
+    authorName:'Autor',
+    authorCooldownA:'Autor enfriando, ',
+    authorCooldownB:'s',
+    authorKillAll:'¡El autor mató todos los monstruos por ti!',
+    authorTips:['Consejo: 10 bajas = escudo, 30 = mini jefe, 50 = bola de fuego!','Consejo: 70 bajas = bola cargada, 120 = jefe final!','Consejo: la lluvia hace resbalar, cuidado! El rayo mata!','Consejo: el sol fuerte baja stats, despejado y nublado sin efecto!','Consejo: los coches atropellan monstruos y cavan! 500 monedas!','Consejo: el nitro duplica la velocidad 3s!','Consejo: en modo duo, el primero que sube conduce!','Consejo: pide monedas a 😊, música cerca de 😎!','Consejo: sangrar pierde 1 PV cada 5s!','Consejo: la tienda vende kits, vendas, rescatadores!','Consejo: el NPC autor es invencible, atacarlo rebota!','Consejo: en duo puedes gastar bromas al rival!','Consejo: el mapa ciudad se desbloquea tras la pradera!'],
+    npcTalksIdle:['...','Hace buen día','Por qué el ascensor es tan lento','Este edificio es alto','Hola','No entres en casas ajenas','Fin de turno...','Qué hambre'],
+    npcTalksKiller:['...','No te acerques','Jeje...','Te veo...','Shh...','No escaparás'],
+    dupTag:'[2P] ',
+    dupRecordTag:'[Modo duo] ',
+    errPrefix:'Error: ',
+    authorGold:'El autor te dio ',
+    authorHeal:'El autor te curó ',
+    authorMobJoke:'El autor bromeó e invocó una horda de monstruos!',
+    coopStart:'👥 ¡Modo cooperativo iniciado! 1P:WASD+J  2P:Flechas+1',
+    hpPoints:' PV',
+    authorEmail:'📧 Email del autor',
+    autoSaved:'Progreso guardado automáticamente',
+    beatFinalBoss:'¡Derrotaste al Boss final 😈!',
+    cheatWarning:'⚠ Esta persona hizo trampa',
+    clearRating:'🏆 Evaluación de fin',
+    clearRecord:'🏆 Récord de fin',
+    confirmClearAll:'¿Borrar todas las partidas locales? Irreversible.',
+    confirmDelete:'¿Borrar ',
+    confirmDelete2:' ? Irreversible.',
+    confirmOverwrite:'¿Sobrescribir ',
+    confirmOverwrite2:' ? El progreso anterior se perderá.',
+    dashNoCdOn:'💨 Dash sin enfriamiento activado',
+    defeatTitle:'💀 Fin del juego',
+    defeatedByMob:'Fuiste derrotado por monstruos...',
+    deleteBtn:'🗑 Borrar',
+    emptySave:'Partida vacía',
+    emptySaveDesc:'Este slot está vacío',
+    feedback:'Envía comentarios a',
+    fullHp:'Vida llena',
+    gameTitle:'Batalla de la Pradera Pixel',
+    infGoldOn:'💰 Monedas infinitas activadas',
+    killCount:'Bajas: ',
+    landscapeHint:'Continúa automáticamente tras girar',
+    lightningHit:'⚡ ¡Alcanzado por un rayo! -8PV',
+    loadBtn:'▶ Cargar',
+    lowHp:'Vida baja',
+    medUse:'Medicamentos usados',
+    newGameBtn:'🆕 Nueva partida',
+    noSlipOn:'🧊 Antideslizante activado, no resbalas bajo la lluvia',
+    overwriteNewGame:'🆕 Sobrescribir nueva partida',
+    r1:'Joystick abajo-izquierda para moverte, botones abajo-derecha atacar/cavar/granada',
+    r10:'6 daño a distancia, desbloqueado a 50 bajas',
+    r11:'8 daño a distancia, desbloqueado a 70 bajas',
+    r12:'Daño de área, 40 oro/3 en tienda',
+    r13:'3 daño cuerpo a cuerpo, rápido',
+    r14:'Onda sónica 2 daño a distancia',
+    r15:'3 daño cuerpo a cuerpo, rapidísimo',
+    r16:'Aparece a 30 bajas, con ejército 👾',
+    r17:'Aparece a 120 bajas, multifase, con ejército 👾',
+    r18:'Puede pedir 25 oro (enfriamiento), explota a los 60s, revive en 30s',
+    r19:'Invencible, abre tienda cerca, vende armas y curas',
+    r2:'Flechas para moverte, J atacar, K cavar, L granada, Q cambiar arma',
+    r20:'Da patadas, aturde 2s, derrotable, revive en 30s',
+    r21:'Deambula al azar, música a 150px, derrotable, revive en 30s',
+    r22:'Puede atacar a toda criatura menos 🤬',
+    r23:'Día 60s: seguro, sin monstruos, ideal para explorar',
+    r24:'Noche 60s: monstruos, menos los primeros 30s, máx 20 (35 👾 en jefe)',
+    r25:'35% de probabilidad de 3 oro por monstruo',
+    r26:'Se abre cerca de 🤬, objetos deslizables',
+    r27:'+5 PV + parar sangrado',
+    r28:'PV completos + parar sangrado',
+    r29:'desbloqueado a  bajas, daño -1/3',
+    r3:'Joystick naranja abajo-derecha para apuntar, muévete a la izquierda, apunta a la derecha, dispara corriendo',
+    r30:'aparece a  bajas, con ejército 👾',
+    r31:'desbloqueado a  bajas, 6 daño a distancia',
+    r32:'desbloqueado a  bajas, 8 daño a distancia',
+    r33:'llega a  bajas, multifase, con ejército 👾',
+    r34:'El jefe llega con muchos 👾 y reaparecen sin parar',
+    r35:'Soporte de 8 idiomas (cambiar en ajustes)',
+    r36:'Bola de fuego/cargada usa joystick de puntería',
+    r37:'Posición del joystick optimizada, tamaño reducido',
+    r38:'😎 La música del vagabundo atrae monstruos cercanos',
+    r39:'💨 Nuevo dash (Shift/botón 💨), 3s de enfriamiento, invencible al hacer dash',
+    r4:'15 PV, puño 2 daño, velocidad 2.8',
+    r40:'🌤️ Nuevo sistema de clima: soleado/nublado/lluvia/tormenta/sol fuerte',
+    r41:'🌧️ La lluvia hace resbalar, jugadores/NPC/monstruos caen (giro 90° 2s)',
+    r42:'⛈️ El rayo mata criaturas cercanas, el sol fuerte ralentiza y daña',
+    r43:'🚗 Nuevo sistema de todoterreno, 500 oro, atropella monstruos, cava árboles',
+    r44:'🚀 Nitro, Shift/2 activar, velocidad x2 3s, 10s de enfriamiento',
+    r45:'💺 Asientos: el primero que sube conduce, el segundo es pasajero, si baja el conductor, el pasajero toma el volante',
+    r46:'👤 Nuevo NPC autor, invencible, interactivo (matar monstruos/consejos/oro/curar), atacar = contraataque',
+    r47:'💀 Mensajes de muerte abstractos: rayo = injusticia, sangrado = sin razón, broma = caracteres rotos, autor = muerto por lo desconocido',
+    r48:'📂 Arreglado el cuelgue al cargar, estado del vehículo guardado, CSS duo quitado de partidas solo',
+    rDash:'💨 Habilidad dash',
+    rDashDesc:'Shift o 💨 para embestir, brevemente invencible, 3s de enfriamiento',
+    rWeather:'🌤️ Sistema de clima',
+    rWeatherCloudy:'Nublado: cielo oscuro, sin otros efectos',
+    rWeatherHot:'Sol fuerte: velocidad -20%, golpe de calor 1 PV cada 10s',
+    rWeatherRain:'Lluvia: suelo resbaladizo, riesgo de caer al moverte (giro 90°, 2s inmóvil), jugadores/NPC/monstruos caen',
+    rWeatherSunny:'Soleado: sin efectos especiales',
+    rWeatherThunder:'Tormenta: lluvia + rayos, el rayo mata monstruos/NPC/jugadores cercanos (jefe inmune)',
+    save1:'Partida 1',
+    save2:'Partida 2',
+    save3:'Partida 3',
+    skipDay:'🌙 Día saltado, cae la noche',
+    skipNight:'☀ Noche saltada, amanece',
+    slipFall:'💦 ¡Resbalaste! 2s inmóvil',
+    times:' veces',
+    unknownTime:'Hora desconocida',
+    victoryTitle:'🏆 ¡Victoria!',
+    weaponLabel:'Arma:',
+    weatherCloudy:'☁️ Se nubló',
+    weatherHot:'🔥 ¡Sol fuerte! ¡Cuidado con el calor!',
+    weatherRain:'🌧️ ¡Llueve! Suelo resbaladizo, ¡cuidado!',
+    weatherSunny:'☀️ Hace sol',
+    weatherThunder:'⛈️ ¡Tormenta! ¡Cuidado con los rayos!',
+    r5:'Invencibilidad breve tras daño',
+    r6:'30% de probabilidad de sangrado: -1 PV cada 5s, venda/botiquín',
+    r7:'2 daño cuerpo a cuerpo, inicial',
+    r8:'4 daño cuerpo a cuerpo, 50 oro en tienda',
+    r9:'5 daño a distancia, 120 oro en tienda, joystick de puntería',
   },
   ru: {
     name:'Русский', start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки',
@@ -1394,11 +2897,263 @@ const LANGS = {
     npcRobotText:'У тебя сильная боевая мощь, но самый плохой характер, ты всегда дёрёшься из-за ерунды. Надеюсь, ты сможешь измениться.',
     npcTroubleName:'😝 Задира',
     npcTroubleText:'(😝 просто скорчил рожу, а потом пнул тебя — этот парень говорит только кулаками.)',
+    bankRobbed:'🏦 Банк ограбили! Монеты повсюду!',
+    policeCarKill1:'1P сбит полицейской машиной!',
+    policeCarKill2:'2P сбит полицейской машиной!',
+    bossDetect:'🥺 Она заметила тебя!',
+    bossEnrage:'🥺 Она разъярилась!',
+    bossVanished:'🥺 Она исчезла... она всё ещё где-то',
+    bossKill:'был разрублен 🥺!',
+    enterBuilding:'Вошёл в здание! Этаж 1, берегись Босса!',
+    exitBuilding:'Вышел из здания!',
+    alreadyTopFloor:'Уже на верхнем этаже!',
+    upToFloor:'Поднялся на этаж ',
+    downToFloor:'Спустился на этаж ',
+    floorSuffix:'!',
+    coinPickup1:'1P подобрал ',
+    coinPickup2:'2P подобрал ',
+    coinSuffix:' монет!',
+    surface:'Всплыл на поверхность!',
+    dive:'Нырнул под воду! Кислород: ',
+    beatCityBoss:'🎉 Городской мясник 🥺 побеждён! +100 монет!',
+    revive1:'1P воскрешён! Половина HP',
+    revive2:'2P воскрешён! Половина HP',
+    fellUnknown1:'1P упал без причины...',
+    fellUnknown2:'2P упал без причины...',
+    cityMixed:'Что-то, кажется, смешалось с городом...',
+    bossStage2:'😈 Босс перешёл во 2-ю фазу!',
+    bossStage3:'😈 Босс перешёл в 3-ю фазу! Теперь он рывком атакует!',
+    bossStage4:'😈 Босс в ФИНАЛЬНОЙ фазе!! Красная тревога!',
+    eliteAppear:'👾 Элитный монстр появился!',
+    cityUnlocked:'🎉 Городская карта открыта!',
+    indoorAttack:'атакован внутренним убийцей 🙂! -8HP',
+    elevatorTop:'🛗 Лифт прямо на верхний этаж! Этаж ',
+    indoorHint:'Рядом с лестницей/лифтом/выходом нажми E',
+    prankFly:'был разыгран и улетел!',
+    prankMob:'монстры были призваны рядом розыгрышем!',
+    prankStun:'был разыгран и оглушён!',
+    prankSlip:'был разыгран и поскользнулся!',
+    prankBleed:'был разыгран и истекает кровью!',
+    prankTeleport:'был разыгран и телепортирован!',
+    prankWeak:'был разыгран и ослаблен!',
+    prankInfGold:'был разыгран и получил бесконечные монеты!',
+    prankRevive:'был разыгран и воскрешён! (Половина HP + 3с неуязвимость)',
+    prankNoNeed:'ещё жив, воскрешение не нужно!',
+    buyRescuer:'💉 Куплен спасательный набор!',
+    alreadyCar:'🚗 У тебя уже есть машина!',
+    buyCar:'🚗 Внедорожник куплен! Нажми E чтобы сесть/выйти',
+    alreadyScuba:'🤿 У тебя уже есть акваланг!',
+    buyScuba:'🤿 Акваланг куплен! Расход кислорода вдвое меньше, макс. кислород увеличен!',
+    carHandover:'вышел, ',
+    carTakeOver:'перехватил управление!',
+    carExit:'вышел из машины',
+    carFull:'Машина полна, нельзя сесть!',
+    carDrive:'сел, начинай водить! WASD/стрелки для управления, таран убивает монстров',
+    carPassenger:'сел, сидит как пассажир',
+    carTooFar:'Слишком далеко от машины',
+    carNitroDriverOnly:'Только водитель может использовать нитро!',
+    carNitroNeedCar:'Нужно быть в машине для нитро!',
+    carNitroCooldown:'Нитро перезаряжается: ',
+    carNitroActive:'🚀 Нитро активировано!',
+    carKill1:'1P сбит машиной!',
+    carKill2:'2P сбит машиной!',
+    deathLightning:'Небеса несправедливы!',
+    deathBleeding:'Исчез без причины...',
+    deathPrank:'ÿþüøõñðáç',
+    deathAuthor:'Ты был убит неизвестным',
+    rescueStart1:'1P начинает спасать 2P! Возрождение через 7с',
+    rescueStart2:'2P начинает спасать 1P! Возрождение через 7с',
+    nitroEnd:'Нитро закончилось',
+    cityLocked:'🔒 Пройди луга (победи финального босса 🥺), чтобы открыть город!',
+    btnUp:'⬆ Вверх',
+    btnDown:'⬇ Вниз',
+    btnExit:'🚪 Выйти',
+    btnElevator:'🛗 Лифт',
+    btnEnterBld:'🏢 Войти',
+    btnEnter:'🏢',
+    cityName:'Город',
+    cityLockedName:'🔒 Город',
+    cheatPanelTitle:'Панель читов',
+    cheatInfHp:'Бесконечное HP игрока',
+    cheatInfDmg:'Бесконечный урон',
+    cheatMobSea:'Море мобов',
+    cheatAlaskey:'Я аляскинец (ослаблен)',
+    cheatNoSlip:'Без скольжения',
+    cheatDashCd:'Рывок без КД',
+    cheatInfGold:'Бесконечные монеты',
+    cheatSkipDay:'Пропустить день',
+    cheatSkipNight:'Пропустить ночь',
+    prankPanelTitle:'🃏 Панель розыгрышей',
+    prankBtnKill:'💀 Убить соперника',
+    prankBtnFly:'🚀 Подбросить соперника',
+    prankBtnMob:'👾 Призвать мобов рядом',
+    prankBtnStun:'😵 Оглушить соперника 3с',
+    prankBtnSlip:'🤸 Заставить соперника поскользнуться',
+    prankBtnBleed:'🩸 Заставить соперника истекать кровью',
+    prankBtnTeleport:'🌀 Телепортировать соперника',
+    prankBtnWeak:'🐢 Ослабить соперника 10с',
+    prankBtnGold:'💰 Бесконечные монеты сопернику',
+    prankBtnRevive:'❤️ Воскресить соперника',
+    authorPanelTitle:'👤 Автор',
+    authorBtnKill:'💀 Убить всех мобов',
+    authorBtnTip:'💡 Подсказки',
+    authorBtnGold:'💰 Дать монеты',
+    authorBtnHeal:'❤️ Восстановить HP',
+    authorBtnMob:'👾 Призвать мобов',
+    switchWeaponBtn:'Сменить оружие',
+    shopRevive:'💉 Спасатель (воскрешает, 7с)',
+    shopCar:'🚗 Внедорожник (таран убивает + быстрый + роет)',
+    shopScuba:'🤿 Акваланг (кислород ÷2)',
+    floorUpTag:'⬆ Вверх',
+    floorDownTag:'⬇ Вниз',
+    elevatorTag:'🛗 Лифт (прямо наверх)',
+    exitTag:'🚪 ВЫХОД',
+    floorInfoA:'Этаж ',
+    floorInfoB:' / ',
+    floorInfoC:'',
+    buildingHint:'⬆Лестница вверх(внизу-слева) ⬇Лестница вниз(вверху-слева) 🛗Лифт(внизу-справа) 🚪Выход(1 этаж центр)',
+    oxygenText:'💧 Кислород: ',
+    surfaceKey:'E чтобы всплыть',
+    diveKey:'🤿 чтобы нырнуть',
+    deathFallen:'упал!',
+    errDisplay:'❌ Ошибка игры (отправь этот скрин автору)',
+    unknownErr:'Неизвестная ошибка',
+    errFatal:'❌ КРИТИЧЕСКАЯ ОШИБКА!',
+    enterBld1:'🏢 Нажми E чтобы войти',
+    enterBld2:'🏢 Нажми 6 чтобы войти',
+    enterBld3:'🏢 У входа нажми E',
+    cityBossName:'🥺 Городской мясник',
+    bossStageX:' [Фаза ',
+    treeGold:'врезался в дерево, +5 монет!',
+    carKillKiller:'переехал убийцу!',
+    driving1:'1P ведёт',
+    driving2:'2P ведёт',
+    authorName:'Автор',
+    authorCooldownA:'Перезарядка автора, ',
+    authorCooldownB:'с',
+    authorKillAll:'Автор убил всех мобов за тебя!',
+    authorTips:['Подсказка: 10 убийств = щит, 30 = мини-босс, 50 = огненный шар!','Подсказка: 70 убийств = заряженный шар, 120 = финальный босс!','Подсказка: дождь делает землю скользкой! Молния убивает!','Подсказка: сильное солнце снижает статы, ясно и облачно без эффекта!','Подсказка: машины убивают мобов и роют деревья! 500 монет!','Подсказка: нитро удваивает скорость на 3с!','Подсказка: в коопе первый севший — водитель!','Подсказка: проси монеты у 😊, музыка у 😎!','Подсказка: кровотечение отнимает 1 HP каждые 5с!','Подсказка: в магазине аптечки, бинты, спасатели!','Подсказка: NPC автор неуязвим, удар отскакивает!','Подсказка: в коопе можно разыгрывать соперника!','Подсказка: город открывается после лугов!'],
+    npcTalksIdle:['...','Хорошая погода','Почему лифт такой медленный','Это здание высокое','Привет','Не заходи в чужие дома','С работы...','Так голоден'],
+    npcTalksKiller:['...','Не подходи','Хе-хе...','Вижу тебя...','Тсс...','Тебе не сбежать'],
+    dupTag:'[2И] ',
+    dupRecordTag:'[Режим 2И] ',
+    errPrefix:'Ошибка: ',
+    authorGold:'Автор дал тебе ',
+    authorHeal:'Автор вылечил тебя ',
+    authorMobJoke:'Автор пошутил и призвал орду монстров!',
+    coopStart:'👥 Кооператив начался! 1P:WASD+J  2P:Стрелки+1',
+    hpPoints:' HP',
+    authorEmail:'📧 Почта автора',
+    autoSaved:'Прогресс сохранён автоматически',
+    beatFinalBoss:'Ты победил финального босса 😈!',
+    cheatWarning:'⚠ Этот человек использовал читы',
+    clearRating:'🏆 Оценка прохождения',
+    clearRecord:'🏆 Рекорд прохождения',
+    confirmClearAll:'Удалить все локальные сохранения? Необратимо.',
+    confirmDelete:'Удалить ',
+    confirmDelete2:' ? Необратимо.',
+    confirmOverwrite:'Перезаписать ',
+    confirmOverwrite2:' ? Старый прогресс будет потерян.',
+    dashNoCdOn:'💨 Рывок без КД включён',
+    defeatTitle:'💀 Конец игры',
+    defeatedByMob:'Тебя победили монстры...',
+    deleteBtn:'🗑 Удалить',
+    emptySave:'Пустое сохранение',
+    emptySaveDesc:'Этот слот пуст',
+    feedback:'Отправляй отзывы на',
+    fullHp:'Полное HP',
+    gameTitle:'Битва на Пиксельной Прерии',
+    infGoldOn:'💰 Бесконечные монеты включены',
+    killCount:'Убийств: ',
+    landscapeHint:'Автоматическое продолжение после поворота',
+    lightningHit:'⚡ Поражён молнией! -8HP',
+    loadBtn:'▶ Загрузить',
+    lowHp:'Низкое HP',
+    medUse:'Лекарства использованы',
+    newGameBtn:'🆕 Новая игра',
+    noSlipOn:'🧊 Антискольжение включено, больше не скользишь',
+    overwriteNewGame:'🆕 Перезаписать новую игру',
+    r1:'Джойстик внизу-слева для движения, кнопки внизу-справа: атака/копка/граната',
+    r10:'6 урона на дистанции, открывается на 50 убийств',
+    r11:'8 урона на дистанции, открывается на 70 убийств',
+    r12:'Урон по площади, 40 золота/3 в магазине',
+    r13:'3 урона вблизи, быстрый',
+    r14:'Звуковая волна 2 урона на дистанции',
+    r15:'3 урона вблизи, самый быстрый',
+    r16:'Появляется на 30 убийств, с армией 👾',
+    r17:'Появляется на 120 убийств, многофазный, с армией 👾',
+    r18:'Можно просить 25 золота (перезарядка), взрывается через 60с, воскрешение 30с',
+    r19:'Неуязвим, открывает магазин рядом, продаёт оружие и лечение',
+    r2:'Стрелки для движения, J атака, K копка, L граната, Q смена оружия',
+    r20:'Пинает, оглушение 2с, убиваем, воскрешение 30с',
+    r21:'Бродит случайно, музыка в 150px, убиваем, воскрешение 30с',
+    r22:'Может атаковать всех существ кроме 🤬',
+    r23:'День 60с: безопасно, без монстров, идеально для поиска',
+    r24:'Ночь 60с: монстры, первые 30с меньше, затем макс 20 (35 👾 у босса)',
+    r25:'35% шанс 3 золота за монстра',
+    r26:'Открывается рядом с 🤬, товары прокручиваются',
+    r27:'+5 HP + остановка кровотечения',
+    r28:'Полное HP + остановка кровотечения',
+    r29:'открывается на  убийств, урон -1/3',
+    r3:'Оранжевый джойстик прицеливания внизу-справа, слева движение, справа прицел, стреляй на бегу',
+    r30:'появляется на  убийств, с армией 👾',
+    r31:'открывается на  убийств, 6 урона на дистанции',
+    r32:'открывается на  убийств, 8 урона на дистанции',
+    r33:'приходит на  убийств, многофазный, с армией 👾',
+    r34:'Босс появляется с кучей 👾 и они постоянно спавнятся',
+    r35:'Поддержка 8 языков (переключение в настройках)',
+    r36:'Огненный шар/заряженный использует джойстик прицеливания',
+    r37:'Позиция джойстика оптимизирована, размер уменьшен',
+    r38:'😎 Музыка странника привлекает монстров рядом',
+    r39:'💨 Новый рывок (Shift/кнопка 💨), КД 3с, неуязвим во время рывка',
+    r4:'15 HP, кулак 2 урона, скорость 2.8',
+    r40:'🌤️ Новая погодная система: ясно/облачно/дождь/гроза/сильное солнце',
+    r41:'🌧️ Дождь делает землю скользкой, игроки/NPC/монстры падают (поворот 90° 2с)',
+    r42:'⛈️ Молния убивает существ рядом, сильное солнце замедляет и наносит урон',
+    r43:'🚗 Новая система внедорожника, 500 золота, таран убивает, роет деревья',
+    r44:'🚀 Нитро, Shift/2 активация, скорость x2 3с, КД 10с',
+    r45:'💺 Сиденья: первый севший — водитель, второй — пассажир, водитель вышел — пассажир за рулём',
+    r46:'👤 Новый NPC автор, неуязвим, взаимодействие (убить монстров/подсказки/золото/лечение), атака = контратака',
+    r47:'💀 Абстрактные сообщения о смерти: молния = несправедливость, кровотечение = без причины, розыгрыш = кракозябры, автор = убит неизвестным',
+    r48:'📂 Исправлено зависание загрузки, состояние машины сохраняется, CSS дуо убран из одиночных сохранений',
+    rDash:'💨 Навык рывка',
+    rDashDesc:'Shift или 💨 для рывка вперёд, кратко неуязвим, КД 3с',
+    rWeather:'🌤️ Погодная система',
+    rWeatherCloudy:'Облачно: небо темнеет, других эффектов нет',
+    rWeatherHot:'Сильное солнце: скорость -20%, тепловой удар 1 HP каждые 10с',
+    rWeatherRain:'Дождь: скользкая земля, риск падения при движении (поворот 90°, 2с без движения), игроки/NPC/монстры падают',
+    rWeatherSunny:'Ясно: особых эффектов нет',
+    rWeatherThunder:'Гроза: дождь + молния, молния убивает монстров/NPC/игроков рядом (босс иммунен)',
+    save1:'Сохранение 1',
+    save2:'Сохранение 2',
+    save3:'Сохранение 3',
+    skipDay:'🌙 День пропущен, наступает ночь',
+    skipNight:'☀ Ночь пропущена, наступает день',
+    slipFall:'💦 Поскользнулся! 2с без движения',
+    times:' раз',
+    unknownTime:'Неизвестное время',
+    victoryTitle:'🏆 Победа!',
+    weaponLabel:'Оружие:',
+    weatherCloudy:'☁️ Облачно',
+    weatherHot:'🔥 Сильное солнце! Осторожно, жара!',
+    weatherRain:'🌧️ Дождь! Скользко, осторожно!',
+    weatherSunny:'☀️ Ясно',
+    weatherThunder:'⛈️ Гроза! Осторожно, молнии!',
+    r5:'Кратковременная неуязвимость после урона',
+    r6:'30% шанс кровотечения: -1 HP каждые 5с, бинт/аптечка',
+    r7:'2 урона вблизи, стартовое',
+    r8:'4 урона вблизи, 50 золота в магазине',
+    r9:'5 урона на дистанции, 120 золота в магазине, джойстик прицела',
   }
 };
 function t(key){
   const lang = LANGS[G.language] || LANGS.en;
   return lang[key] || LANGS.en[key] || key;
+}
+
+function tList(key){
+  const lang = LANGS[G.language] || LANGS.en;
+  return lang[key] || LANGS.en[key] || [];
 }
 function applyLanguage(){
   // 页面标题
@@ -1464,6 +3219,74 @@ function applyLanguage(){
   if(shopBandageText) shopBandageText.textContent = t('shopBandage');
   const shopMedkitText = document.getElementById('shopMedkitText');
   if(shopMedkitText) shopMedkitText.textContent = t('shopMedkit');
+  const shopReviveText = document.getElementById('shopReviveText');
+  if(shopReviveText) shopReviveText.textContent = t('shopRevive');
+  const shopCarText = document.getElementById('shopCarText');
+  if(shopCarText) shopCarText.textContent = t('shopCar');
+  const shopScubaText = document.getElementById('shopScubaText');
+  if(shopScubaText) shopScubaText.textContent = t('shopScuba');
+  // 功能面板
+  const cheatPanelTitle = document.getElementById('cheatPanelTitle');
+  if(cheatPanelTitle) cheatPanelTitle.textContent = t('cheatPanelTitle');
+  const cheatInfHpText = document.getElementById('cheatInfHpText');
+  if(cheatInfHpText) cheatInfHpText.textContent = t('cheatInfHp');
+  const cheatInfDmgText = document.getElementById('cheatInfDmgText');
+  if(cheatInfDmgText) cheatInfDmgText.textContent = t('cheatInfDmg');
+  const cheatMobSeaText = document.getElementById('cheatMobSeaText');
+  if(cheatMobSeaText) cheatMobSeaText.textContent = t('cheatMobSea');
+  const cheatAlaskeyText = document.getElementById('cheatAlaskeyText');
+  if(cheatAlaskeyText) cheatAlaskeyText.textContent = t('cheatAlaskey');
+  const cheatNoSlipText = document.getElementById('cheatNoSlipText');
+  if(cheatNoSlipText) cheatNoSlipText.textContent = t('cheatNoSlip');
+  const cheatDashCdText = document.getElementById('cheatDashCdText');
+  if(cheatDashCdText) cheatDashCdText.textContent = t('cheatDashCd');
+  const cheatInfGoldText = document.getElementById('cheatInfGoldText');
+  if(cheatInfGoldText) cheatInfGoldText.textContent = t('cheatInfGold');
+  const skipDayBtn = document.getElementById('skipDay');
+  if(skipDayBtn) skipDayBtn.textContent = t('cheatSkipDay');
+  const skipNightBtn = document.getElementById('skipNight');
+  if(skipNightBtn) skipNightBtn.textContent = t('cheatSkipNight');
+  // 整蛊面板
+  const prankPanelTitle = document.getElementById('prankPanelTitle');
+  if(prankPanelTitle) prankPanelTitle.textContent = t('prankPanelTitle');
+  const prankKillBtn = document.getElementById('prankKill');
+  if(prankKillBtn) prankKillBtn.textContent = t('prankBtnKill');
+  const prankFlyBtn = document.getElementById('prankFly');
+  if(prankFlyBtn) prankFlyBtn.textContent = t('prankBtnFly');
+  const prankMobBtn = document.getElementById('prankMob');
+  if(prankMobBtn) prankMobBtn.textContent = t('prankBtnMob');
+  const prankStunBtn = document.getElementById('prankStun');
+  if(prankStunBtn) prankStunBtn.textContent = t('prankBtnStun');
+  const prankSlipBtn = document.getElementById('prankSlip');
+  if(prankSlipBtn) prankSlipBtn.textContent = t('prankBtnSlip');
+  const prankBleedBtn = document.getElementById('prankBleed');
+  if(prankBleedBtn) prankBleedBtn.textContent = t('prankBtnBleed');
+  const prankTeleportBtn = document.getElementById('prankTeleport');
+  if(prankTeleportBtn) prankTeleportBtn.textContent = t('prankBtnTeleport');
+  const prankWeakBtn = document.getElementById('prankWeak');
+  if(prankWeakBtn) prankWeakBtn.textContent = t('prankBtnWeak');
+  const prankGoldBtn = document.getElementById('prankGold');
+  if(prankGoldBtn) prankGoldBtn.textContent = t('prankBtnGold');
+  const prankReviveBtn = document.getElementById('prankRevive');
+  if(prankReviveBtn) prankReviveBtn.textContent = t('prankBtnRevive');
+  // 作者面板
+  const authorPanelTitle = document.getElementById('authorPanelTitle');
+  if(authorPanelTitle) authorPanelTitle.textContent = t('authorPanelTitle');
+  const authorKillBtn = document.getElementById('authorKillBtn');
+  if(authorKillBtn) authorKillBtn.textContent = t('authorBtnKill');
+  const authorTipBtn = document.getElementById('authorTipBtn');
+  if(authorTipBtn) authorTipBtn.textContent = t('authorBtnTip');
+  const authorGoldBtn = document.getElementById('authorGoldBtn');
+  if(authorGoldBtn) authorGoldBtn.textContent = t('authorBtnGold');
+  const authorHealBtn = document.getElementById('authorHealBtn');
+  if(authorHealBtn) authorHealBtn.textContent = t('authorBtnHeal');
+  const authorMobBtn = document.getElementById('authorMobBtn');
+  if(authorMobBtn) authorMobBtn.textContent = t('authorBtnMob');
+  // 切换武器
+  const weaponSwitch = document.getElementById('weaponSwitch');
+  if(weaponSwitch) weaponSwitch.textContent = t('switchWeaponBtn');
+  const weaponSwitch2 = document.getElementById('weaponSwitch2');
+  if(weaponSwitch2) weaponSwitch2.textContent = t('switchWeaponBtn');
   // 规则面板标题
   const rulesTitle = document.getElementById('rulesTitle');
   if(rulesTitle) rulesTitle.textContent = t('rulesTitle');
@@ -2146,30 +3969,30 @@ function loadGame(slot){
       if(enterBtn) enterBtn.style.display = 'flex';
       if(enterBtn){
         if(G.inBuilding !== null){
-          if(G._nearExit) enterBtn.textContent = '🚪退出';
-          else if(G._nearStairUp) enterBtn.textContent = '⬆上楼';
-          else if(G._nearStairDown) enterBtn.textContent = '⬇下楼';
-          else if(G._nearElevator) enterBtn.textContent = '🛗电梯';
-          else enterBtn.textContent = '🏢';
+          if(G._nearExit) enterBtn.textContent = t('btnExit');
+          else if(G._nearStairUp) enterBtn.textContent = t('btnUp');
+          else if(G._nearStairDown) enterBtn.textContent = t('btnDown');
+          else if(G._nearElevator) enterBtn.textContent = t('btnElevator');
+          else enterBtn.textContent = t('btnEnter');
         } else if(G._nearBuildingIndex !== null && G._nearBuildingIndex !== undefined){
-          enterBtn.textContent = '🏢进入';
+          enterBtn.textContent = t('btnEnterBld');
         } else {
-          enterBtn.textContent = '🏢';
+          enterBtn.textContent = t('btnEnter');
         }
       }
       // 2P进入建筑按钮（双人模式）
       if(G.isCoop && enterBtn2){
         enterBtn2.style.display = 'flex';
         if(G.inBuilding !== null){
-          if(G._nearExit) enterBtn2.textContent = '🚪退出';
-          else if(G._nearStairUp) enterBtn2.textContent = '⬆上楼';
-          else if(G._nearStairDown) enterBtn2.textContent = '⬇下楼';
-          else if(G._nearElevator) enterBtn2.textContent = '🛗电梯';
-          else enterBtn2.textContent = '🏢';
+          if(G._nearExit) enterBtn2.textContent = t('btnExit');
+          else if(G._nearStairUp) enterBtn2.textContent = t('btnUp');
+          else if(G._nearStairDown) enterBtn2.textContent = t('btnDown');
+          else if(G._nearElevator) enterBtn2.textContent = t('btnElevator');
+          else enterBtn2.textContent = t('btnEnter');
         } else if(G._nearBuildingIndex2 !== null && G._nearBuildingIndex2 !== undefined){
-          enterBtn2.textContent = '🏢进入';
+          enterBtn2.textContent = t('btnEnterBld');
         } else {
-          enterBtn2.textContent = '🏢';
+          enterBtn2.textContent = t('btnEnter');
         }
       } else if(enterBtn2){
         enterBtn2.style.display = 'none';
@@ -2192,7 +4015,7 @@ function loadGame(slot){
     document.getElementById('endPanel').style.display = 'none';
     document.getElementById('shopPanel').style.display = 'none';
     closeDialog();
-    showToast('📂 '+SAVE_NAMES()[targetSlot]+' '+(d.isCoop ? '[双人] ' : '')+t('loadSave'), 2000);
+    showToast('📂 '+SAVE_NAMES()[targetSlot]+' '+(d.isCoop ? t('dupTag') : '')+t('loadSave'), 2000);
     return true;
   }catch(e){
     console.error('Load failed:', e);
@@ -2234,7 +4057,7 @@ function renderSaveSlots(mode){
       slotDiv.innerHTML = `
         <div class="save-slot-title"><span>📁 ${SAVE_NAMES()[i]}</span><span style="font-size:12px;color:#888">${formatSaveTime(info.savedAt)}</span></div>
         <div class="save-slot-info">
-          ${info.isCoop ? '<span style="color:#e74c3c;font-weight:bold">[双人模式]</span> ' : ''}${t('kills')}: ${info.killCount || 0} | ${t('gold')}: ${info.gold || 0}<br>
+          ${info.isCoop ? '<span style="color:#e74c3c;font-weight:bold">'+t('dupRecordTag')+'</span> ' : ''}${t('kills')}: ${info.killCount || 0} | ${t('gold')}: ${info.gold || 0}<br>
           ${t('weaponLabel')}${info.currentWeapon || t('fist')} | HP: ${info.playerHp || 15}/15${info.isCoop && info.player2 ? ' | 2P HP: ' + (info.player2.hp || 15) + '/15' : ''}
         </div>
         <div class="save-slot-actions">
@@ -2857,7 +4680,7 @@ function updateBankGuards(){
               value: 10,
             });
           }
-          showToast('银行被抢了！满地都是金币！');
+          showToast(t('bankRobbed'));
         }
       }
     }
@@ -2935,7 +4758,7 @@ function updatePoliceCars(){
     if(G.player && !G.player.dead && !G.inBuilding && rectOverlap(carBox, G.player)){
       G.player.hp = 0;
       G.player.dead = true;
-      showToast('1P 被警车撞死了！');
+      showToast(t('policeCarKill1'));
       playSound('death');
       makeCorpse(G.player);
       if(!G.isCoop){
@@ -2954,7 +4777,7 @@ function updatePoliceCars(){
     if(G.isCoop && G.player2 && !G.coopP2Dead && !G.inBuilding && rectOverlap(carBox, G.player2)){
       G.player2.hp = 0;
       G.player2.dead = true;
-      showToast('2P 被警车撞死了！');
+      showToast(t('policeCarKill2'));
       playSound('death');
       makeCorpse(G.player2);
       G.coopP2Dead = true;
@@ -3117,7 +4940,7 @@ function updateCityBoss(){
       boss.breakTimer = 0;
       // 爆发特效和提示
       spawnParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#ff4444', 15);
-      showToast('🥺 察觉到了你！');
+      showToast(t('bossDetect'));
       playSound('boss');
       return;
     }
@@ -3127,7 +4950,7 @@ function updateCityBoss(){
       boss.mode = 'hunt';
       boss.breakTimer = 0;
       spawnParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#ff4444', 10);
-      showToast('🥺 被激怒了！');
+      showToast(t('bossEnrage'));
       playSound('boss');
       return;
     }
@@ -3210,7 +5033,7 @@ function updateCityBoss(){
       boss.x = clamp(target.x + Math.cos(angle) * teleDist, 50, WORLD_W - 114);
       boss.y = clamp(target.y + Math.sin(angle) * teleDist, 50, WORLD_H - 114);
       spawnParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#999999', 8);
-      showToast('🥺 消失了...她还在某个地方');
+      showToast(t('bossVanished'));
       return;
     }
   } else {
@@ -3237,7 +5060,7 @@ function updateCityBoss(){
       target.hp = 0;
       target.dead = true;
       const label = boss.targetPlayer === 2 ? '2P ' : '1P ';
-      showToast(label + '被🥺一刀秒杀了！');
+      showToast(label + t('bossKill'));
       playSound('death');
       makeCorpse(target);
       spawnParticles(target.x+target.w/2, target.y+target.h/2, '#ff0000', 20);
@@ -3313,7 +5136,7 @@ function enterBuilding(buildingIndex, playerNum){
     G.cityBoss.y = 300;
   }
   const playerLabel = playerNum === 2 ? '2P ' : '1P ';
-  showToast(playerLabel + '进入建筑！第1层，小心Boss！');
+  showToast(playerLabel + t('enterBuilding'));
 }
 
 // 退出建筑
@@ -3339,7 +5162,7 @@ function exitBuilding(){
   }
   G.inBuilding = null;
   G.buildingFloor = 1;
-  showToast('退出建筑！');
+  showToast(t('exitBuilding'));
 }
 
 // 上一层楼
@@ -3348,7 +5171,7 @@ function goUpFloor(){
   const building = G.cityBuildings[G.inBuilding];
   if(!building) return;
   if(G.buildingFloor >= building.floors){
-    showToast('已经是顶楼了！');
+    showToast(t('alreadyTopFloor'));
     return;
   }
   G.buildingFloor++;
@@ -3368,7 +5191,7 @@ function goUpFloor(){
     G.cityBoss.x = 400;
     G.cityBoss.y = 300;
   }
-  showToast('上到第' + G.buildingFloor + '层！');
+  showToast(t('upToFloor') + G.buildingFloor + t('floorSuffix'));
 }
 
 // 下一层楼
@@ -3396,7 +5219,7 @@ function goDownFloor(){
     G.cityBoss.x = 400;
     G.cityBoss.y = 300;
   }
-  showToast('下到第' + G.buildingFloor + '层！');
+  showToast(t('downToFloor') + G.buildingFloor + t('floorSuffix'));
 }
 
 // 检查玩家是否靠近建筑入口（室外时）
@@ -3567,7 +5390,7 @@ function drawIndoor(){
     ctx.fillStyle = G._nearStairUp ? '#ffd700' : '#aaa';
     ctx.font = 'bold 16px serif';
     ctx.textAlign = 'center';
-    ctx.fillText('⬆ 上楼', sx + sw / 2, sy - 10);
+    ctx.fillText(t('floorUpTag'), sx + sw / 2, sy - 10);
     if(G._nearStairUp){
       ctx.fillStyle = 'rgba(255,215,0,0.2)';
       ctx.fillRect(sx - 5, sy - 5, sw + 10, sh + 10);
@@ -3606,7 +5429,7 @@ function drawIndoor(){
     ctx.fillStyle = G._nearStairDown ? '#ffd700' : '#aaa';
     ctx.font = 'bold 16px serif';
     ctx.textAlign = 'center';
-    ctx.fillText('⬇ 下楼', sx + sw / 2, sy + sh + 20);
+    ctx.fillText(t('floorDownTag'), sx + sw / 2, sy + sh + 20);
     if(G._nearStairDown){
       ctx.fillStyle = 'rgba(255,215,0,0.2)';
       ctx.fillRect(sx - 5, sy - 5, sw + 10, sh + 10);
@@ -3665,7 +5488,7 @@ function drawIndoor(){
   ctx.fillStyle = G._nearElevator ? '#ffd700' : '#aaa';
   ctx.font = 'bold 14px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('🛗 电梯（直达顶楼）', ex + ew / 2, ey + eh + 20);
+  ctx.fillText(t('elevatorTag'), ex + ew / 2, ey + eh + 20);
   if(G._nearElevator){
     ctx.fillStyle = 'rgba(255,215,0,0.15)';
     ctx.fillRect(ex - 8, ey - 8, ew + 16, eh + 16);
@@ -3696,7 +5519,7 @@ function drawIndoor(){
     ctx.fillStyle = '#00ff00';
     ctx.font = 'bold 16px serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🚪 EXIT 出口', ox + ow / 2, oy - 12);
+    ctx.fillText(t('exitTag'), ox + ow / 2, oy - 12);
     // 出口指示灯
     ctx.fillStyle = G._nearExit ? '#00ff00' : '#004400';
     ctx.fillRect(ox + ow / 2 - 25, oy - 30, 50, 12);
@@ -3768,7 +5591,7 @@ function drawIndoor(){
   ctx.fillStyle = '#ffd700';
   ctx.font = 'bold 22px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('第 ' + G.buildingFloor + ' 层 / 共 ' + maxFloor + ' 层', W / 2, 48);
+  ctx.fillText(t('floorInfoA') + G.buildingFloor + t('floorInfoB') + maxFloor + t('floorInfoC'), W / 2, 48);
   
   // ===== 操作提示 =====
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -3776,7 +5599,7 @@ function drawIndoor(){
   ctx.fillStyle = '#ccc';
   ctx.font = '13px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('⬆上楼楼梯(左下) ⬇下楼楼梯(左上) 🛗电梯(右下) 🚪出口(一楼中下)', W / 2, H - 18);
+  ctx.fillText(t('buildingHint'), W / 2, H - 18);
 }
 
 // 更新室内逻辑
@@ -3926,7 +5749,7 @@ function updateIndoor(){
           }
           spawnParticles(target.x+target.w/2, target.y+target.h/2, '#ff0000', 8);
           playSound('hurt');
-          showToast((target === G.player ? '1P' : '2P') + ' 被室内杀手🙂攻击了！-8HP');
+          showToast((target === G.player ? '1P' : '2P') + t('indoorAttack'));
         }
       } else {
         // 没有目标，随机走动
@@ -4000,8 +5823,8 @@ function updateIndoor(){
     npc.talkTimer--;
     if(npc.talkTimer <= 0){
       npc.talkTimer = 180 + Math.random() * 180;
-      const normalTalks = ['...', '今天天气不错', '电梯怎么这么慢', '这楼真高', '你好啊', '别随便进别人家', '下班了...', '好饿啊'];
-      const killerTalks = ['...', '别过来', '哼哼...', '看到你了...', '嘘...', '你跑不掉的'];
+      const normalTalks = tList('npcTalksIdle');
+      const killerTalks = tList('npcTalksKiller');
       npc.talkText = npc.isKiller 
         ? killerTalks[Math.floor(Math.random() * killerTalks.length)]
         : normalTalks[Math.floor(Math.random() * normalTalks.length)];
@@ -4021,7 +5844,7 @@ function updateCoins(){
         G.player.gold += coin.value;
         spawnParticles(coin.x, coin.y, '#ffd700', 8);
         playSound('pickup');
-        showToast('1P 拾取' + coin.value + '金币！');
+        showToast(t('coinPickup1') + coin.value + t('coinSuffix'));
         G.coins.splice(i, 1);
         updateUI();
         continue;
@@ -4035,7 +5858,7 @@ function updateCoins(){
         G.player2.gold += coin.value;
         spawnParticles(coin.x, coin.y, '#ffd700', 8);
         playSound('pickup');
-        showToast('2P 拾取' + coin.value + '金币！');
+        showToast(t('coinPickup2') + coin.value + t('coinSuffix'));
         G.coins.splice(i, 1);
         updateUI();
         continue;
@@ -4199,13 +6022,13 @@ function toggleDive(){
     // 浮上来
     G.isUnderwater = false;
     G.oxygen = G.maxOxygen;
-    showToast('浮上水面！');
+    showToast(t('surface'));
     playSound('jump');
   } else if(G._inWater && G.inBuilding === null){
     // 潜入水中
     G.isUnderwater = true;
     G.oxygen = G.maxOxygen;
-    showToast('潜入水下！氧气：' + Math.round(G.oxygen));
+    showToast(t('dive') + Math.round(G.oxygen));
     playSound('jump');
     spawnParticles(G.player.x+G.player.w/2, G.player.y+G.player.h/2, '#4ecdc4', 15);
   }
@@ -4273,13 +6096,13 @@ function drawUnderwater(){
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 12px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('💧 氧气: ' + Math.round(G.oxygen) + '/' + G.maxOxygen, W/2, barY - 10);
+  ctx.fillText(t('oxygenText') + Math.round(G.oxygen) + '/' + G.maxOxygen, W/2, barY - 10);
   
   // 上浮提示
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.font = '14px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('按 E 上浮', W/2, H - 50);
+  ctx.fillText(t('surfaceKey'), W/2, H - 50);
   
   // 确保恢复全局透明度
   ctx.globalAlpha = 1;
@@ -4308,7 +6131,7 @@ function drawWaters(){
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.font = '14px serif';
       ctx.textAlign = 'center';
-      ctx.fillText('按 🤿 潜水', w.x + w.w/2, w.y + 30);
+      ctx.fillText(t('diveKey'), w.x + w.w/2, w.y + 30);
     }
   });
 }
@@ -4697,7 +6520,7 @@ function hitAllMobs(hitBox, dmg){
         G.killCount++;
         spawnParticles(G.cityBoss.x+G.cityBoss.w/2, G.cityBoss.y+G.cityBoss.h/2, '#ff0000', 25);
         playSound('kill');
-        showToast('🎉 击败城市屠夫🥺！获得100金币！');
+        showToast(t('beatCityBoss'));
         G.player.gold += 100;
         updateUI();
         // 掉落大量金币
@@ -4767,19 +6590,19 @@ function handlePlayerDeath(player, isP2){
   const playerLabel = isP2 ? '2P ' : '1P ';
   switch(G.deathCause){
     case 'lightning':
-      deathMsg = playerLabel + '老天不公啊！';
+      deathMsg = playerLabel + t('deathLightning');
       break;
     case 'bleeding':
-      deathMsg = playerLabel + '不知道为什么就倒下了...';
+      deathMsg = playerLabel + t('deathBleeding');
       break;
     case 'prank':
-      deathMsg = '�ז�' + playerLabel + '�זז�';
+      deathMsg = t('deathPrank');
       break;
     case 'author':
-      deathMsg = playerLabel + '你被未知杀死了';
+      deathMsg = playerLabel + t('deathAuthor');
       break;
     default:
-      deathMsg = playerLabel + '倒下了！';
+      deathMsg = playerLabel + t('deathFallen');
   }
   
   if(isP2){
@@ -5117,7 +6940,7 @@ function update(){
         G.player.invincible = 180; // 3秒无敌
         spawnParticles(G.player.x+G.player.w/2, G.player.y+G.player.h/2, '#ff69b4', 20);
         playSound('unlock');
-        showToast('1P 复活了！半血');
+        showToast(t('revive1'));
         updateUI();
       }
     }
@@ -5132,7 +6955,7 @@ function update(){
         G.player2.invincible = 180; // 3秒无敌
         spawnParticles(G.player2.x+G.player2.w/2, G.player2.y+G.player2.h/2, '#ff69b4', 20);
         playSound('unlock');
-        showToast('2P 复活了！半血');
+        showToast(t('revive2'));
         updateUI();
       }
     }
@@ -5285,7 +7108,7 @@ function update(){
           G.deathCause = 'bleeding';
           G.coopP2Dead = true;
           makeCorpse(p2);
-          showToast('2P 不知道为什么就倒下了...');
+          showToast(t('fellUnknown2'));
           // 检查是否两人都死亡
           if(G.coopP1Dead){
             G.running = false;
@@ -5317,7 +7140,7 @@ function update(){
         if(G.isCoop){
           G.coopP1Dead = true;
           makeCorpse(p);
-          showToast('1P 不知道为什么就倒下了...');
+          showToast(t('fellUnknown1'));
           if(G.coopP2Dead) gameOver(false);
         } else {
           makeCorpse(p);
@@ -5350,7 +7173,7 @@ function update(){
     G.cityBossSpawned = true;
     G.cityBoss = createCityBoss();
     // 隐晦提示：不暴露Boss身份，让玩家自己察觉
-    showToast('城市里好像混进了什么...');
+    showToast(t('cityMixed'));
   }
   // 室内场景系统
   if(G.currentMap === 'city'){
@@ -5635,7 +7458,7 @@ function updateBosses(){
         b.face = 'stage2';
         G.bossStageTransition = 120; // 2秒暂停
         G.shake = 20;
-        showToast('😈 Boss进入第二阶段！');
+        showToast(t('bossStage2'));
         spawnParticles(b.x+b.w/2, b.y+b.h/2, '#ff0000', 30);
         continue;
       }
@@ -5651,7 +7474,7 @@ function updateBosses(){
         b.dodgeCd = 0;
         G.bossStageTransition = 120;
         G.shake = 25;
-        showToast('😈 Boss进入第三阶段！会冲刺了！');
+        showToast(t('bossStage3'));
         spawnParticles(b.x+b.w/2, b.y+b.h/2, '#ff6600', 30);
         continue;
       }
@@ -5667,7 +7490,7 @@ function updateBosses(){
         G.bossStageTransition = 120;
         G.shake = 30;
         G.eliteMobSpawnTimer = 0;
-        showToast('😈 Boss进入最终阶段！！红色警戒！');
+        showToast(t('bossStage4'));
         spawnParticles(b.x+b.w/2, b.y+b.h/2, '#ff0000', 50);
         // 立即召唤3只精英👾
         for(let e=0;e<3;e++){
@@ -5756,7 +7579,7 @@ function updateBosses(){
       if(G.eliteMobSpawnTimer >= 300 && G.mobs.length < 15){ // 每5秒召唤一只
         G.eliteMobSpawnTimer = 0;
         G.mobs.push(createEliteMob());
-        showToast('👾 精英怪出现！');
+        showToast(t('eliteAppear'));
       }
     }
 
@@ -5769,7 +7592,7 @@ function updateBosses(){
       G.bossRedScreen = false;
       if(b.type==='finalBoss'){
         unlockCity(); // 通关草原，解锁城市地图
-        showToast('🎉 城市地图已解锁！');
+        showToast(t('cityUnlocked'));
         gameOver(true);
       } else {
         showToast(t('beatMiniBoss'));
@@ -6432,7 +8255,7 @@ function updateProjectiles(){
             G.killCount++;
             spawnParticles(G.cityBoss.x+G.cityBoss.w/2, G.cityBoss.y+G.cityBoss.h/2, '#ff0000', 25);
             playSound('kill');
-            showToast('🎉 击败城市屠夫🥺！获得100金币！');
+            showToast(t('beatCityBoss'));
             G.player.gold += 100;
             updateUI();
             // 掉落大量金币
@@ -6733,12 +8556,12 @@ function render(){
       ctx.font = 'bold 20px sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-      ctx.fillText('❌ 游戏错误（把这个截图发给作者）', 20, 20);
+      ctx.fillText(t('errDisplay'), 20, 20);
       // 错误信息
       ctx.fillStyle = '#ffffff';
       ctx.font = '14px monospace';
-      const msgStr = String(err.msg || '未知错误').substring(0, 150);
-      ctx.fillText('错误: ' + msgStr, 20, 55);
+      const msgStr = String(err.msg || t('unknownErr')).substring(0, 150);
+      ctx.fillText(t('errPrefix') + msgStr, 20, 55);
       // 错误堆栈（只显示前8行）
       ctx.fillStyle = '#ffcc00';
       ctx.font = '11px monospace';
@@ -6757,7 +8580,7 @@ function render(){
         ctx.fillRect(0, 0, W, 50);
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 16px sans-serif';
-        ctx.fillText('❌ 严重错误！', 20, 15);
+        ctx.fillText(t('errFatal'), 20, 15);
       } catch(e4) {}
     }
   }
@@ -6967,14 +8790,14 @@ ctx.globalAlpha = 1;
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(W/4 - 100, H - 60, 200, 28);
         ctx.fillStyle = '#ffd700';
-        ctx.fillText('🏢 按E进入高楼', W/4, H - 46);
+        ctx.fillText(t('enterBld1'), W/4, H - 46);
       }
       // 右半屏提示（2P）
       if(G._nearBuildingIndex2 !== null && G._nearBuildingIndex2 !== undefined){
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(W*3/4 - 100, H - 60, 200, 28);
         ctx.fillStyle = '#ffd700';
-        ctx.fillText('🏢 按6进入高楼', W*3/4, H - 46);
+        ctx.fillText(t('enterBld2'), W*3/4, H - 46);
       }
     }
     return;
@@ -7170,7 +8993,7 @@ ctx.globalAlpha = 1;
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
     ctx.fillRect(W/2 - 150, H - 80, 300, 36);
     ctx.fillStyle = '#ffd700';
-    ctx.fillText('🏢 靠近高楼入口，按E进入室内', W/2, H - 62);
+    ctx.fillText(t('enterBld3'), W/2, H - 62);
   }
 }
 
@@ -7652,7 +9475,7 @@ function drawCityBoss(){
   ctx.fillStyle = '#fff';
   ctx.font = '12px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('🥺 城市屠夫', boss.x + boss.w/2, boss.y - 28);
+  ctx.fillText(t('cityBossName'), boss.x + boss.w/2, boss.y - 28);
 }
 
 function drawMinimap(){
@@ -7853,7 +9676,7 @@ function drawBossHpBar(){
   ctx.font = 'bold 12px sans-serif';
   ctx.textAlign = 'center';
   let stageText = '';
-  if(b.type==='finalBoss') stageText = ' [阶段'+G.bossStage+'/4]';
+  if(b.type==='finalBoss') stageText = t('bossStageX')+G.bossStage+'/4]';
   ctx.fillText(b.face+' Boss '+b.hp+'/'+b.maxHp+stageText, W/2, 20);
 }
 
@@ -7905,11 +9728,14 @@ function drawPlayer2(){
     // 根据瞄准轮盘方向计算旋转角度
     const aimX = p.aimX || p.facing;
     const aimY = p.aimY || 0;
-    const angle = Math.atan2(aimY, aimX);
-    // 朝左时先镜像翻转emoji（先翻转，再旋转，保证枪口方向正确）
-    if(aimX < 0) ctx.scale(-1, 1);
-    // 再旋转坐标系
-    ctx.rotate(angle);
+    // 朝右：直接旋转到目标角度
+    // 朝左：先水平镜像emoji，再按镜像坐标系内的角度旋转（否则旋转π会把镜像抵消，枪口反而朝右）
+    if(aimX < 0){
+      ctx.scale(-1, 1);
+      ctx.rotate(Math.atan2(aimY, -aimX));
+    } else {
+      ctx.rotate(Math.atan2(aimY, aimX));
+    }
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
@@ -7985,11 +9811,14 @@ function drawPlayer(){
     // 根据瞄准轮盘方向计算旋转角度
     const aimX = p.aimX || p.facing;
     const aimY = p.aimY || 0;
-    const angle = Math.atan2(aimY, aimX);
-    // 朝左时先镜像翻转emoji（先翻转，再旋转，保证枪口方向正确）
-    if(aimX < 0) ctx.scale(-1, 1);
-    // 再旋转坐标系
-    ctx.rotate(angle);
+    // 朝右：直接旋转到目标角度
+    // 朝左：先水平镜像emoji，再按镜像坐标系内的角度旋转（否则旋转π会把镜像抵消，枪口反而朝右）
+    if(aimX < 0){
+      ctx.scale(-1, 1);
+      ctx.rotate(Math.atan2(aimY, -aimX));
+    } else {
+      ctx.rotate(Math.atan2(aimY, aimX));
+    }
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
@@ -8306,16 +10135,16 @@ function gameOver(win){
     let deathReason = t('defeatedByMob');
     switch(G.deathCause){
       case 'lightning':
-        deathReason = '老天不公啊！';
+        deathReason = t('deathLightning');
         break;
       case 'bleeding':
-        deathReason = '不知道为什么就没了...';
+        deathReason = t('deathBleeding');
         break;
       case 'prank':
-        deathReason = '�זז�ז�';
+        deathReason = t('deathPrank');
         break;
       case 'author':
-        deathReason = '你被未知杀死了';
+        deathReason = t('deathAuthor');
         break;
     }
     statsHtml += deathReason;
@@ -8809,7 +10638,7 @@ document.getElementById('prankFly').addEventListener('click', ()=>{
     target.stunTimer = 120; // 眩晕2秒
     target.stunRotate = true;
     playSound('hurt');
-    showToast('🚀 ' + label + ' 被整蛊飞起来了！');
+    showToast('🚀 ' + label + t('prankFly'));
   }
   document.getElementById('prankPanel').style.display = 'none';
 });
@@ -8827,7 +10656,7 @@ document.getElementById('prankMob').addEventListener('click', ()=>{
       G.mobs.push(mob);
     }
     playSound('hurt');
-    showToast('👾 ' + label + ' 身边被整蛊召唤了怪物！');
+    showToast('👾 ' + label + t('prankMob'));
   }
   document.getElementById('prankPanel').style.display = 'none';
 });
@@ -8839,7 +10668,7 @@ document.getElementById('prankStun').addEventListener('click', ()=>{
     target.stunTimer = 180; // 3秒
     target.stunRotate = true;
     playSound('hurt');
-    showToast('😵 ' + label + ' 被整蛊眩晕了！');
+    showToast('😵 ' + label + t('prankStun'));
   }
   document.getElementById('prankPanel').style.display = 'none';
 });
@@ -8851,7 +10680,7 @@ document.getElementById('prankSlip').addEventListener('click', ()=>{
     target.slipTimer = 120; // 2秒
     target.slipRotate = true;
     playSound('hurt');
-    showToast('🤸 ' + label + ' 被整蛊打滑摔倒了！');
+    showToast('🤸 ' + label + t('prankSlip'));
   }
   document.getElementById('prankPanel').style.display = 'none';
 });
@@ -8863,7 +10692,7 @@ document.getElementById('prankBleed').addEventListener('click', ()=>{
     target.bleeding = true;
     target.bleedTimer = 600; // 持续10秒
     playSound('hurt');
-    showToast('🩸 ' + label + ' 被整蛊持续流血！');
+    showToast('🩸 ' + label + t('prankBleed'));
   }
   document.getElementById('prankPanel').style.display = 'none';
 });
@@ -8875,7 +10704,7 @@ document.getElementById('prankTeleport').addEventListener('click', ()=>{
     target.x = 100 + Math.random()*(WORLD_W-200);
     target.y = 100 + Math.random()*(WORLD_H-200);
     playSound('hurt');
-    showToast('🌀 ' + label + ' 被整蛊随机传送了！');
+    showToast('🌀 ' + label + t('prankTeleport'));
   }
   document.getElementById('prankPanel').style.display = 'none';
 });
@@ -8886,7 +10715,7 @@ document.getElementById('prankWeak').addEventListener('click', ()=>{
   if(target){
     target.weakTimer = 600; // 10秒
     playSound('hurt');
-    showToast('🐢 ' + label + ' 被整蛊变弱了！');
+    showToast('🐢 ' + label + t('prankWeak'));
   }
   document.getElementById('prankPanel').style.display = 'none';
 });
@@ -8898,7 +10727,7 @@ document.getElementById('prankGold').addEventListener('click', ()=>{
     target.gold = 99999; // 直接给大量金币，相当于无限金币
     target.infGold = true; // 标记无限金币，购买时不扣钱
     playSound('pickup');
-    showToast('💰 ' + label + ' 被整蛊获得无限金币！');
+    showToast('💰 ' + label + t('prankInfGold'));
     updateUI();
   }
   document.getElementById('prankPanel').style.display = 'none';
@@ -8915,10 +10744,10 @@ document.getElementById('prankRevive').addEventListener('click', ()=>{
       if(G.prankOpener === 1) G.coopP2Dead = false;
       else G.coopP1Dead = false;
       playSound('heal');
-      showToast('❤️ ' + label + ' 被整蛊复活了！（半血+3秒无敌）');
+      showToast('❤️ ' + label + t('prankRevive'));
       updateUI();
     } else {
-      showToast('⚠️ ' + label + ' 还活着，不需要复活！');
+      showToast('⚠️ ' + label + t('prankNoNeed'));
     }
   }
   document.getElementById('prankPanel').style.display = 'none';
@@ -9062,7 +10891,7 @@ document.getElementById('buyRevive').addEventListener('click', ()=>{
     if(!G.cheat.infGold) buyer.gold-=100;
     buyer.reviveKit = (buyer.reviveKit || 0) + 1;
     playSound('pickup');
-    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '💉 购买了救助器！');
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('buyRescuer'));
     updateUI();
     saveGame();
   } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
@@ -9071,7 +10900,7 @@ document.getElementById('buyRevive').addEventListener('click', ()=>{
 document.getElementById('buyCar').addEventListener('click', ()=>{
   const buyer = getShopBuyer();
   if(G.carOwned){
-    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '🚗 已经有车了！');
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('alreadyCar'));
     return;
   }
   if(G.cheat.infGold || buyer.gold>=500){
@@ -9082,7 +10911,7 @@ document.getElementById('buyCar').addEventListener('click', ()=>{
     const spawnY = clamp(buyer.y, 20, WORLD_H-60);
     G.car = {x:spawnX, y:spawnY, w:60, h:40, speed:0, maxSpeed:6.5, facing:1, hp:100, vx:0, vy:0};
     playSound('unlock');
-    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '🚗 购买了越野车！按E上车/下车');
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('buyCar'));
     // 显示上车按钮
     const carBtn = document.getElementById('carBtn');
     if(carBtn) carBtn.style.display = 'flex';
@@ -9097,7 +10926,7 @@ document.getElementById('buyCar').addEventListener('click', ()=>{
 document.getElementById('buyScuba').addEventListener('click', ()=>{
   const buyer = getShopBuyer();
   if(G.hasScuba){
-    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '🤿 已经有潜水装备了！');
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('alreadyScuba'));
     return;
   }
   if(G.cheat.infGold || buyer.gold>=150){
@@ -9105,7 +10934,7 @@ document.getElementById('buyScuba').addEventListener('click', ()=>{
     G.hasScuba = true;
     G.maxOxygen = 150; // 有潜水装备后最大氧气增加
     playSound('unlock');
-    showToast((G.isCoop ? G.shopOpener + ' ' : '') + '🤿 购买了潜水装备！氧气消耗减半，最大氧气增加！');
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('buyScuba'));
     updateUI();
     saveGame();
   } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
@@ -9174,12 +11003,12 @@ function handleEKey(playerNum){
           G.cityBoss.x = 400;
           G.cityBoss.y = 300;
         }
-        showToast('🛗 电梯直达顶楼！第' + G.buildingFloor + '层！');
+        showToast(t('elevatorTop') + G.buildingFloor + t('floorSuffix'));
       }
       return;
     }
     // 室内但没靠近任何交互点，提示
-    showToast('靠近上楼/下楼楼梯/电梯/出口按E交互');
+    showToast(t('indoorHint'));
     return;
   }
   
@@ -9213,13 +11042,13 @@ function toggleCar(playerNum){
       const otherInCar = otherPlayer === 2 ? G.player2InCar : G.playerInCar;
       if(otherInCar){
         G.carDriver = otherPlayer;
-        showToast(playerLabel + '下车了，' + (otherPlayer === 2 ? '2P' : '1P') + '接管驾驶！');
+        showToast(playerLabel + t('carHandover') + (otherPlayer === 2 ? '2P' : '1P') + t('carTakeOver'));
       } else {
         G.carDriver = 0;
-        showToast(playerLabel + '下车了');
+        showToast(playerLabel + t('carExit'));
       }
     } else {
-      showToast(playerLabel + '下车了');
+      showToast(playerLabel + t('carExit'));
     }
     
     // 玩家出现在车旁边
@@ -9237,7 +11066,7 @@ function toggleCar(playerNum){
     if(dist < 80){
       // 检查车是否已满
       if(G.playerInCar && G.player2InCar){
-        showToast(playerLabel + '车已满，无法上车！');
+        showToast(playerLabel + t('carFull'));
         return;
       }
       // 上车
@@ -9247,13 +11076,13 @@ function toggleCar(playerNum){
       // 分配座位：没人驾驶就当驾驶员，否则当乘客
       if(G.carDriver === 0){
         G.carDriver = playerNum;
-        showToast(playerLabel + '上车了，开始驾驶！WASD/方向键控制，撞击秒杀怪物');
+        showToast(playerLabel + t('carDrive'));
       } else {
-        showToast(playerLabel + '上车了，坐在乘客位');
+        showToast(playerLabel + t('carPassenger'));
       }
       playSound('unlock');
     } else {
-      showToast(playerLabel + '离车太远，无法上车');
+      showToast(playerLabel + t('carTooFar'));
     }
   }
 }
@@ -9263,17 +11092,17 @@ function activateCarNitro(playerNum){
   if(!G.carOwned || !G.car) return;
   // 必须是驾驶员才能用氮气
   if(playerNum && G.carDriver !== playerNum){
-    showToast((playerNum === 2 ? '2P ' : '1P ') + '只有驾驶员才能使用氮气加速！');
+    showToast((playerNum === 2 ? '2P ' : '1P ') + t('carNitroDriverOnly'));
     return;
   }
   // 必须有人在车里才能用氮气
   if(!G.playerInCar && !G.player2InCar){
-    showToast('必须在车里才能使用氮气加速！');
+    showToast(t('carNitroNeedCar'));
     return;
   }
   // 冷却中
   if(G.carNitroCooldown > 0){
-    showToast('氮气加速冷却中：' + Math.ceil(G.carNitroCooldown/60) + '秒');
+    showToast(t('carNitroCooldown') + Math.ceil(G.carNitroCooldown/60) + 's');
     return;
   }
   // 已经在氮气加速中
@@ -9287,7 +11116,7 @@ function activateCarNitro(playerNum){
   G.car.maxSpeed = 13; // 速度翻倍
   playSound('unlock');
   const driverLabel = G.carDriver === 2 ? '2P ' : '1P ';
-  showToast(driverLabel + '🚀 氮气加速激活！');
+  showToast(driverLabel + t('carNitroActive'));
   // 屏幕震动
   G.shake = 10;
 }
@@ -9422,7 +11251,7 @@ function updateCars(){
       G.player.hp = 0;
       G.player.dead = true;
       G.deathCause = '';
-      showToast('1P 被车撞死了！');
+      showToast(t('carKill1'));
       playSound('death');
       makeCorpse(G.player);
       if(!G.isCoop){
@@ -9443,7 +11272,7 @@ function updateCars(){
       G.player2.hp = 0;
       G.player2.dead = true;
       G.deathCause = '';
-      showToast('2P 被车撞死了！');
+      showToast(t('carKill2'));
       playSound('death');
       makeCorpse(G.player2);
       G.coopP2Dead = true;
@@ -9500,7 +11329,7 @@ function updateCar(){
     if(G.carNitroTimer <= 0){
       G.carNitroActive = false;
       car.maxSpeed = 6.5; // 恢复正常速度
-      showToast('氮气加速结束');
+      showToast(t('nitroEnd'));
     }
     // 车尾喷火特效
     if(Math.random() < 0.5){
@@ -9615,7 +11444,7 @@ function updateCar(){
       G.woods.splice(i, 1);
       if(driverNum === 2 && G.player2) G.player2.gold += 5;
       else if(G.player) G.player.gold += 5;
-      showToast((driverNum === 2 ? '2P ' : '1P ') + '撞树获得5金币！');
+      showToast((driverNum === 2 ? '2P ' : '1P ') + t('treeGold'));
       playSound('pickup');
       // 车稍微减速
       car.vx *= 0.8;
@@ -9646,7 +11475,7 @@ function updateCar(){
         G.killers.splice(i, 1);
         G.killCount++;
         playSound('kill');
-        showToast((driverNum === 2 ? '2P ' : '1P ') + '开车撞死了杀手！');
+        showToast((driverNum === 2 ? '2P ' : '1P ') + t('carKillKiller'));
         // 车稍微减速
         car.vx *= 0.7;
         car.vy *= 0.7;
@@ -9729,7 +11558,7 @@ function drawCar(){
   // 驾驶员标签：在车上方显示谁在驾驶
   if(G.carDriver > 0 && (G.playerInCar || G.player2InCar)){
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    const labelText = G.carDriver === 1 ? '1P驾驶' : '2P驾驶';
+    const labelText = G.carDriver === 1 ? t('driving1') : t('driving2');
     ctx.font = 'bold 14px Microsoft YaHei, sans-serif';
     const textWidth = ctx.measureText(labelText).width;
     ctx.fillRect(car.x + car.w/2 - textWidth/2 - 8, car.y - 32, textWidth + 16, 22);
@@ -9769,7 +11598,7 @@ function drawAuthorNPC(){
     ctx.fillStyle = '#000';
     ctx.font = 'bold 20px Microsoft YaHei, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('作者', an.x + an.w/2, an.y + an.h/2 + 7);
+    ctx.fillText(t('authorName'), an.x + an.w/2, an.y + an.h/2 + 7);
     ctx.textAlign = 'left';
   }
   
@@ -9793,7 +11622,7 @@ function getAuthorNearPlayer(){
 function authorCheckCooldown(){
   if(!G.authorNPC || G.authorNPC.dead) return false;
   if(G.authorNPC.interactCooldown > 0){
-    showToast('作者冷却中，还需 ' + Math.ceil(G.authorNPC.interactCooldown/60) + ' 秒');
+    showToast(t('authorCooldownA') + Math.ceil(G.authorNPC.interactCooldown/60) + t('authorCooldownB'));
     return false;
   }
   return true;
@@ -9810,7 +11639,7 @@ function authorKillMobs(){
   const player = getAuthorNearPlayer();
   if(!player) return;
   const playerLabel = player === G.player2 ? '2P ' : '1P ';
-  showToast(playerLabel + '作者帮你秒杀了所有怪物！');
+  showToast(playerLabel + t('authorKillAll'));
   for(let i = G.mobs.length-1; i >= 0; i--){
     const m = G.mobs[i];
     makeCorpse(m);
@@ -9826,20 +11655,7 @@ function authorKillMobs(){
 // 功能2：给游戏提示
 function authorGiveTip(){
   if(!authorCheckCooldown()) return;
-  const tips = [
-    '提示：10杀获得盾牌，30杀打小Boss，50杀获得火焰弹！',
-    '提示：70杀获得蓄力火焰弹，120杀打最终Boss！',
-    '提示：下雨地面会滑，小心摔倒！打雷会劈死人！',
-    '提示：大太阳会让状态下降，晴天和阴天没效果！',
-    '提示：车可以撞怪物秒杀，还能挖树！500金币购买！',
-    '提示：氮气加速可以让车速度翻倍，持续3秒！',
-    '提示：双人模式下，第一个上车的是驾驶员！',
-    '提示：靠近😊可以索要金币，靠近😎会播放音乐！',
-    '提示：受伤后会流血，每5秒流失1点血量！',
-    '提示：商店可以买医疗包、绷带、救助器等道具！',
-    '提示：作者NPC是无敌的，打他会被反杀！',
-    '提示：双人模式下可以用整蛊功能整蛊对方！',
-  ];
+  const tips = tList('authorTips');
   const tip = tips[Math.floor(Math.random() * tips.length)];
   showToast('💡 ' + tip);
   playSound('unlock');
@@ -9854,7 +11670,7 @@ function authorGiveGold(){
   const playerLabel = player === G.player2 ? '2P ' : '1P ';
   const gold = rand(50, 200);
   player.gold += gold;
-  showToast(playerLabel + '作者给了你 ' + gold + ' 金币！');
+  showToast(playerLabel + t('authorGold') + gold + t('coinSuffix'));
   playSound('pickup');
   spawnParticles(player.x+player.w/2, player.y+player.h/2, '#ffd700', 10);
   updateUI(); // 立即更新UI，避免金币显示延迟
@@ -9870,7 +11686,7 @@ function authorHealPlayer(){
   const heal = rand(20, 50);
   player.hp = Math.min(player.maxHp, player.hp + heal);
   player.bleeding = false; // 顺便止血
-  showToast(playerLabel + '作者恢复了你 ' + heal + ' 点血量！');
+  showToast(playerLabel + t('authorHeal') + heal + t('hpPoints'));
   playSound('heal');
   spawnParticles(player.x+player.w/2, player.y+player.h/2, '#00ff00', 10);
   updateUI(); // 立即更新UI，避免血量显示延迟
@@ -9883,7 +11699,7 @@ function authorSpawnMobs(){
   const player = getAuthorNearPlayer();
   if(!player) return;
   const playerLabel = player === G.player2 ? '2P ' : '1P ';
-  showToast(playerLabel + '作者开玩笑，召唤了一群怪物！');
+  showToast(playerLabel + t('authorMobJoke'));
   for(let i = 0; i < 5; i++){
     const mx = clamp(player.x + rand(-200, 200), 50, WORLD_W-50);
     const my = clamp(player.y + rand(-200, 200), 50, WORLD_H-50);
@@ -9974,7 +11790,7 @@ document.getElementById('reviveBtn').addEventListener('click', ()=>{
     G.revivingP2 = true;
     G.reviveTimerP2 = 420; // 7秒 * 60帧
     playSound('unlock');
-    showToast('1P 开始救助2P！7秒后复活');
+    showToast(t('rescueStart1'));
     updateUI();
   }
 });
@@ -9986,7 +11802,7 @@ document.getElementById('reviveBtn2').addEventListener('click', ()=>{
     G.revivingP1 = true;
     G.reviveTimerP1 = 420; // 7秒 * 60帧
     playSound('unlock');
-    showToast('2P 开始救助1P！7秒后复活');
+    showToast(t('rescueStart2'));
     updateUI();
   }
 });
@@ -10009,7 +11825,7 @@ function gameLoop(){
         console.error('UPDATE错误堆栈:', e2.stack);
         // 把错误信息存到全局变量，render时画在画面上
         window._gameError = {
-          msg: e2.message || '未知错误',
+          msg: e2.message || t('unknownErr'),
           stack: (e2.stack || '').substring(0, 500),
           time: Date.now()
         };
@@ -10026,7 +11842,7 @@ function gameLoop(){
     console.error('错误堆栈:', e.stack);
     // 把错误信息存到全局变量
     window._gameError = {
-      msg: e.message || '未知错误',
+      msg: e.message || t('unknownErr'),
       stack: (e.stack || '').substring(0, 500),
       time: Date.now()
     };
@@ -10333,7 +12149,7 @@ function startCoopGame(){
   updateAimJoystick(); // 根据武器类型显示/隐藏瞄准轮盘
   // 延迟一帧显示提示，避免初始化卡顿
   requestAnimationFrame(() => {
-    showToast('👥 双人合作模式开始！1P:WASD+J  2P:方向键+1', 4000);
+    showToast(t('coopStart'), 4000);
   });
 }
 
@@ -10406,10 +12222,10 @@ function updateMapLockState(){
   if(!mapCity) return;
   if(isCityUnlocked()){
     mapCity.classList.remove('locked');
-    mapCity.querySelector('.map-name').textContent = '城市';
+    mapCity.querySelector('.map-name').textContent = t('cityName');
   } else {
     mapCity.classList.add('locked');
-    mapCity.querySelector('.map-name').textContent = '🔒 城市';
+    mapCity.querySelector('.map-name').textContent = t('cityLockedName');
   }
 }
 
@@ -10454,7 +12270,7 @@ document.getElementById('mapCity').addEventListener('click', ()=>{
   // 检查是否已解锁
   if(!isCityUnlocked()){
     playSound('hurt');
-    showToast('🔒 需要先通关草原（打败最终Boss🥺）才能解锁城市地图！');
+    showToast(t('cityLocked'));
     return;
   }
   playSound('click');
