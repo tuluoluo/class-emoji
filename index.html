@@ -9732,20 +9732,22 @@ function detectGunBaseAngle(){
     ctx2.textBaseline = 'middle';
     ctx2.fillText('🔫', 100, 100);
     const d = ctx2.getImageData(0, 0, 200, 200).data;
-    // 枪口=离中心最远的非黑像素（跨平台最通用；绿色枪头在部分平台是顶部旋钮，会算歪，故不以绿色为准）
-    let bestD = 0, bx = 0, by = 0;
+    // 枪口=绿色像素中最远者：大部分平台🔫的枪口带绿色标记，方向校准正确
+    // （Noto水枪绿色在顶部旋钮属已知平台差异，用"枪姿修正"开关翻转姿态即可）
+    let bestG = 0, gx = 0, gy = 0;
     for(let y = 0; y < 200; y++){
       for(let x = 0; x < 200; x++){
         const i = (y*200 + x) * 4;
-        if(d[i] > 30 || d[i+1] > 30 || d[i+2] > 30){
+        const r = d[i], g = d[i+1], b = d[i+2];
+        if(g > 80 && g > r * 1.4 && g > b * 1.4){
           const dx = x - 100, dy = y - 100;
           const dist = Math.hypot(dx, dy);
-          if(dist > bestD){ bestD = dist; bx = dx; by = dy; }
+          if(dist > bestG){ bestG = dist; gx = dx; gy = dy; }
         }
       }
     }
-    if(bestD > 15){
-      G.gunBaseAngle = Math.atan2(by, bx);
+    if(bestG > 15){
+      G.gunBaseAngle = Math.atan2(gy, gx);
     }
   }catch(e){
     // 检测失败保持默认
@@ -9811,8 +9813,15 @@ function drawPlayer2(){
     } else {
       ctx.rotate(aimAngle - base);
     }
-    // 枪姿修正：部分平台枪口对准后握把仍反，设置里可翻转（只翻上下，不影响枪口朝向）
-    if(G.gunFlip) ctx.scale(1, -1);
+    // 火焰弹/蓄力火焰弹：火球不随枪校准角旋转，只按攻击方向左右镜像，保持火苗自然向上
+    const isFireBall = weaponEmoji === '🔥' || weaponEmoji === '💥';
+    if(isFireBall){
+      if(aimX < 0) ctx.scale(-1, 1);
+      ctx.rotate(0);
+    } else {
+      // 枪姿修正：部分平台枪口对准后握把仍反，设置里可翻转（只翻上下，不影响枪口朝向）
+      if(G.gunFlip) ctx.scale(1, -1);
+    }
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
@@ -9899,8 +9908,15 @@ function drawPlayer(){
     } else {
       ctx.rotate(aimAngle - base);
     }
-    // 枪姿修正：部分平台枪口对准后握把仍反，设置里可翻转（只翻上下，不影响枪口朝向）
-    if(G.gunFlip) ctx.scale(1, -1);
+    // 火焰弹/蓄力火焰弹：火球不随枪校准角旋转，只按攻击方向左右镜像，保持火苗自然向上
+    const isFireBall = weaponEmoji === '🔥' || weaponEmoji === '💥';
+    if(isFireBall){
+      if(aimX < 0) ctx.scale(-1, 1);
+      ctx.rotate(0);
+    } else {
+      // 枪姿修正：部分平台枪口对准后握把仍反，设置里可翻转（只翻上下，不影响枪口朝向）
+      if(G.gunFlip) ctx.scale(1, -1);
+    }
     // 武器显示在玩家身体外侧（旋转后自动对应方向）
     ctx.font = (p.w*0.7)+'px serif';
     ctx.textAlign = 'center';
