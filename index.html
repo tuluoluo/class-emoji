@@ -4082,14 +4082,14 @@ function renderSaveSlots(mode){
         </div>
         <div class="save-slot-actions">
           ${mode === 'continue' ? '<button class="btn-load" data-slot="'+i+'" data-action="load">'+t('loadBtn')+'</button>' : '<button class="btn-new" data-slot="'+i+'" data-action="new">'+t('overwriteNewGame')+'</button>'}
-          <button class="btn-delete" data-slot="${i}" data-action="delete">'+t('deleteBtn')+'</button>
+          <button class="btn-delete" data-slot="${i}" data-action="delete">${t('deleteBtn')}</button>
         </div>`;
     } else {
       slotDiv.innerHTML = `
-        <div class="save-slot-title"><span>📁 ${SAVE_NAMES()[i]}</span><span style="font-size:12px;color:#aaa">'+t('emptySave')+'</span></div>
-        <div class="save-slot-info" style="color:#aaa">'+t('emptySaveDesc')+'</div>
+        <div class="save-slot-title"><span>📁 ${SAVE_NAMES()[i]}</span><span style="font-size:12px;color:#aaa">${t('emptySave')}</span></div>
+        <div class="save-slot-info" style="color:#aaa">${t('emptySaveDesc')}</div>
         <div class="save-slot-actions">
-          <button class="btn-new" data-slot="${i}" data-action="new" style="flex:2">'+t('newGameBtn')+'</button>
+          <button class="btn-new" data-slot="${i}" data-action="new" style="flex:2">${t('newGameBtn')}</button>
         </div>`;
     }
     list.appendChild(slotDiv);
