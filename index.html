@@ -773,7 +773,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;border-top:1px dashed #ddd;padding-top:8px">
         <span id="gunCalibLabel">🔫 枪口校准</span>
         <span style="font-size:11px;color:#888" id="gunCalibHint">把枪调到"枪口朝右、正常握持"的样子，调好后点完成</span>
-        <canvas id="gunCalibCanvas" width="300" height="150" style="background:#90c96a;border-radius:8px;border:2px solid #333;width:100%;max-width:300px;height:auto;touch-action:none"></canvas>
+        <canvas id="gunCalibCanvas" width="300" height="150" style="background:#90c96a;border-radius:8px;border:2px solid #333;width:100%;max-width:300px;height:150px;touch-action:none"></canvas>
         <div style="width:100%;display:flex;align-items:center;gap:8px">
           <span id="gunCalibAngle" style="font-weight:bold;min-width:52px">-62.6°</span>
           <input type="range" id="gunCalibSlider" min="-180" max="180" step="1" value="-63" style="flex:1">
@@ -10500,29 +10500,36 @@ function drawGunCalib(){
   // 角度值
   const ang = document.getElementById('gunCalibAngle');
   if(ang) ang.textContent = (G.gunBaseAngle*180/Math.PI).toFixed(1)+'°';
-  const slider = document.getElementById('gunCalibSlider');
-  if(slider) slider.value = (G.gunBaseAngle*180/Math.PI).toFixed(0);
 }
 function initGunCalib(){
   const slider = document.getElementById('gunCalibSlider');
   const reset = document.getElementById('gunCalibReset');
   const done = document.getElementById('gunCalibDone');
-  if(slider) slider.addEventListener('input', ()=>{
-    G.gunBaseAngle = parseFloat(slider.value) * Math.PI / 180;
-    drawGunCalib();
-  });
-  if(reset) reset.addEventListener('click', ()=>{
-    try{ localStorage.removeItem('gunCalibManual'); }catch(e){}
-    G.gunBaseAngle = -1.0926;
-    detectGunBaseAngle();
-    drawGunCalib();
-  });
-  if(done) done.addEventListener('click', ()=>{
-    try{ localStorage.setItem('gunCalibManual', G.gunBaseAngle.toString()); }catch(e){}
-    drawGunCalib();
-    const hint = document.getElementById('gunCalibHint');
-    if(hint) hint.textContent = t('gunCalibSaved');
-  });
+  if(slider && !slider._calibBound){
+    slider._calibBound = true;
+    slider.addEventListener('input', ()=>{
+      G.gunBaseAngle = parseFloat(slider.value) * Math.PI / 180;
+      drawGunCalib();
+    });
+  }
+  if(reset && !reset._calibBound){
+    reset._calibBound = true;
+    reset.addEventListener('click', ()=>{
+      try{ localStorage.removeItem('gunCalibManual'); }catch(e){}
+      G.gunBaseAngle = -1.0926;
+      detectGunBaseAngle();
+      drawGunCalib();
+    });
+  }
+  if(done && !done._calibBound){
+    done._calibBound = true;
+    done.addEventListener('click', ()=>{
+      try{ localStorage.setItem('gunCalibManual', G.gunBaseAngle.toString()); }catch(e){}
+      drawGunCalib();
+      const hint = document.getElementById('gunCalibHint');
+      if(hint) hint.textContent = t('gunCalibSaved');
+    });
+  }
   drawGunCalib();
 }
 
