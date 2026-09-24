@@ -762,14 +762,6 @@ input:checked + .slider:before{transform:translateX(24px)}
         <span>🔊 游戏声音</span>
         <label class="switch"><input type="checkbox" id="soundToggle" checked><span class="slider"></span></label>
       </div>
-      <div class="settings-row">
-        <span id="rulesBtnText">📜 游戏规则</span>
-        <button id="showRulesBtn" class="settings-small-btn">查看</button>
-      </div>
-      <div class="settings-row">
-        <span id="gunFlipLabel">🔫 枪姿修正</span>
-        <label class="switch"><input type="checkbox" id="gunFlipToggle"><span class="slider"></span></label>
-      </div>
       <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;border-top:1px dashed #ddd;padding-top:8px">
         <span id="gunCalibLabel">🔫 枪口校准</span>
         <span style="font-size:11px;color:#888" id="gunCalibHint">把枪调到"枪口朝右、正常握持"的样子，调好后点完成</span>
@@ -782,6 +774,14 @@ input:checked + .slider:before{transform:translateX(24px)}
           <button id="gunCalibReset" class="settings-small-btn" style="flex:1">恢复自动</button>
           <button id="gunCalibDone" class="settings-small-btn" style="flex:1;background:#2ecc71;color:#fff">✅ 完成保存</button>
         </div>
+      </div>
+      <div class="settings-row">
+        <span id="rulesBtnText">📜 游戏规则</span>
+        <button id="showRulesBtn" class="settings-small-btn">查看</button>
+      </div>
+      <div class="settings-row">
+        <span id="gunFlipLabel">🔫 枪姿修正</span>
+        <label class="switch"><input type="checkbox" id="gunFlipToggle"><span class="slider"></span></label>
       </div>
       <div class="settings-row">
         <span>🌐 语言 / Language</span>
@@ -10500,6 +10500,17 @@ function drawGunCalib(){
   // 角度值
   const ang = document.getElementById('gunCalibAngle');
   if(ang) ang.textContent = (G.gunBaseAngle*180/Math.PI).toFixed(1)+'°';
+  // 自愈：若画面意外为空（部分机型首次布局/字体未就绪），下一帧重绘
+  if(!cv._calibChecked){
+    cv._calibChecked = true;
+    setTimeout(()=>{
+      const c2 = cv.getContext('2d');
+      const d2 = c2.getImageData(0, 0, cv.width, cv.height).data;
+      let sum = 0;
+      for(let i = 0; i < d2.length; i += 4){ sum += d2[i] + d2[i+1] + d2[i+2]; }
+      if(sum < 500) drawGunCalib();
+    }, 300);
+  }
 }
 function initGunCalib(){
   const slider = document.getElementById('gunCalibSlider');
@@ -13204,6 +13215,8 @@ document.getElementById('settingsBtn').addEventListener('click', ()=>{
   document.getElementById('settingsPanel').style.display = 'flex';
   G.paused = true; // 打开设置时暂停游戏
   initGunCalib();
+  // 延迟重绘确保布局稳定后画面出现（主页/局内都可靠）
+  requestAnimationFrame(()=>requestAnimationFrame(()=>drawGunCalib()));
 });
 // 关闭设置
 document.getElementById('closeSettingsBtn').addEventListener('click', ()=>{
