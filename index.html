@@ -770,6 +770,19 @@ input:checked + .slider:before{transform:translateX(24px)}
         <span id="gunFlipLabel">🔫 枪姿修正</span>
         <label class="switch"><input type="checkbox" id="gunFlipToggle"><span class="slider"></span></label>
       </div>
+      <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;border-top:1px dashed #ddd;padding-top:8px">
+        <span id="gunCalibLabel">🔫 枪口校准</span>
+        <span style="font-size:11px;color:#888" id="gunCalibHint">把枪调到"枪口朝右、正常握持"的样子，调好后点完成</span>
+        <canvas id="gunCalibCanvas" width="300" height="150" style="background:#90c96a;border-radius:8px;border:2px solid #333;width:100%;max-width:300px;height:auto;touch-action:none"></canvas>
+        <div style="width:100%;display:flex;align-items:center;gap:8px">
+          <span id="gunCalibAngle" style="font-weight:bold;min-width:52px">-62.6°</span>
+          <input type="range" id="gunCalibSlider" min="-180" max="180" step="1" value="-63" style="flex:1">
+        </div>
+        <div style="display:flex;gap:8px;width:100%">
+          <button id="gunCalibReset" class="settings-small-btn" style="flex:1">恢复自动</button>
+          <button id="gunCalibDone" class="settings-small-btn" style="flex:1;background:#2ecc71;color:#fff">✅ 完成保存</button>
+        </div>
+      </div>
       <div class="settings-row">
         <span>🌐 语言 / Language</span>
         <select id="languageSelect" style="padding:6px 10px;border-radius:6px;border:2px solid #333;font-size:13px;font-weight:bold;cursor:pointer">
@@ -949,7 +962,7 @@ function initAudio(){
 // ==================== 八国语言系统 ====================
 const LANGS = {
   chinglish: {
-    name:"Chinglish",askGold:"Ask gold coin la", shopTitle:"🤬 Arms shop la", 
+    name:"Chinglish",gunCalibLabel:"🔫 Gun calibration la", gunCalibHint:"Tune gun to muzzle point right + natural grip, then click save", gunCalibReset:"Auto reset", gunCalibDone:"✅ Save", gunCalibSaved:"✅ Saved la! Work for all map and co-op mode", askGold:"Ask gold coin la", shopTitle:"🤬 Arms shop la", 
     start:"Start play game",
     continue:"Continue play game",
     rules:"Game rule",
@@ -1288,7 +1301,7 @@ const LANGS = {
     hpPoints:" hp points",
   },
   wenyan: {
-    name:"文言文",askGold:"索金", shopTitle:"🤬 军火商铺", 
+    name:"文言文",gunCalibLabel:"🔫 枪口校准", gunCalibHint:"调枪至枪口朝右、持握自然，毕则点完成", gunCalibReset:"复自动", gunCalibDone:"✅ 成而存", gunCalibSaved:"✅ 已存！此角度通用于诸图及双人", askGold:"索金", shopTitle:"🤬 军火商铺", 
     start:"开局",
     continue:"续战",
     rules:"规则",
@@ -1626,7 +1639,7 @@ const LANGS = {
     coopStart:"👥 双人合作起！1P:WASD+J  2P:方向键+1",
     hpPoints:" 点气血",
   },  zh: {
-    name:'中文',askGold:'索要金币', shopTitle:'🤬 军火商店',  start:'开始游戏', continue:'继续游戏', rules:'游戏规则', settings:'设置', gunFlip:'枪姿修正', saveDeadTag:'已阵亡', saveDead:'该存档已在战斗中阵亡，无法复活',
+    name:'中文',gunCalibLabel:'🔫 枪口校准', gunCalibHint:'把枪调到“枪口朝右、正常握持”的样子，调好后点完成', gunCalibReset:'恢复自动', gunCalibDone:'✅ 完成保存', gunCalibSaved:'✅ 已保存！此角度已对所有地图和双人模式生效', askGold:'索要金币', shopTitle:'🤬 军火商店',  start:'开始游戏', continue:'继续游戏', rules:'游戏规则', settings:'设置', gunFlip:'枪姿修正', saveDeadTag:'已阵亡', saveDead:'该存档已在战斗中阵亡，无法复活',
     hp:'HP', kills:'击杀', gold:'金币', day:'白天', night:'夜晚',
     close:'关闭', chat:'聊聊', shop:'商店', restart:'重新开始', menu:'返回主菜单',
     weapon:'武器', sound:'游戏声音', viewRules:'查看', exitGame:'退出到主页', clearSave:'清除本地存档',
@@ -1889,7 +1902,7 @@ const LANGS = {
     hpPoints:'点血量',
   },
   en: {
-    name:'English',askGold:'Ask gold', shopTitle:'🤬 Arms Shop',  start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings', gunFlip:'Gun Flip Fix', saveDeadTag:'Fallen', saveDead:'This save fell in battle and cannot be revived',
+    name:'English',gunCalibLabel:'🔫 Gun Calibration', gunCalibHint:'Adjust the gun so the muzzle points right with a natural grip, then press save', gunCalibReset:'Auto Reset', gunCalibDone:'✅ Save', gunCalibSaved:'✅ Saved! Applies to all maps and co-op mode', askGold:'Ask gold', shopTitle:'🤬 Arms Shop',  start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings', gunFlip:'Gun Flip Fix', saveDeadTag:'Fallen', saveDead:'This save fell in battle and cannot be revived',
     hp:'HP', kills:'Kills', gold:'Gold', day:'Day', night:'Night',
     close:'Close', chat:'Chat', shop:'Shop', restart:'Restart', menu:'Main Menu',
     weapon:'Weapon', sound:'Game Sound', viewRules:'View', exitGame:'Exit to Menu', clearSave:'Clear Save',
@@ -2147,7 +2160,7 @@ const LANGS = {
     weatherThunder:'⛈️ Thunder! Watch out for lightning!',
   },
   ja: {
-    name:'日本語',askGold:'コインを求む', shopTitle:'🤬 武器ショップ',  start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定', gunFlip:'銃の姿勢修正', saveDeadTag:'戦死', saveDead:'このセーブは戦闘で死亡したため、復活できません',
+    name:'日本語',gunCalibLabel:'🔫 銃口キャリブレーション', gunCalibHint:'銃口が右を向き、自然な握りになるよう調整してから保存', gunCalibReset:'自動に戻す', gunCalibDone:'✅ 保存', gunCalibSaved:'✅ 保存済み！全マップと2人モードに適用', askGold:'コインを求む', shopTitle:'🤬 武器ショップ',  start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定', gunFlip:'銃の姿勢修正', saveDeadTag:'戦死', saveDead:'このセーブは戦闘で死亡したため、復活できません',
     hp:'HP', kills:'キル', gold:'ゴールド', day:'昼', night:'夜',
     close:'閉じる', chat:'話す', shop:'ショップ', restart:'リスタート', menu:'メインメニュー',
     weapon:'武器', sound:'ゲーム音声', viewRules:'見る', exitGame:'メニューへ', clearSave:'セーブ削除',
@@ -2406,7 +2419,7 @@ const LANGS = {
     weatherThunder:'⛈️ 雷だ！落雷注意！',
   },
   ko: {
-    name:'한국어',askGold:'동전 요구', shopTitle:'🤬 무기 상점',  start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정', gunFlip:'총기 자세 수정', saveDeadTag:'전사', saveDead:'이 저장은 전투에서 사망하여 부활할 수 없습니다',
+    name:'한국어',gunCalibLabel:'🔫 총구 보정', gunCalibHint:'총구가 오른쪽을 향하고 자연스럽게 쥐도록 조정한 후 저장', gunCalibReset:'자동 복원', gunCalibDone:'✅ 저장', gunCalibSaved:'✅ 저장됨! 모든 맵과 2인 모드에 적용', askGold:'동전 요구', shopTitle:'🤬 무기 상점',  start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정', gunFlip:'총기 자세 수정', saveDeadTag:'전사', saveDead:'이 저장은 전투에서 사망하여 부활할 수 없습니다',
     hp:'HP', kills:'킬', gold:'골드', day:'낮', night:'밤',
     close:'닫기', chat:'대화', shop:'상점', restart:'다시 시작', menu:'메인 메뉴',
     weapon:'무기', sound:'게임 소리', viewRules:'보기', exitGame:'메뉴로 나가기', clearSave:'세이브 삭제',
@@ -2691,7 +2704,7 @@ const LANGS = {
     r9:'원거리 5피해, 상점 120골드, 조준 조이스틱',
   },
   fr: {
-    name:'Français',askGold:'Demander de l\'or', shopTitle:'🤬 Armurerie',  start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres', gunFlip:'Correction posture arme', saveDeadTag:'Tombé', saveDead:'Cette sauvegarde est tombée au combat, impossible de revenir à la vie',
+    name:'Français',gunCalibLabel:'🔫 Calibrage du canon', gunCalibHint:'Réglez le pistolet pour que le canon pointe à droite avec une prise naturelle, puis enregistrez', gunCalibReset:'Réinitialiser auto', gunCalibDone:'✅ Enregistrer', gunCalibSaved:'✅ Enregistré ! Appliqué à toutes les cartes et au mode coop', askGold:'Demander de l\'or', shopTitle:'🤬 Armurerie',  start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres', gunFlip:'Correction posture arme', saveDeadTag:'Tombé', saveDead:'Cette sauvegarde est tombée au combat, impossible de revenir à la vie',
     hp:'PV', kills:'Tués', gold:'Or', day:'Jour', night:'Nuit',
     close:'Fermer', chat:'Parler', shop:'Boutique', restart:'Recommencer', menu:'Menu Principal',
     weapon:'Arme', sound:'Son du Jeu', viewRules:'Voir', exitGame:'Quitter au Menu', clearSave:'Effacer Sauvegarde',
@@ -2976,7 +2989,7 @@ const LANGS = {
     r9:'5 dégâts à distance, 120 or en boutique, joystick de visée',
   },
   de: {
-    name:'Deutsch',askGold:'Gold fordern', shopTitle:'🤬 Waffenladen',  start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen', gunFlip:'Waffen-Haltung korrigieren', saveDeadTag:'Gefallen', saveDead:'Dieser Spielstand ist im Kampf gefallen und kann nicht wiederbelebt werden',
+    name:'Deutsch',gunCalibLabel:'🔫 Laufkalibrierung', gunCalibHint:'Stelle die Waffe so ein, dass der Lauf nach rechts zeigt und der Griff natürlich ist, dann speichern', gunCalibReset:'Auto zurücksetzen', gunCalibDone:'✅ Speichern', gunCalibSaved:'✅ Gespeichert! Gilt für alle Karten und den Koop-Modus', askGold:'Gold fordern', shopTitle:'🤬 Waffenladen',  start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen', gunFlip:'Waffen-Haltung korrigieren', saveDeadTag:'Gefallen', saveDead:'Dieser Spielstand ist im Kampf gefallen und kann nicht wiederbelebt werden',
     hp:'HP', kills:'Kills', gold:'Gold', day:'Tag', night:'Nacht',
     close:'Schließen', chat:'Plaudern', shop:'Laden', restart:'Neustart', menu:'Hauptmenü',
     weapon:'Waffe', sound:'Spielton', viewRules:'Ansehen', exitGame:'Zum Menü', clearSave:'Speichern Löschen',
@@ -3261,7 +3274,7 @@ const LANGS = {
     r9:'5 Schaden Distanz, 120 Gold im Laden, Ziel-Joystick',
   },
   es: {
-    name:'Español',askGold:'Pedir oro', shopTitle:'🤬 Armería',  start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes', gunFlip:'Corregir postura del arma', saveDeadTag:'Caído', saveDead:'Esta partida cayó en combate y no puede revivir',
+    name:'Español',gunCalibLabel:'🔫 Calibración del cañón', gunCalibHint:'Ajusta la pistola para que el cañón apunte a la derecha con un agarre natural, luego guarda', gunCalibReset:'Restablecer auto', gunCalibDone:'✅ Guardar', gunCalibSaved:'✅ ¡Guardado! Aplica a todos los mapas y al modo cooperativo', askGold:'Pedir oro', shopTitle:'🤬 Armería',  start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes', gunFlip:'Corregir postura del arma', saveDeadTag:'Caído', saveDead:'Esta partida cayó en combate y no puede revivir',
     hp:'HP', kills:'Bajas', gold:'Oro', day:'Día', night:'Noche',
     close:'Cerrar', chat:'Hablar', shop:'Tienda', restart:'Reiniciar', menu:'Menú Principal',
     weapon:'Arma', sound:'Sonido del Juego', viewRules:'Ver', exitGame:'Salir al Menú', clearSave:'Borrar Partida',
@@ -3546,7 +3559,7 @@ const LANGS = {
     r9:'5 daño a distancia, 120 oro en tienda, joystick de puntería',
   },
   ru: {
-    name:'Русский',askGold:'Просить золото', shopTitle:'🤬 Оружейный магазин',  start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки', gunFlip:'Коррекция хвата оружия', saveDeadTag:'Пал', saveDead:'Это сохранение пало в бою и не может воскреснуть',
+    name:'Русский',gunCalibLabel:'🔫 Калибровка дула', gunCalibHint:'Настройте пистолет так, чтобы дуло смотрело вправо с естественным хватом, затем сохраните', gunCalibReset:'Сброс авто', gunCalibDone:'✅ Сохранить', gunCalibSaved:'✅ Сохранено! Действует на все карты и кооператив', askGold:'Просить золото', shopTitle:'🤬 Оружейный магазин',  start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки', gunFlip:'Коррекция хвата оружия', saveDeadTag:'Пал', saveDead:'Это сохранение пало в бою и не может воскреснуть',
     hp:'HP', kills:'Убийств', gold:'Золото', day:'День', night:'Ночь',
     close:'Закрыть', chat:'Говорить', shop:'Магазин', restart:'Заново', menu:'Главное Меню',
     weapon:'Оружие', sound:'Звук Игры', viewRules:'Смотреть', exitGame:'Выйти в Меню', clearSave:'Удалить Сохранение',
@@ -3899,6 +3912,15 @@ function applyLanguage(){
   if(shopTitleEl) shopTitleEl.textContent = t('shopTitle');
   const askBtnTxt = document.getElementById('askBtn');
   if(askBtnTxt) askBtnTxt.textContent = t('askGold');
+  // 枪口校准
+  const gunCalibLabel = document.getElementById('gunCalibLabel');
+  if(gunCalibLabel) gunCalibLabel.textContent = t('gunCalibLabel');
+  const gunCalibHint = document.getElementById('gunCalibHint');
+  if(gunCalibHint) gunCalibHint.textContent = t('gunCalibHint');
+  const gunCalibReset = document.getElementById('gunCalibReset');
+  if(gunCalibReset) gunCalibReset.textContent = t('gunCalibReset');
+  const gunCalibDone = document.getElementById('gunCalibDone');
+  if(gunCalibDone) gunCalibDone.textContent = t('gunCalibDone');
   // 商店物品名称
   const shopKnifeText = document.getElementById('shopKnifeText');
   if(shopKnifeText) shopKnifeText.textContent = t('shopKnife');
@@ -10438,6 +10460,70 @@ function detectGunBaseAngle(){
     // 检测失败保持默认
   }
   if(isNaN(G.gunBaseAngle)) G.gunBaseAngle = -1.0926; // 兜底-62.6°（Noto橙色水枪枪头）
+  // 手动校准值优先：玩家在设置里用枪口校准滑块调好的角度，永久覆盖自动检测（跨平台通用）
+  try{
+    const cal = localStorage.getItem('gunCalibManual');
+    if(cal !== null && !isNaN(parseFloat(cal))) G.gunBaseAngle = parseFloat(cal);
+  }catch(e){}
+}
+
+// ============ 枪口校准工具 ============
+function drawGunCalib(){
+  const cv = document.getElementById('gunCalibCanvas');
+  if(!cv) return;
+  const c = cv.getContext('2d');
+  const w = cv.width, h = cv.height;
+  c.clearRect(0, 0, w, h);
+  // 草地背景
+  c.fillStyle = '#90c96a';
+  c.fillRect(0, 0, w, h);
+  c.fillStyle = '#7ab55c';
+  for(let y = 0; y < h; y += 25){ for(let x = 0; x < w; x += 25){ if((x/25+y/25)%2===0) c.fillRect(x, y, 25, 25); } }
+  // 画一个玩家😡（朝右）做参照
+  c.font = '54px serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('😡', 85, h/2);
+  // 用当前base角画枪：实际游戏中朝右时 rotate(aimAngle - base)，aimAngle=0 即朝右
+  c.save();
+  c.translate(85, h/2);
+  c.rotate(0 - G.gunBaseAngle);
+  c.font = '46px serif';
+  c.fillText('🔫', 33, 0);
+  c.restore();
+  // 提示方向线
+  c.strokeStyle = 'rgba(255,255,255,0.6)';
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(85, h/2);
+  c.lineTo(w-10, h/2);
+  c.stroke();
+  // 角度值
+  const ang = document.getElementById('gunCalibAngle');
+  if(ang) ang.textContent = (G.gunBaseAngle*180/Math.PI).toFixed(1)+'°';
+  const slider = document.getElementById('gunCalibSlider');
+  if(slider) slider.value = (G.gunBaseAngle*180/Math.PI).toFixed(0);
+}
+function initGunCalib(){
+  const slider = document.getElementById('gunCalibSlider');
+  const reset = document.getElementById('gunCalibReset');
+  const done = document.getElementById('gunCalibDone');
+  if(slider) slider.addEventListener('input', ()=>{
+    G.gunBaseAngle = parseFloat(slider.value) * Math.PI / 180;
+    drawGunCalib();
+  });
+  if(reset) reset.addEventListener('click', ()=>{
+    try{ localStorage.removeItem('gunCalibManual'); }catch(e){}
+    G.gunBaseAngle = -1.0926;
+    detectGunBaseAngle();
+    drawGunCalib();
+  });
+  if(done) done.addEventListener('click', ()=>{
+    try{ localStorage.setItem('gunCalibManual', G.gunBaseAngle.toString()); }catch(e){}
+    drawGunCalib();
+    const hint = document.getElementById('gunCalibHint');
+    if(hint) hint.textContent = t('gunCalibSaved');
+  });
+  drawGunCalib();
 }
 
 function drawPlayer2(){
@@ -13110,6 +13196,7 @@ document.getElementById('settingsBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click');
   document.getElementById('settingsPanel').style.display = 'flex';
   G.paused = true; // 打开设置时暂停游戏
+  initGunCalib();
 });
 // 关闭设置
 document.getElementById('closeSettingsBtn').addEventListener('click', ()=>{
