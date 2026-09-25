@@ -8007,7 +8007,7 @@ function checkUnlocks(){
     saveGame();
     showToast(t('gotChargeFire'));
   }
-  if(k>=120 && !G.finalBossSpawned && G.currentMap === 'grass'){
+  if(k>=120 && !G.finalBossSpawned && G.currentMap === 'grassland'){
     G.finalBossSpawned = true;
     G.bosses.push(createFinalBoss());
     playSound('boss');
