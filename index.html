@@ -7170,9 +7170,12 @@ function drawWaters(){
 
 // ==================== 尸体系统 ====================
 function makeCorpse(entity){
+  // Boss阶段标识（stage2/stage3/stage4）不是emoji，尸体统一显示😈，避免渲染出阶段名字
+  let corpseFace = entity.face;
+  if(corpseFace === 'stage2' || corpseFace === 'stage3' || corpseFace === 'stage4') corpseFace = '😈';
   G.corpses.push({
     x:entity.x, y:entity.y, w:entity.w, h:entity.h,
-    face:entity.face, angle:Math.PI/2, // 翻转90度
+    face:corpseFace, angle:Math.PI/2, // 翻转90度
     life:1200, fadeStart:900,
   });
 }
