@@ -13557,20 +13557,23 @@ function closeAnnouncement(){
 }
 function updateAnnouncement(){
   const body = document.getElementById('announcementBody');
+  const panel = document.getElementById('announcementPanel');
+  panel.querySelectorAll('.announcement-face').forEach(el=>el.remove());
   const faces = ['😀','😄','😆','😊','🥹','🙂'];
   const pos = [
-    'top:6px;right:6px;font-size:64px',
-    'top:110px;left:-30px;font-size:50px',
-    'top:220px;right:-34px;font-size:46px',
-    'bottom:40px;right:8px;font-size:54px',
-    'bottom:100px;left:-22px;font-size:42px',
-    'top:330px;left:12px;font-size:48px'
+    'top:16%;left:14px;font-size:54px',
+    'top:48%;left:14px;font-size:54px',
+    'top:80%;left:14px;font-size:54px',
+    'top:16%;right:14px;font-size:54px',
+    'top:48%;right:14px;font-size:54px',
+    'top:80%;right:14px;font-size:54px'
   ];
-  let html = '';
+  let faceHtml = '';
   for(let fi=0; fi<faces.length; fi++){
-    html += '<div class="announcement-face" style="'+pos[fi]+'">'+faces[fi]+'</div>';
+    faceHtml += '<div class="announcement-face" style="'+pos[fi]+'">'+faces[fi]+'</div>';
   }
-  html += '<div class="announcement-section">';
+  panel.insertAdjacentHTML('afterbegin', faceHtml);
+  let html = '<div class="announcement-section">';
   for(let n=1; n<=7; n++){
     html += '<div class="announcement-item"><div class="a-title">'+t('a'+n)+'</div><div class="a-desc">'+t('a'+n+'d')+'</div></div>';
   }
