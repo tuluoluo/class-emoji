@@ -520,6 +520,15 @@ input:checked + .slider:before{transform:translateX(24px)}
     font-size:3vmin !important;
     max-font-size:16px !important;
   }
+
+/* ===== 公告面板 ===== */
+.announcement-body{position:relative;max-height:64vh;overflow-y:auto;padding:14px 10px;text-align:left}
+.announcement-face{position:absolute;font-size:58px;opacity:0.22;user-select:none;pointer-events:none;animation:announceBounce 2.6s ease-in-out infinite;line-height:1}
+@keyframes announceBounce{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-7px) rotate(4deg)}}
+.announcement-section{padding:4px 2px}
+.announcement-item{background:#fff8e1;border:1px solid #f5d78a;border-left:4px solid #f39c12;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.announcement-item .a-title{font-weight:bold;font-size:15px;color:#333}
+.announcement-item .a-desc{font-size:12.5px;color:#555;line-height:1.6;margin-top:4px;word-break:break-word}
 </style>
 </head>
 <body>
@@ -720,6 +729,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       <button id="coopBtn" class="menu-play" style="background:#8e44ad">👥 双人模式</button>
       <button id="continueBtn" class="menu-continue">📂 继续游戏</button>
       <button id="menuSettingsBtn" class="menu-settings">⚙ 设置</button>
+      <button id="announcementBtn" class="menu-settings" style="background:#f39c12;color:#fff">📢 公告</button>
       <div id="clearBadge" style="display:none"></div>
       <div class="menu-hint">📱 移动端：左下摇杆移动 · 右下攻击/挖掘<br>💻 电脑端：WASD/方向键移动 · J攻击 · K挖掘 · L手雷 · Q切武器 · Enter开始</div>
     </div>
@@ -751,6 +761,15 @@ input:checked + .slider:before{transform:translateX(24px)}
         </div>
       </div>
       <button id="closeMapSelectBtn" class="settings-close">返回</button>
+    </div>
+  </div>
+
+  <!-- 公告面板 -->
+  <div id="announcementPanel" style="display:none">
+    <div class="settings-box" style="max-width:600px;width:92vw">
+      <h3 id="announcementTitle">📢 游戏公告</h3>
+      <div class="announcement-body" id="announcementBody"></div>
+      <button id="closeAnnouncementBtn" class="settings-close">关闭</button>
     </div>
   </div>
 
@@ -962,7 +981,7 @@ function initAudio(){
 // ==================== 八国语言系统 ====================
 const LANGS = {
   chinglish: {
-    name:"Chinglish",menuHintMobile:"📱 Mobile: left joystick go, right attack/dig", menuHintDesktop:"💻 PC: WASD/arrow go, J attack, K dig, L grenade, Q switch, Enter start", coopBtn:"Co-op mode", guiBtn:"Gui", prankBtnName:"Prank", gunCalibLabel:"🔫 Gun calibration la", gunCalibHint:"Tune gun to muzzle point right + natural grip, then click save", gunCalibReset:"Auto reset", gunCalibDone:"✅ Save", gunCalibSaved:"✅ Saved la! Work for all map and co-op mode", askGold:"Ask gold coin la", shopTitle:"🤬 Arms shop la", 
+    name:"Chinglish", announcement:"📢 Announcement", announcementTitle:"Game Announcement", a1:"🏙️ New City Map", a1d:"Brand new city map! Killer with knife gun on street, police drive patrol car run over everything; bank guard, kill them get lots gold; tall building can enter with elevator and stair, people each floor. Drive car run over enemy, sea can dive!", a2:"🥺 New City Boss", a2d:"120 kill appear! She disguise normal NPC, no hp bar no announce; you get close she notice and chase — touch is instant death, and dodge your bullet.", a3:"🗺️ Map Select", a3d:"Choose map at start: Grassland or City. Clear Grassland no cheat unlock City.", a4:"🔫 Gun Calibration Tool", a4d:"Settings new gun calibration: drag slider live preview barrel direction, save forever — all phone OK, never gun backwards again.", a5:"🌐 Language Upgrade", a5d:"Traditional Chinese added! Now 11 language total — dialog, co-op button, hint all switch with language.", a6:"🐛 Bug Fix", a6d:"Fix 120 kill Boss no appear, load save auto summon Boss, freeze cause expired Boss stage image, death effect show text, and more.",menuHintMobile:"📱 Mobile: left joystick go, right attack/dig", menuHintDesktop:"💻 PC: WASD/arrow go, J attack, K dig, L grenade, Q switch, Enter start", coopBtn:"Co-op mode", guiBtn:"Gui", prankBtnName:"Prank", gunCalibLabel:"🔫 Gun calibration la", gunCalibHint:"Tune gun to muzzle point right + natural grip, then click save", gunCalibReset:"Auto reset", gunCalibDone:"✅ Save", gunCalibSaved:"✅ Saved la! Work for all map and co-op mode", askGold:"Ask gold coin la", shopTitle:"🤬 Arms shop la", 
     start:"Start play game",
     continue:"Continue play game",
     rules:"Game rule",
@@ -1639,7 +1658,7 @@ const LANGS = {
     coopStart:"👥 雙人合作起！1P:WASD+J  2P:方向鍵+1",
     hpPoints:" 點氣血",
   },  hant: {
-    name:'繁體中文',menuHintMobile:'📱 移動端：左下搖桿移動 · 右下攻擊/挖掘', menuHintDesktop:'💻 電腦端：WASD/方向鍵移動 · J攻擊 · K挖掘 · L手雷 · Q切武器 · Enter開始', coopBtn:'雙人模式', guiBtn:'桂', prankBtnName:'蠱', gunCalibLabel:'🔫 槍口校準', gunCalibHint:'把槍調到“槍口朝右、正常握持”的樣子，調好後點完成', gunCalibReset:'恢復自動', gunCalibDone:'✅ 完成保存', gunCalibSaved:'✅ 已保存！此角度已對所有地圖和雙人模式生效', askGold:'索要金幣', shopTitle:'🤬 軍火商店',  start:'開始遊戲', continue:'繼續遊戲', rules:'遊戲規則', settings:'設置', gunFlip:'槍姿修正', saveDeadTag:'已陣亡', saveDead:'該存檔已在戰鬥中陣亡，無法復活',
+    name:'繁體中文',  announcement:'📢 公告', announcementTitle:'遊戲公告', a1:'🏙️ 全新城市地圖', a1d:'全新城市大地圖！街頭有拿刀槍的殺手，有開著警車亂撞亂殺的警察；銀行裡有守衛，幹掉守衛就能拿到大量金幣；高樓大廈可以進去，有電梯和樓梯，每層樓都有人。城市裡還能開車撞人，海邊可以潛水！', a2:'🥺 新增城市Boss', a2d:'120擊殺後出現！她平時偽裝成普通NPC混在人群裡，沒有血條也沒有通報；一旦你靠近她就會察覺並爆發追擊，碰到就是秒殺，還會躲避你的子彈。', a3:'🗺️ 地圖選擇', a3d:'開局可以選擇地圖：草原或者城市。不用外掛通關草原，就能解鎖城市地圖。', a4:'🔫 槍口校準工具', a4d:'設定裡新增槍口校準：拖動滑塊即時預覽槍口方向，儲存後永久生效，適配各種手機機型，再也不怕槍拿反。', a5:'🌐 語言系統升級', a5d:'新增繁體中文！現在一共支援11種語言，劇情對話、雙人模式按鈕、操作提示全部隨語言切換。', a6:'🐛 Bug修復', a6d:'修復120殺Boss不出現、讀檔後Boss丟失自動補召喚、Boss階段圖片過期導致卡死、死亡特效顯示文字等一系列問題。',menuHintMobile:'📱 移動端：左下搖桿移動 · 右下攻擊/挖掘', menuHintDesktop:'💻 電腦端：WASD/方向鍵移動 · J攻擊 · K挖掘 · L手雷 · Q切武器 · Enter開始', coopBtn:'雙人模式', guiBtn:'桂', prankBtnName:'蠱', gunCalibLabel:'🔫 槍口校準', gunCalibHint:'把槍調到“槍口朝右、正常握持”的樣子，調好後點完成', gunCalibReset:'恢復自動', gunCalibDone:'✅ 完成保存', gunCalibSaved:'✅ 已保存！此角度已對所有地圖和雙人模式生效', askGold:'索要金幣', shopTitle:'🤬 軍火商店',  start:'開始遊戲', continue:'繼續遊戲', rules:'遊戲規則', settings:'設置', gunFlip:'槍姿修正', saveDeadTag:'已陣亡', saveDead:'該存檔已在戰鬥中陣亡，無法復活',
     hp:'HP', kills:'擊殺', gold:'金幣', day:'白天', night:'夜晚',
     close:'關閉', chat:'聊聊', shop:'商店', restart:'重新開始', menu:'返回主菜單',
     weapon:'武器', sound:'遊戲聲音', viewRules:'查看', exitGame:'退出到主頁', clearSave:'清除本地存檔',
@@ -1902,7 +1921,7 @@ const LANGS = {
     hpPoints:'點血量',
   },
   zh: {
-    name:'中文',menuHintMobile:'📱 移动端：左下摇杆移动 · 右下攻击/挖掘', menuHintDesktop:'💻 电脑端：WASD/方向键移动 · J攻击 · K挖掘 · L手雷 · Q切武器 · Enter开始', coopBtn:'双人模式', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 枪口校准', gunCalibHint:'把枪调到“枪口朝右、正常握持”的样子，调好后点完成', gunCalibReset:'恢复自动', gunCalibDone:'✅ 完成保存', gunCalibSaved:'✅ 已保存！此角度已对所有地图和双人模式生效', askGold:'索要金币', shopTitle:'🤬 军火商店',  start:'开始游戏', continue:'继续游戏', rules:'游戏规则', settings:'设置', gunFlip:'枪姿修正', saveDeadTag:'已阵亡', saveDead:'该存档已在战斗中阵亡，无法复活',
+    name:'中文',  announcement:'📢 公告', announcementTitle:'游戏公告', a1:'🏙️ 全新城市地图', a1d:'全新城市大地图！街头有拿着刀枪的杀手，有开着警车乱撞乱杀的警察；银行里有守卫，干掉守卫就能拿到大量金币；高楼大厦可以进去，有电梯和楼梯，每层楼都有人。城市里还能开车撞人，海边可以潜水！', a2:'🥺 新增城市Boss', a2d:'120击杀后出现！她平时伪装成普通NPC混在人群里，没有血条也没有通报；一旦你靠近她就会察觉并爆发追击，碰到就是秒杀，还会躲避你的子弹。', a3:'🗺️ 地图选择', a3d:'开局可以选择地图：草原或者城市。不用外挂通关草原，就能解锁城市地图。', a4:'🔫 枪口校准工具', a4d:'设置里新增枪口校准：拖动滑块实时预览枪口方向，保存后永久生效，适配各种手机机型，再也不怕枪拿反。', a5:'🌐 语言系统升级', a5d:'新增繁體中文！现在一共支持11种语言，剧情对话、双人模式按钮、操作提示全部随语言切换。', a6:'🐛 Bug修复', a6d:'修复120杀Boss不出现、读档后Boss丢失自动补召唤、Boss阶段图片过期导致卡死、死亡特效显示文字等一系列问题。',menuHintMobile:'📱 移动端：左下摇杆移动 · 右下攻击/挖掘', menuHintDesktop:'💻 电脑端：WASD/方向键移动 · J攻击 · K挖掘 · L手雷 · Q切武器 · Enter开始', coopBtn:'双人模式', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 枪口校准', gunCalibHint:'把枪调到“枪口朝右、正常握持”的样子，调好后点完成', gunCalibReset:'恢复自动', gunCalibDone:'✅ 完成保存', gunCalibSaved:'✅ 已保存！此角度已对所有地图和双人模式生效', askGold:'索要金币', shopTitle:'🤬 军火商店',  start:'开始游戏', continue:'继续游戏', rules:'游戏规则', settings:'设置', gunFlip:'枪姿修正', saveDeadTag:'已阵亡', saveDead:'该存档已在战斗中阵亡，无法复活',
     hp:'HP', kills:'击杀', gold:'金币', day:'白天', night:'夜晚',
     close:'关闭', chat:'聊聊', shop:'商店', restart:'重新开始', menu:'返回主菜单',
     weapon:'武器', sound:'游戏声音', viewRules:'查看', exitGame:'退出到主页', clearSave:'清除本地存档',
@@ -2165,7 +2184,7 @@ const LANGS = {
     hpPoints:'点血量',
   },
   en: {
-    name:'English',menuHintMobile:'📱 Mobile: left joystick move · right attack/dig', menuHintDesktop:'💻 PC: WASD/Arrows move · J attack · K dig · L grenade · Q switch · Enter start', coopBtn:'Co-op Mode', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Gun Calibration', gunCalibHint:'Adjust the gun so the muzzle points right with a natural grip, then press save', gunCalibReset:'Auto Reset', gunCalibDone:'✅ Save', gunCalibSaved:'✅ Saved! Applies to all maps and co-op mode', askGold:'Ask gold', shopTitle:'🤬 Arms Shop',  start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings', gunFlip:'Gun Flip Fix', saveDeadTag:'Fallen', saveDead:'This save fell in battle and cannot be revived',
+    name:'English',  announcement:'📢 Announcement', announcementTitle:'Game Announcement', a1:'🏙️ Brand-new City Map', a1d:'A whole new city map! Killers with knives and guns on the streets, police officers driving patrol cars running over everything; guards inside banks — take them down for lots of gold; tall buildings you can enter with elevators and stairs, people on every floor. Drive cars to run over enemies, and dive into the sea!', a2:'🥺 New City Boss', a2d:'Appears at 120 kills! She lurks disguised as a normal NPC with no health bar and no announcement; get close and she notices you, then hunts you down — one touch is instant death, and she dodges your bullets.', a3:'🗺️ Map Selection', a3d:'Choose your map at the start: Grassland or City. Clear the Grassland without cheats to unlock the City map.', a4:'🔫 Gun Calibration Tool', a4d:'New gun calibration in Settings: drag the slider for a live preview of the barrel direction, save permanently — works on all phones, never hold the gun backwards again.', a5:'🌐 Language Upgrade', a5d:'Traditional Chinese added! Now 11 languages total — dialogs, co-op buttons and hints all switch with your language.', a6:'🐛 Bug Fixes', a6d:'Fixed the 120-kill Boss not appearing, auto-respawn Boss on save load, freeze caused by expired Boss stage images, death effects showing text, plus more.',menuHintMobile:'📱 Mobile: left joystick move · right attack/dig', menuHintDesktop:'💻 PC: WASD/Arrows move · J attack · K dig · L grenade · Q switch · Enter start', coopBtn:'Co-op Mode', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Gun Calibration', gunCalibHint:'Adjust the gun so the muzzle points right with a natural grip, then press save', gunCalibReset:'Auto Reset', gunCalibDone:'✅ Save', gunCalibSaved:'✅ Saved! Applies to all maps and co-op mode', askGold:'Ask gold', shopTitle:'🤬 Arms Shop',  start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings', gunFlip:'Gun Flip Fix', saveDeadTag:'Fallen', saveDead:'This save fell in battle and cannot be revived',
     hp:'HP', kills:'Kills', gold:'Gold', day:'Day', night:'Night',
     close:'Close', chat:'Chat', shop:'Shop', restart:'Restart', menu:'Main Menu',
     weapon:'Weapon', sound:'Game Sound', viewRules:'View', exitGame:'Exit to Menu', clearSave:'Clear Save',
@@ -2423,7 +2442,7 @@ const LANGS = {
     weatherThunder:'⛈️ Thunder! Watch out for lightning!',
   },
   ja: {
-    name:'日本語',menuHintMobile:'📱 モバイル：左下スティックで移動・右下で攻撃/掘る', menuHintDesktop:'💻 PC：WASD/矢印キーで移動・J攻撃・K掘る・L手榴弾・Q武器切替・Enter開始', coopBtn:'協力モード', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 銃口キャリブレーション', gunCalibHint:'銃口が右を向き、自然な握りになるよう調整してから保存', gunCalibReset:'自動に戻す', gunCalibDone:'✅ 保存', gunCalibSaved:'✅ 保存済み！全マップと2人モードに適用', askGold:'コインを求む', shopTitle:'🤬 武器ショップ',  start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定', gunFlip:'銃の姿勢修正', saveDeadTag:'戦死', saveDead:'このセーブは戦闘で死亡したため、復活できません',
+    name:'日本語',  announcement:'📢 お知らせ', announcementTitle:'ゲームお知らせ', a1:'🏙️ 新しい都市マップ', a1d:'全新の都市マップ！通りには刀や銃を持った殺し屋、パトカーで乱暴に走る警察；銀行には警備員がいて倒すと大量ゴールド；高層ビルは中に入れてエレベーターと階段、各階に人がいる。車で敵を轢けるし、海辺ではダイビングもできる！', a2:'🥺 都市ボス追加', a2d:'120キルで出現！普段は普通のNPCに偽装して血条も通報もなし。近づくと気づいて追撃開始、触れたら即死、弾も回避する。', a3:'🗺️ マップ選択', a3d:'開始時に草原か都市を選択。チートなしで草原をクリアすると都市が解放。', a4:'🔫 銃口キャリブレーション', a4d:'設定に銃口調整を追加：スライダーでリアルタイムプレビュー、保存で永久適用。どのスマホでも銃が逆さにならない。', a5:'🌐 言語システムアップグレード', a5d:'繁體中文追加！全11言語対応。会話、協力モードボタン、ヒントもすべて言語に合わせて切替。', a6:'🐛 バグ修正', a6d:'120キルボスが出ない、ロード時ボス自動召喚、期限切れ画像によるフリーズ、死亡エフェクトが文字になる問題などを修正。',menuHintMobile:'📱 モバイル：左下スティックで移動・右下で攻撃/掘る', menuHintDesktop:'💻 PC：WASD/矢印キーで移動・J攻撃・K掘る・L手榴弾・Q武器切替・Enter開始', coopBtn:'協力モード', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 銃口キャリブレーション', gunCalibHint:'銃口が右を向き、自然な握りになるよう調整してから保存', gunCalibReset:'自動に戻す', gunCalibDone:'✅ 保存', gunCalibSaved:'✅ 保存済み！全マップと2人モードに適用', askGold:'コインを求む', shopTitle:'🤬 武器ショップ',  start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定', gunFlip:'銃の姿勢修正', saveDeadTag:'戦死', saveDead:'このセーブは戦闘で死亡したため、復活できません',
     hp:'HP', kills:'キル', gold:'ゴールド', day:'昼', night:'夜',
     close:'閉じる', chat:'話す', shop:'ショップ', restart:'リスタート', menu:'メインメニュー',
     weapon:'武器', sound:'ゲーム音声', viewRules:'見る', exitGame:'メニューへ', clearSave:'セーブ削除',
@@ -2682,7 +2701,7 @@ const LANGS = {
     weatherThunder:'⛈️ 雷だ！落雷注意！',
   },
   ko: {
-    name:'한국어',menuHintMobile:'📱 모바일: 왼쪽 조이스틱 이동 · 오른쪽 공격/파기', menuHintDesktop:'💻 PC: WASD/방향키 이동 · J 공격 · K 파기 · L 수류탄 · Q 무기전환 · Enter 시작', coopBtn:'협동 모드', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 총구 보정', gunCalibHint:'총구가 오른쪽을 향하고 자연스럽게 쥐도록 조정한 후 저장', gunCalibReset:'자동 복원', gunCalibDone:'✅ 저장', gunCalibSaved:'✅ 저장됨! 모든 맵과 2인 모드에 적용', askGold:'동전 요구', shopTitle:'🤬 무기 상점',  start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정', gunFlip:'총기 자세 수정', saveDeadTag:'전사', saveDead:'이 저장은 전투에서 사망하여 부활할 수 없습니다',
+    name:'한국어',  announcement:'📢 공지', announcementTitle:'게임 공지', a1:'🏙️ 새로운 도시 맵', a1d:'새로운 도시 맵! 거리에는 칼과 총을 든 킬러, 순찰차로 마구 들이받는 경찰; 은행에는 경비원이 있고 쓰러뜨리면 큰 골드; 고층 빌딩은 안에 들어갈 수 있고 엘리베이터와 계단, 각 층마다 사람이 있습니다. 차로 적을 치고, 바다에서는 다이빙도 가능!', a2:'🥺 도시 보스 추가', a2d:'120킬 시 출현! 평소에는 일반 NPC로 위장하고 혈통도 통보도 없음. 가까이 가면 눈치채고 추격 시작, 닿으면 즉사, 총알도 회피합니다.', a3:'🗺️ 맵 선택', a3d:'시작 시 초원 또는 도시 선택. 치트 없이 초원 클리어 시 도시 해금.', a4:'🔫 총구 보정', a4d:'설정에 총구 보정 추가: 슬라이더로 실시간 미리보기, 저장하면 영구 적용. 어떤 폰에서도 총이 거꾸로 안 됩니다.', a5:'🌐 언어 시스템 업그레이드', a5d:'번체 중국어 추가! 총 11개 언어. 대화, 협동 모드 버튼, 힌트 모두 언어에 맞춰 전환.', a6:'🐛 버그 수정', a6d:'120킬 보스 미출현, 로드 시 보스 자동 소환, 만료 이미지로 인한 프리즈, 사망 이펙트가 글자로 나오는 문제 등을 수정.',menuHintMobile:'📱 모바일: 왼쪽 조이스틱 이동 · 오른쪽 공격/파기', menuHintDesktop:'💻 PC: WASD/방향키 이동 · J 공격 · K 파기 · L 수류탄 · Q 무기전환 · Enter 시작', coopBtn:'협동 모드', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 총구 보정', gunCalibHint:'총구가 오른쪽을 향하고 자연스럽게 쥐도록 조정한 후 저장', gunCalibReset:'자동 복원', gunCalibDone:'✅ 저장', gunCalibSaved:'✅ 저장됨! 모든 맵과 2인 모드에 적용', askGold:'동전 요구', shopTitle:'🤬 무기 상점',  start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정', gunFlip:'총기 자세 수정', saveDeadTag:'전사', saveDead:'이 저장은 전투에서 사망하여 부활할 수 없습니다',
     hp:'HP', kills:'킬', gold:'골드', day:'낮', night:'밤',
     close:'닫기', chat:'대화', shop:'상점', restart:'다시 시작', menu:'메인 메뉴',
     weapon:'무기', sound:'게임 소리', viewRules:'보기', exitGame:'메뉴로 나가기', clearSave:'세이브 삭제',
@@ -2967,7 +2986,7 @@ const LANGS = {
     r9:'원거리 5피해, 상점 120골드, 조준 조이스틱',
   },
   fr: {
-    name:'Français',menuHintMobile:'📱 Mobile : joystick gauche pour bouger · droite pour attaquer/creuser', menuHintDesktop:'💻 PC : WASD/flèches pour bouger · J attaque · K creuser · L grenade · Q changer · Entrée pour commencer', coopBtn:'Mode Coop', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Calibrage du canon', gunCalibHint:'Réglez le pistolet pour que le canon pointe à droite avec une prise naturelle, puis enregistrez', gunCalibReset:'Réinitialiser auto', gunCalibDone:'✅ Enregistrer', gunCalibSaved:'✅ Enregistré ! Appliqué à toutes les cartes et au mode coop', askGold:'Demander de l\'or', shopTitle:'🤬 Armurerie',  start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres', gunFlip:'Correction posture arme', saveDeadTag:'Tombé', saveDead:'Cette sauvegarde est tombée au combat, impossible de revenir à la vie',
+    name:'Français',  announcement:'📢 Annonce', announcementTitle:'Annonce du jeu', a1:'🏙️ Nouvelle carte Ville', a1d:'Une toute nouvelle carte ville ! Des tueurs armés de couteaux et de fusils dans les rues, des policiers en voiture qui foncent partout ; des gardes dans les banques — éliminez-les pour beaucoup de pièces ; des immeubles où entrer avec ascenseurs et escaliers, des gens à chaque étage. Écrasez les ennemis en voiture et plongez dans la mer !', a2:'🥺 Nouveau Boss Ville', a2d:'Apparaît à 120 kills ! Elle se cache en NPC normal, sans barre de vie ni annonce ; approchez-vous et elle vous repère, puis vous chasse — un contact = mort instantanée, et elle esquive vos balles.', a3:'🗺️ Sélection de carte', a3d:'Choisissez votre carte au départ : Prairie ou Ville. Terminez la Prairie sans triche pour débloquer la Ville.', a4:'🔫 Calibrage du canon', a4d:'Nouveau calibrage du canon dans les réglages : glissez pour un aperçu en direct, sauvegardez — fonctionne sur tous les téléphones, plus de canon à l\u0027envers.', a5:'🌐 Mise à jour des langues', a5d:'Chinois traditionnel ajouté ! 11 langues au total — dialogues, boutons coop et astuces suivent la langue choisie.', a6:'🐛 Corrections de bugs', a6d:'Boss 120 kills corrigé, respawn auto au chargement, gel causé par les images expirées, effets de mort affichant du texte, et plus.',menuHintMobile:'📱 Mobile : joystick gauche pour bouger · droite pour attaquer/creuser', menuHintDesktop:'💻 PC : WASD/flèches pour bouger · J attaque · K creuser · L grenade · Q changer · Entrée pour commencer', coopBtn:'Mode Coop', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Calibrage du canon', gunCalibHint:'Réglez le pistolet pour que le canon pointe à droite avec une prise naturelle, puis enregistrez', gunCalibReset:'Réinitialiser auto', gunCalibDone:'✅ Enregistrer', gunCalibSaved:'✅ Enregistré ! Appliqué à toutes les cartes et au mode coop', askGold:'Demander de l\'or', shopTitle:'🤬 Armurerie',  start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres', gunFlip:'Correction posture arme', saveDeadTag:'Tombé', saveDead:'Cette sauvegarde est tombée au combat, impossible de revenir à la vie',
     hp:'PV', kills:'Tués', gold:'Or', day:'Jour', night:'Nuit',
     close:'Fermer', chat:'Parler', shop:'Boutique', restart:'Recommencer', menu:'Menu Principal',
     weapon:'Arme', sound:'Son du Jeu', viewRules:'Voir', exitGame:'Quitter au Menu', clearSave:'Effacer Sauvegarde',
@@ -3252,7 +3271,7 @@ const LANGS = {
     r9:'5 dégâts à distance, 120 or en boutique, joystick de visée',
   },
   de: {
-    name:'Deutsch',menuHintMobile:'📱 Mobil: linker Joystick bewegen · rechts Angriff/Graben', menuHintDesktop:'💻 PC: WASD/Pfeile bewegen · J Angriff · K Graben · L Granate · Q Waffe wechseln · Enter starten', coopBtn:'Koop-Modus', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Laufkalibrierung', gunCalibHint:'Stelle die Waffe so ein, dass der Lauf nach rechts zeigt und der Griff natürlich ist, dann speichern', gunCalibReset:'Auto zurücksetzen', gunCalibDone:'✅ Speichern', gunCalibSaved:'✅ Gespeichert! Gilt für alle Karten und den Koop-Modus', askGold:'Gold fordern', shopTitle:'🤬 Waffenladen',  start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen', gunFlip:'Waffen-Haltung korrigieren', saveDeadTag:'Gefallen', saveDead:'Dieser Spielstand ist im Kampf gefallen und kann nicht wiederbelebt werden',
+    name:'Deutsch',  announcement:'📢 Ankündigung', announcementTitle:'Spiel-Ankündigung', a1:'🏙️ Neue Stadtkarte', a1d:'Eine brandneue Stadtkarte! Killer mit Messern und Gewehren auf den Straßen, Polizisten, die mit ihren Streifenwagen alles überfahren; Wachen in den Banken — schalte sie aus für viel Gold; Hochhäuser mit Aufzügen und Treppen, in jedem Stockwerk Leute. Überfahre Feinde mit dem Auto und tauche ins Meer!', a2:'🥺 Neuer Stadt-Boss', a2d:'Erscheint bei 120 Kills! Sie tarnt sich als normaler NPC, ohne Lebensleiste und Ankündigung; kommst du näher, bemerkt sie dich und jagt dich — eine Berührung = sofortiger Tod, und sie weicht deinen Kugeln aus.', a3:'🗺️ Kartenauswahl', a3d:'Wähle deine Karte am Start: Grasland oder Stadt. Schaffe das Grasland ohne Cheats, um die Stadt freizuschalten.', a4:'🔫 Laufkalibrierung', a4d:'Neue Laufkalibrierung in den Einstellungen: Schieberegler mit Live-Vorschau, dauerhaft gespeichert — funktioniert auf allen Handys, nie wieder verkehrt gehaltene Waffe.', a5:'🌐 Sprach-Upgrade', a5d:'Traditionelles Chinesisch hinzugefügt! Jetzt 11 Sprachen — Dialoge, Koop-Buttons und Hinweise wechseln mit der Sprache.', a6:'🐛 Fehlerbehebungen', a6d:'120-Kill-Boss behoben, Auto-Beschwörung beim Laden, Einfrieren durch abgelaufene Bilder, Todeseffekte mit Text — und mehr.',menuHintMobile:'📱 Mobil: linker Joystick bewegen · rechts Angriff/Graben', menuHintDesktop:'💻 PC: WASD/Pfeile bewegen · J Angriff · K Graben · L Granate · Q Waffe wechseln · Enter starten', coopBtn:'Koop-Modus', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Laufkalibrierung', gunCalibHint:'Stelle die Waffe so ein, dass der Lauf nach rechts zeigt und der Griff natürlich ist, dann speichern', gunCalibReset:'Auto zurücksetzen', gunCalibDone:'✅ Speichern', gunCalibSaved:'✅ Gespeichert! Gilt für alle Karten und den Koop-Modus', askGold:'Gold fordern', shopTitle:'🤬 Waffenladen',  start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen', gunFlip:'Waffen-Haltung korrigieren', saveDeadTag:'Gefallen', saveDead:'Dieser Spielstand ist im Kampf gefallen und kann nicht wiederbelebt werden',
     hp:'HP', kills:'Kills', gold:'Gold', day:'Tag', night:'Nacht',
     close:'Schließen', chat:'Plaudern', shop:'Laden', restart:'Neustart', menu:'Hauptmenü',
     weapon:'Waffe', sound:'Spielton', viewRules:'Ansehen', exitGame:'Zum Menü', clearSave:'Speichern Löschen',
@@ -3537,7 +3556,7 @@ const LANGS = {
     r9:'5 Schaden Distanz, 120 Gold im Laden, Ziel-Joystick',
   },
   es: {
-    name:'Español',menuHintMobile:'📱 Móvil: joystick izquierdo mover · derecho atacar/cavar', menuHintDesktop:'💻 PC: WASD/flechas mover · J atacar · K cavar · L granada · Q cambiar · Enter empezar', coopBtn:'Modo Cooperativo', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Calibración del cañón', gunCalibHint:'Ajusta la pistola para que el cañón apunte a la derecha con un agarre natural, luego guarda', gunCalibReset:'Restablecer auto', gunCalibDone:'✅ Guardar', gunCalibSaved:'✅ ¡Guardado! Aplica a todos los mapas y al modo cooperativo', askGold:'Pedir oro', shopTitle:'🤬 Armería',  start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes', gunFlip:'Corregir postura del arma', saveDeadTag:'Caído', saveDead:'Esta partida cayó en combate y no puede revivir',
+    name:'Español',  announcement:'📢 Anuncio', announcementTitle:'Anuncio del juego', a1:'🏙️ Nuevo mapa Ciudad', a1d:'¡Un mapa ciudad totalmente nuevo! Asesinos con cuchillos y pistolas en las calles, policías atropellando con sus patrullas; guardias en los bancos — elimínalos para ganar mucho oro; rascacielos a los que entrar con ascensores y escaleras, gente en cada piso. ¡Atropella enemigos con el coche y bucea en el mar!', a2:'🥺 Nuevo Jefe Ciudad', a2d:'¡Aparece a 120 asesinatos! Se esconde como NPC normal, sin barra de vida ni aviso; acércate y te detecta, luego te persigue — un toque = muerte instantánea, y esquiva tus balas.', a3:'🗺️ Selección de mapa', a3d:'Elige tu mapa al inicio: Pradera o Ciudad. Supera la Pradera sin trucos para desbloquear la Ciudad.', a4:'🔫 Calibración del cañón', a4d:'Nueva calibración del cañón en ajustes: desliza para ver en vivo, guarda — funciona en todos los móviles, nunca más el arma al revés.', a5:'🌐 Actualización de idiomas', a5d:'¡Chino tradicional añadido! 11 idiomas en total — diálogos, botones cooperativos y pistas cambian con el idioma.', a6:'🐛 Correcciones', a6d:'Jefe 120 arreglado, respawn automático al cargar, congelación por imágenes caducadas, efectos de muerte mostrando texto, y más.',menuHintMobile:'📱 Móvil: joystick izquierdo mover · derecho atacar/cavar', menuHintDesktop:'💻 PC: WASD/flechas mover · J atacar · K cavar · L granada · Q cambiar · Enter empezar', coopBtn:'Modo Cooperativo', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Calibración del cañón', gunCalibHint:'Ajusta la pistola para que el cañón apunte a la derecha con un agarre natural, luego guarda', gunCalibReset:'Restablecer auto', gunCalibDone:'✅ Guardar', gunCalibSaved:'✅ ¡Guardado! Aplica a todos los mapas y al modo cooperativo', askGold:'Pedir oro', shopTitle:'🤬 Armería',  start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes', gunFlip:'Corregir postura del arma', saveDeadTag:'Caído', saveDead:'Esta partida cayó en combate y no puede revivir',
     hp:'HP', kills:'Bajas', gold:'Oro', day:'Día', night:'Noche',
     close:'Cerrar', chat:'Hablar', shop:'Tienda', restart:'Reiniciar', menu:'Menú Principal',
     weapon:'Arma', sound:'Sonido del Juego', viewRules:'Ver', exitGame:'Salir al Menú', clearSave:'Borrar Partida',
@@ -3822,7 +3841,7 @@ const LANGS = {
     r9:'5 daño a distancia, 120 oro en tienda, joystick de puntería',
   },
   ru: {
-    name:'Русский',menuHintMobile:'📱 Мобильный: левый джойстик — движение · правый — атака/копка', menuHintDesktop:'💻 ПК: WASD/стрелки — движение · J атака · K копать · L граната · Q смена · Enter старт', coopBtn:'Кооператив', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Калибровка дула', gunCalibHint:'Настройте пистолет так, чтобы дуло смотрело вправо с естественным хватом, затем сохраните', gunCalibReset:'Сброс авто', gunCalibDone:'✅ Сохранить', gunCalibSaved:'✅ Сохранено! Действует на все карты и кооператив', askGold:'Просить золото', shopTitle:'🤬 Оружейный магазин',  start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки', gunFlip:'Коррекция хвата оружия', saveDeadTag:'Пал', saveDead:'Это сохранение пало в бою и не может воскреснуть',
+    name:'Русский',  announcement:'📢 Объявление', announcementTitle:'Объявление игры', a1:'🏙️ Новая карта Город', a1d:'Совершенно новая карта города! Убийцы с ножами и пистолетами на улицах, полицейские, сбивающие всё подряд на патрульных машинах; охрана в банках — убери их за много золота; небоскрёбы, в которые можно зайти, с лифтами и лестницами, на каждом этаже люди. Сбивай врагов машиной и ныряй в море!', a2:'🥺 Новый Городской Босс', a2d:'Появляется на 120 убийств! Она прячется как обычный NPC, без полосы здоровья и оповещения; подойди ближе — заметит и начнёт охоту — одно касание = мгновенная смерть, и уклоняется от пуль.', a3:'🗺️ Выбор карты', a3d:'Выбирай карту в начале: Луга или Город. Пройди Луга без читов, чтобы открыть Город.', a4:'🔫 Калибровка дула', a4d:'Новая калибровка дула в настройках: ползунок с живым предпросмотром, сохраняется навсегда — работает на всех телефонах, больше не держишь оружие задом наперёд.', a5:'🌐 Обновление языков', a5d:'Добавлен традиционный китайский! Всего 11 языков — диалоги, кнопки кооператива и подсказки переключаются с языком.', a6:'🐛 Исправления багов', a6d:'Исправлен босс на 120 убийств, авто-призыв при загрузке, зависание из-за просроченных картинок, эффекты смерти с текстом и другое.',menuHintMobile:'📱 Мобильный: левый джойстик — движение · правый — атака/копка', menuHintDesktop:'💻 ПК: WASD/стрелки — движение · J атака · K копать · L граната · Q смена · Enter старт', coopBtn:'Кооператив', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Калибровка дула', gunCalibHint:'Настройте пистолет так, чтобы дуло смотрело вправо с естественным хватом, затем сохраните', gunCalibReset:'Сброс авто', gunCalibDone:'✅ Сохранить', gunCalibSaved:'✅ Сохранено! Действует на все карты и кооператив', askGold:'Просить золото', shopTitle:'🤬 Оружейный магазин',  start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки', gunFlip:'Коррекция хвата оружия', saveDeadTag:'Пал', saveDead:'Это сохранение пало в бою и не может воскреснуть',
     hp:'HP', kills:'Убийств', gold:'Золото', day:'День', night:'Ночь',
     close:'Закрыть', chat:'Говорить', shop:'Магазин', restart:'Заново', menu:'Главное Меню',
     weapon:'Оружие', sound:'Звук Игры', viewRules:'Смотреть', exitGame:'Выйти в Меню', clearSave:'Удалить Сохранение',
@@ -4145,6 +4164,8 @@ function applyLanguage(){
   if(menuRulesBtn) menuRulesBtn.textContent = '📖 ' + t('rules');
   const menuSettingsBtn = document.getElementById('menuSettingsBtn');
   if(menuSettingsBtn) menuSettingsBtn.textContent = '⚙ ' + t('settings');
+  const announcementBtn = document.getElementById('announcementBtn');
+  if(announcementBtn) announcementBtn.textContent = t('announcement');
   const coopBtnTxt = document.getElementById('coopBtn');
   if(coopBtnTxt) coopBtnTxt.textContent = '👥 ' + t('coopBtn');
   const menuHintEl = document.querySelector('.menu-hint');
@@ -13522,6 +13543,45 @@ document.getElementById('closeMapSelectBtn').addEventListener('click', ()=>{
   playSound('click');
   document.getElementById('mapSelectPanel').style.display = 'none';
   G._mapSelectMode = null;
+});
+function openAnnouncement(){
+  updateAnnouncement();
+  document.getElementById('announcementPanel').style.display = 'flex';
+  playSound('click');
+}
+function closeAnnouncement(){
+  document.getElementById('announcementPanel').style.display = 'none';
+  playSound('click');
+}
+function updateAnnouncement(){
+  const body = document.getElementById('announcementBody');
+  const faces = ['😀','😄','😆','😊','🥹','🙂'];
+  const pos = [
+    'top:6px;right:6px;font-size:64px',
+    'top:110px;left:-30px;font-size:50px',
+    'top:220px;right:-34px;font-size:46px',
+    'bottom:40px;right:8px;font-size:54px',
+    'bottom:100px;left:-22px;font-size:42px',
+    'top:330px;left:12px;font-size:48px'
+  ];
+  let html = '';
+  for(let fi=0; fi<faces.length; fi++){
+    html += '<div class="announcement-face" style="'+pos[fi]+'">'+faces[fi]+'</div>';
+  }
+  html += '<div class="announcement-section">';
+  for(let n=1; n<=6; n++){
+    html += '<div class="announcement-item"><div class="a-title">'+t('a'+n)+'</div><div class="a-desc">'+t('a'+n+'d')+'</div></div>';
+  }
+  html += '</div>';
+  body.innerHTML = html;
+  const title = document.getElementById('announcementTitle');
+  if(title) title.textContent = '📢 ' + t('announcementTitle');
+}
+document.getElementById('announcementBtn').addEventListener('click', ()=>{
+  initAudio(); openAnnouncement();
+});
+document.getElementById('closeAnnouncementBtn').addEventListener('click', ()=>{
+  closeAnnouncement();
 });
 document.getElementById('menuSettingsBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click');
