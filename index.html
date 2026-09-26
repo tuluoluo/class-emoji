@@ -428,11 +428,11 @@ input:checked + .slider:before{transform:translateX(24px)}
   }
   /* 蛊按钮：1P在左半屏右上角，2P在右半屏左上角 */
   .coop-mode #guiBtn{
-    right:calc(50% + 10px) !important;
+    right:calc(50% + 60px) !important;
     left:auto !important;
   }
   .coop-mode #guiBtn2{
-    left:calc(50% + 10px) !important;
+    left:calc(50% + 60px) !important;
     right:auto !important;
   }
   /* 商店面板：双人模式下适配半屏，提高z-index避免被分屏线遮挡 */
@@ -10864,6 +10864,7 @@ function initGunCalib(){
 }
 
 function drawPlayer2(){
+  const p = G.player2;
   if(!p) return;
   // 2P死亡后只显示尸体，不绘制玩家本身
   if(G.coopP2Dead) return;
