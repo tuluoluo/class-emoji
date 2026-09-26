@@ -7680,7 +7680,10 @@ function handlePlayerDeath(player, isP2){
     if(G.coopP2Dead) return; // 防止重复处理
     G.coopP2Dead = true;
     makeCorpse(player);
+    // 死亡特效：红色粒子爆炸，让队友清楚看到倒下位置
+    spawnParticles(player.x+player.w/2, player.y+player.h/2, '#ff2222', 30);
     showToast(deathMsg);
+    updateUI(); // 同步UI（HP显示0）
     // 确保1P也死亡时游戏结束
     if(G.coopP1Dead){
       G.running = false;
@@ -7692,7 +7695,10 @@ function handlePlayerDeath(player, isP2){
       if(G.coopP1Dead) return; // 防止重复处理
       G.coopP1Dead = true;
       makeCorpse(player);
+      // 死亡特效：红色粒子爆炸
+      spawnParticles(player.x+player.w/2, player.y+player.h/2, '#ff2222', 30);
       showToast(deathMsg);
+      updateUI(); // 同步UI（HP显示0）
       // 确保2P也死亡时游戏结束
       if(G.coopP2Dead){
         G.running = false;
@@ -11077,12 +11083,28 @@ function drawProjectile(pr){
 
 function drawCorpse(c){
   ctx.save();
+  // 红色标记光柱：竖直向上延伸，远处也能看到队友倒下位置
+  ctx.strokeStyle = 'rgba(255,40,40,0.5)';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(c.x+c.w/2, c.y+c.h/2);
+  ctx.lineTo(c.x+c.w/2, c.y - c.h*1.6);
+  ctx.stroke();
+  // 光柱顶部发光点
+  ctx.fillStyle = 'rgba(255,60,60,0.9)';
+  ctx.beginPath();
+  ctx.arc(c.x+c.w/2, c.y - c.h*1.6, 7, 0, Math.PI*2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  // 躺倒的尸体（红色底醒目）
   ctx.translate(c.x+c.w/2, c.y+c.h/2);
   ctx.rotate(c.angle); // 翻转90度倒下
-  // 尸体完全不透明，变暗表示已死亡
-  ctx.fillStyle = 'rgba(60,60,60,0.35)';
+  ctx.fillStyle = 'rgba(180,25,25,0.55)';
   ctx.fillRect(-c.w/2, -c.h/2, c.w, c.h);
-  ctx.globalAlpha = 1;
+  // 红色边框
+  ctx.strokeStyle = 'rgba(255,60,60,0.85)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-c.w/2, -c.h/2, c.w, c.h);
   ctx.fillStyle = '#000000';
   ctx.font = c.w + 'px serif';
   ctx.textAlign = 'center';
