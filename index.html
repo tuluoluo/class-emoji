@@ -11404,6 +11404,8 @@ function handleJoyStart(e){
   joy.dx = 0; joy.dy = 0; // 重置，避免残留NaN
   joy.centerX = rect.left + rect.width/2;
   joy.centerY = rect.top + rect.height/2;
+  const innerR = joyInner.getBoundingClientRect();
+  joy.maxR = Math.max(10, (rect.width - innerR.width) / 2);
   handleJoyMove(e);
 }
 function handleJoyMove(e){
@@ -11415,17 +11417,16 @@ function handleJoyMove(e){
   let dx = tp.x - joy.centerX;
   let dy = tp.y - joy.centerY;
   if(isNaN(dx)||isNaN(dy)){ dx=0; dy=0; } // 防御NaN
-  const maxR = 45;
+  const maxR = joy.maxR || 45;
   const len = Math.hypot(dx,dy);
   if(len > maxR && len>0){ dx = dx/len*maxR; dy = dy/len*maxR; }
   joy.dx = dx/maxR;
   joy.dy = dy/maxR;
-  joyInner.style.left = (45+dx)+'px';
-  joyInner.style.top = (45+dy)+'px';
+  joyInner.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
 }
 function handleJoyEnd(e){
   joy.active = false; joy.dx = 0; joy.dy = 0;
-  joyInner.style.left = '45px'; joyInner.style.top = '45px';
+  joyInner.style.transform = 'translate(0px, 0px)';
 }
 joyEl.addEventListener('touchstart', function(e){
   e.preventDefault();
@@ -11469,6 +11470,8 @@ function handleJoy2Start(e){
   joy2.dx = 0; joy2.dy = 0;
   joy2.centerX = rect.left + rect.width/2;
   joy2.centerY = rect.top + rect.height/2;
+  const innerR2 = joyInner2.getBoundingClientRect();
+  joy2.maxR = Math.max(10, (rect.width - innerR2.width) / 2);
   handleJoy2Move(e);
 }
 function handleJoy2Move(e){
@@ -11480,17 +11483,16 @@ function handleJoy2Move(e){
   let dx = tp.x - joy2.centerX;
   let dy = tp.y - joy2.centerY;
   if(isNaN(dx)||isNaN(dy)){ dx=0; dy=0; }
-  const maxR = 45;
+  const maxR = joy2.maxR || 45;
   const len = Math.hypot(dx,dy);
   if(len > maxR && len>0){ dx = dx/len*maxR; dy = dy/len*maxR; }
   joy2.dx = dx/maxR;
   joy2.dy = dy/maxR;
-  joyInner2.style.left = (45+dx)+'px';
-  joyInner2.style.top = (45+dy)+'px';
+  joyInner2.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
 }
 function handleJoy2End(e){
   joy2.active = false; joy2.dx = 0; joy2.dy = 0;
-  joyInner2.style.left = '45px'; joyInner2.style.top = '45px';
+  joyInner2.style.transform = 'translate(0px, 0px)';
 }
 joyEl2.addEventListener('touchstart', function(e){
   e.preventDefault();
