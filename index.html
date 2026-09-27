@@ -7165,14 +7165,14 @@ function enterBank(bi, playerNum){
     G._outdoorPlayerX = enteringPlayer.x;
     G._outdoorPlayerY = enteringPlayer.y;
   }
-  // 玩家放到银行大厅门口
+  // 玩家放到银行大厅中央（相机自然居中显示）
   if(G.player){
-    G.player.x = INDOOR_W/2 - 40;
-    G.player.y = INDOOR_H - 260;
+    G.player.x = INDOOR_W/2 - 60;
+    G.player.y = INDOOR_H/2 - 230;
   }
   if(G.isCoop && G.player2 && !G.coopP2Dead){
     G.player2.x = INDOOR_W/2 + 60;
-    G.player2.y = INDOOR_H - 260;
+    G.player2.y = INDOOR_H/2 - 230;
   }
   G.bankInterior = createBankInterior(bi);
   G._nearExit = false;
@@ -7184,20 +7184,51 @@ function enterBank(bi, playerNum){
 
 // 生成银行室内内容
 function createBankInterior(bi){
-  const interior = { bank: bi, cleared: false, npcs: [] };
+  const interior = { bank: bi, cleared: false, npcs: [], colliders: [] };
   // 金库（右侧金库房间内）
   interior.vault = {
     x: INDOOR_W - 620, y: INDOOR_H/2 - 90, w: 130, h: 180,
     unlocked: false,
     opened: (G.bankVaultOpened || []).includes(bi)
   };
+  // ===== 银行室内碰撞体（墙壁/柜台/设施/金库房间/出口门两侧） =====
+  const hw = INDOOR_W/2;
+  interior.colliders = [
+    // 四壁
+    {x:0, y:110, w:30, h:INDOOR_H-110},                 // 左墙
+    {x:INDOOR_W-30, y:110, w:30, h:INDOOR_H-110},       // 右墙
+    {x:30, y:0, w:INDOOR_W-60, h:110},                  // 吊顶区
+    // 底部墙（出口门洞留中央80宽）
+    {x:30, y:INDOOR_H-120, w:hw-60, h:120},
+    {x:hw+60, y:INDOOR_H-120, w:hw-60, h:120},
+    // 柜台（中部一排，员工区隔断）
+    {x:hw-260, y:INDOOR_H/2-40, w:520, h:70},
+    // ATM / 保险柜
+    {x:200, y:300, w:90, h:130},
+    {x:360, y:330, w:60, h:70},
+    // 厕所（左下方洗手间）
+    {x:100, y:520, w:130, h:170},
+    // 座椅（大厅两侧长椅）
+    {x:640, y:300, w:150, h:36},
+    {x:850, y:300, w:150, h:36},
+    // 叫号机（柜台北侧）
+    {x:hw-60, y:INDOOR_H/2-200, w:120, h:40},
+    // 金库房间墙（右墙留门洞）
+    {x:INDOOR_W-640, y:INDOOR_H/2-220, w:560, h:20},    // 上墙
+    {x:INDOOR_W-640, y:INDOOR_H/2+200, w:560, h:20},    // 下墙
+    {x:INDOOR_W-640, y:INDOOR_H/2-220, w:20, h:440},    // 左墙
+    {x:INDOOR_W-80, y:INDOOR_H/2-220, w:20, h:190},     // 右墙上段（门洞在 -30~+30）
+    {x:INDOOR_W-80, y:INDOOR_H/2+30, w:20, h:190},      // 右墙下段
+    // 金库大门（实心，贴门可互动）
+    {x:interior.vault.x-5, y:interior.vault.y-5, w:interior.vault.w+10, h:interior.vault.h+10},
+  ];
   // 顾客🙂×4（不攻击，但要清掉才算清场）
   for(let i=0;i<4;i++){
     interior.npcs.push(makeBankNPC('customer', rand(300, INDOOR_W-700), rand(350, INDOOR_H-400)));
   }
-  // 银行人员🤵×2（近战弱攻击）
+  // 银行人员🤵×2（柜台后工作区，近战弱攻击）
   for(let i=0;i<2;i++){
-    interior.npcs.push(makeBankNPC('staff', INDOOR_W/2 - 160 + i*110, INDOOR_H/2 - 80));
+    interior.npcs.push(makeBankNPC('staff', INDOOR_W/2 - 160 + i*110, INDOOR_H/2 + 130));
   }
   // 杀手🔪×2（追击近战）
   for(let i=0;i<2;i++){
@@ -7304,10 +7335,11 @@ function updateBankInterior(){
         if(Math.random() < 0.01){ npc.vx = (Math.random()-0.5)*0.6; npc.vy = (Math.random()-0.5)*0.6; }
       }
     }
-    // 移动 + 边界
+    // 移动 + 边界 + 碰撞
     npc.x += npc.vx; npc.y += npc.vy;
     npc.x = clamp(npc.x, 120, INDOOR_W-120);
     npc.y = clamp(npc.y, 170, INDOOR_H-190);
+    resolveBankCollision(npc);
   });
   
   // 击杀所有人 → 金库解锁
@@ -7317,6 +7349,26 @@ function updateBankInterior(){
       interior.cleared = true;
       vault.unlocked = true;
       showToast(t('bankCleared'));
+    }
+  }
+}
+
+// 银行室内碰撞推挤（实体用中心点+宽高，collider 用左上角+宽高）
+function resolveBankCollision(ent){
+  if(G.inBank === -1 || !G.bankInterior || !G.bankInterior.colliders) return;
+  const ew = ent.w/2, eh = ent.h/2;
+  for(const r of G.bankInterior.colliders){
+    const cx = ent.x + ew, cy = ent.y + eh;
+    if(cx+ew > r.x && cx-ew < r.x+r.w && cy+eh > r.y && cy-eh < r.y+r.h){
+      const ovL = (cx+ew) - r.x;
+      const ovR = (r.x+r.w) - (cx-ew);
+      const ovT = (cy+eh) - r.y;
+      const ovB = (r.y+r.h) - (cy-eh);
+      const mn = Math.min(ovL, ovR, ovT, ovB);
+      if(mn === ovL) ent.x = r.x - ew;
+      else if(mn === ovR) ent.x = r.x + r.w + ew;
+      else if(mn === ovT) ent.y = r.y - eh;
+      else ent.y = r.y + r.h + eh;
     }
   }
 }
@@ -7382,6 +7434,42 @@ function drawBankIndoorWorld(camX, camY){
   ctx.fillRect(360, 330, 60, 70);
   ctx.fillStyle = '#888';
   ctx.beginPath(); ctx.arc(390, 365, 12, 0, Math.PI*2); ctx.fill();
+  // 厕所（左下方洗手间）
+  ctx.fillStyle = '#8a7a6a';
+  ctx.fillRect(95, 515, 140, 180);
+  ctx.fillStyle = '#6a5a4a';
+  ctx.fillRect(100, 520, 130, 170);
+  // 厕所门（左侧，半开）
+  ctx.fillStyle = '#4a5a6a';
+  ctx.fillRect(108, 600, 26, 82);
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath(); ctx.arc(126, 640, 4, 0, Math.PI*2); ctx.fill();
+  // 洗手池/镜子
+  ctx.fillStyle = '#cfe8f5';
+  ctx.fillRect(190, 540, 30, 42);
+  ctx.fillStyle = '#eef5fa';
+  ctx.fillRect(192, 542, 26, 38);
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath(); ctx.arc(205, 548, 4, 0, Math.PI*2); ctx.fill();
+  // 🚻标志
+  ctx.font = 'bold 30px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🚻', 165, 585);
+  // 座椅（大厅两排长椅）
+  ctx.fillStyle = '#5a4632';
+  ctx.fillRect(640, 300, 150, 36);
+  ctx.fillRect(850, 300, 150, 36);
+  ctx.fillStyle = '#7a5f42';
+  ctx.fillRect(642, 302, 146, 14);
+  ctx.fillRect(852, 302, 146, 14);
+  // 叫号机（柜台北侧）
+  ctx.fillStyle = '#222';
+  ctx.fillRect(INDOOR_W/2-60, INDOOR_H/2-200, 120, 40);
+  ctx.fillStyle = '#0a3d0a';
+  ctx.fillRect(INDOOR_W/2-54, INDOOR_H/2-194, 108, 20);
+  ctx.fillStyle = '#00ff66';
+  ctx.font = 'bold 16px serif';
+  ctx.fillText('A-042', INDOOR_W/2, INDOOR_H/2-178);
   
   // ===== 金库房间（右侧）=====
   ctx.fillStyle = '#5a4f42';
@@ -7453,30 +7541,17 @@ function drawBankIndoorWorld(camX, camY){
       if(npc.dead) return;
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.beginPath(); ctx.ellipse(npc.x, npc.y+18, 16, 6, 0, 0, Math.PI*2); ctx.fill();
-      if(npc.type==='killer'){
-        ctx.fillStyle = 'rgba(255,0,0,0.25)';
-        ctx.beginPath(); ctx.arc(npc.x, npc.y, 30, 0, Math.PI*2); ctx.fill();
-      } else if(npc.type==='cop'){
-        ctx.fillStyle = 'rgba(50,150,255,0.25)';
-        ctx.beginPath(); ctx.arc(npc.x, npc.y, 30, 0, Math.PI*2); ctx.fill();
-      } else if(npc.type==='staff'){
-        ctx.fillStyle = 'rgba(255,215,0,0.2)';
-        ctx.beginPath(); ctx.arc(npc.x, npc.y, 26, 0, Math.PI*2); ctx.fill();
-      }
-      if(npc.hurtFlash > 0){
-        ctx.globalAlpha = 0.5;
-      } else {
-        ctx.globalAlpha = 1;
-      }
-      ctx.font = '36px serif';
+      // NPC 与玩家同尺寸（44px），不再叠半透明光圈（视觉透明）
+      ctx.globalAlpha = 1;
+      ctx.font = '44px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(npc.emoji, npc.x, npc.y);
       // 杀手手持刀（像室外杀手一样🙂拿刀）
       if(npc.weaponFace && npc.type==='killer'){
-        const wOff = npc.facing > 0 ? 22 : -22;
-        ctx.font = '20px serif';
-        ctx.fillText(npc.weaponFace, npc.x + wOff, npc.y + 4);
+        const wOff = npc.facing > 0 ? 26 : -26;
+        ctx.font = '26px serif';
+        ctx.fillText(npc.weaponFace, npc.x + wOff, npc.y + 5);
       }
       if(npc.type!=='customer' && npc.hp < npc.maxHp){
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -8684,6 +8759,8 @@ function update(){
       // 室内/银行室内：限制在室内大地图范围内
       p.x = clamp(p.x, 60, INDOOR_W - 100);
       p.y = clamp(p.y, 110, INDOOR_H - 120);
+      // 银行室内：碰撞体阻挡（墙壁/柜台/设施）
+      if(G.inBank !== -1) resolveBankCollision(p);
     } else {
       p.x = clamp(p.x, 0, WORLD_W-p.w);
       p.y = clamp(p.y, 0, WORLD_H-p.h);
@@ -8860,6 +8937,8 @@ function update(){
       // 室内/银行室内：限制在室内大地图范围内
       p2.x = clamp(p2.x, 60, INDOOR_W - 100);
       p2.y = clamp(p2.y, 110, INDOOR_H - 120);
+      // 银行室内：碰撞体阻挡
+      if(G.inBank !== -1) resolveBankCollision(p2);
     } else {
       p2.x = clamp(p2.x, 0, WORLD_W-p2.w);
       p2.y = clamp(p2.y, 0, WORLD_H-p2.h);
