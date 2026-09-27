@@ -6854,9 +6854,9 @@ function drawIndoorWorld(camX, camY){
         ctx.arc(npc.x, npc.y, 28, 0, Math.PI * 2);
         ctx.stroke();
       }
-      // 绘制NPC（全部用🙂，确保完全不透明）
+      // 绘制NPC（全部用🙂，确保完全不透明，与玩家同尺寸44px）
       ctx.globalAlpha = 1;
-      ctx.font = '36px serif';
+      ctx.font = '44px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(npc.emoji, npc.x, npc.y);
