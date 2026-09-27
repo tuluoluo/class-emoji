@@ -703,6 +703,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="shopItem"><span id="shopReviveText">💉 救助器 (复活队友，7秒)</span><button id="buyRevive">100金</button></div>
     <div class="shopItem"><span id="shopCarText">🚗 越野车 (撞怪秒杀+速度快+可撞树)</span><button id="buyCar">500金</button></div>
     <div class="shopItem"><span id="shopScubaText">🤿 潜水装备 (氧气消耗减半)</span><button id="buyScuba">150金</button></div>
+    <div class="shopItem"><span id="shopBankKeyText">🔑 银行钥匙 (开启银行金库)</span><button id="buyBankKey">100金</button></div>
     </div>
     <div class="shopFooter">
     <button id="merchantTalkBtn" style="width:100%;margin-bottom:8px;padding:8px;background:#9b59b6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">💬 聊聊</button>
@@ -852,6 +853,7 @@ const ctx = canvas.getContext('2d');
 const wrap = document.getElementById('wrap');
 let W = 1280, H = 720;
 const WORLD_W = 3200, WORLD_H = 2400;
+const INDOOR_W = 2200, INDOOR_H = 1300; // 室内大地图尺寸（每层楼/银行内部）
 const camera = {x:0, y:0};
 function resize(){
   const r = wrap.getBoundingClientRect();
@@ -890,6 +892,14 @@ const G = {
   _nearStairDown: false, // 是否靠近下楼楼梯
   _nearElevator: false, // 是否靠近电梯
   _nearExit: false, // 是否靠近出口
+  inBank: -1, // 当前所在银行索引（-1=不在银行）
+  bankInterior: null, // 银行室内状态（NPC/金库）
+  hasBankKey: false, // 是否拥有银行钥匙
+  _nearBankIndex: null, // 靠近的银行入口（1P）
+  _nearBankIndex2: null, // 靠近的银行入口（2P）
+  _nearVault: false, // 靠近金库（1P）
+  _nearVault2: false, // 靠近金库（2P）
+  bankVaultOpened: [], // 已开启金库的银行索引
   _outdoorPlayerX: 0, // 室外玩家X位置（进入建筑前保存）
   _outdoorPlayerY: 0, // 室外玩家Y位置（进入建筑前保存）
   day: true,
@@ -1203,6 +1213,20 @@ const LANGS = {
     bossStage4:"😈 Boss enter final stage!! Red alert!",
     eliteAppear:"👾 Elite monster appear!",
     cityUnlocked:"🎉 City map unlocked!",
+    bankName:"Bank (gold inside!)",
+    enterBank:"Enter Bank! Hall full of people, watch out",
+    bankCleared:"Bank all cleared! Vault unlocked! Go buy 🔑 key at shop, come back open it!",
+    vaultRoom:"Vault Room",
+    vaultOpenedTag:"OPENED",
+    vaultUnlockedTag:"UNLOCKED · NEED KEY",
+    vaultLockedTag:"LOCKED",
+    vaultHint:"Press E to open vault",
+    vaultEmpty:"Vault already empty la!",
+    vaultLocked:"Vault still locked! Kill everyone in the bank first!",
+    vaultNeedKey:"Need 🔑 bank key! Go buy from shop!",
+    vaultOpened:"Vault OPENED! +",
+    buyKey:"🔑 Bank key purchased!",
+    alreadyKey:"You already got the bank key la",
     indoorAttack:"Attack by indoor killer🙂! -8HP",
     elevatorTop:"🛗 Elevator straight to top floor! Floor ",
     indoorHint:"Near up/down stair/elevator/exit press E interact",
@@ -1282,6 +1306,7 @@ const LANGS = {
     shopRevive:"💉 Rescuer (revive teammate, 7 sec)",
     shopCar:"🚗 Offroad car (hit monster kill + speed fast + can hit tree)",
     shopScuba:"🤿 Scuba (oxygen use half)",
+    shopBankKey:"🔑 Bank Key (open vault)",
     floorUpTag:"⬆ Up floor",
     floorDownTag:"⬇ Down floor",
     elevatorTag:"🛗 Elevator (straight top floor)",
@@ -1543,6 +1568,20 @@ const LANGS = {
     bossStage4:"😈 Boss入終階！！赤警！",
     eliteAppear:"👾 精英怪現！",
     cityUnlocked:"🎉 城市圖已解！",
+    bankName:"銀莊",
+    enterBank:"步入銀莊，人多財廣",
+    bankCleared:"銀莊已清，金庫啟焉！往市買🔑鑰匙以開之",
+    vaultRoom:"金庫室",
+    vaultOpenedTag:"已啟",
+    vaultUnlockedTag:"已解鎖·尚需鑰匙",
+    vaultLockedTag:"鎖定",
+    vaultHint:"按E以開金庫",
+    vaultEmpty:"金庫已空，無所取",
+    vaultLocked:"金庫猶鎖，先誅銀莊諸人！",
+    vaultNeedKey:"需🔑銀莊鑰匙！往市購之",
+    vaultOpened:"金庫大開！得",
+    buyKey:"已購🔑銀莊鑰匙！",
+    alreadyKey:"汝已有銀莊鑰匙",
     indoorAttack:"爲室內殺手🙂所攻！失血八",
     elevatorTop:"🛗 梯直抵頂樓！第",
     indoorHint:"近上下樓/梯/出口按E以交互",
@@ -1622,6 +1661,7 @@ const LANGS = {
     shopRevive:"💉 救助器 (復生隊友，七息)",
     shopCar:"🚗 越野車 (撞怪斃命+行速疾+可撞樹)",
     shopScuba:"🤿 潛水具 (氧耗減半)",
+    shopBankKey:"🔑 銀莊鑰匙 (啟金庫)",
     floorUpTag:"⬆ 上樓",
     floorDownTag:"⬇ 下樓",
     elevatorTag:"🛗 梯（直達頂樓）",
@@ -1806,6 +1846,20 @@ const LANGS = {
     bossStage4:'😈 Boss進入最終階段！！紅色警戒！',
     eliteAppear:'👾 精英怪出現！',
     cityUnlocked:'🎉 城市地圖已解鎖！',
+    bankName:"銀行",
+    enterBank:"進入銀行，大廳人多小心",
+    bankCleared:"銀行敵人已清空，金庫解鎖！去商店買🔑鑰匙開鎖吧",
+    vaultRoom:"金庫",
+    vaultOpenedTag:"已開啟",
+    vaultUnlockedTag:"已解鎖·需要鑰匙",
+    vaultLockedTag:"鎖定",
+    vaultHint:"按E開鎖",
+    vaultEmpty:"金庫已被搬空",
+    vaultLocked:"金庫還鎖著，先幹掉銀行裡所有人！",
+    vaultNeedKey:"需要🔑銀行鑰匙！去商店購買",
+    vaultOpened:"金庫打開！獲得",
+    buyKey:"已購買🔑銀行鑰匙！",
+    alreadyKey:"你已經有銀行鑰匙了",
     indoorAttack:'被室內殺手🙂攻擊了！-8HP',
     elevatorTop:'🛗 電梯直達頂樓！第',
     indoorHint:'靠近上樓/下樓樓梯/電梯/出口按E交互',
@@ -1885,6 +1939,7 @@ const LANGS = {
     shopRevive:'💉 救助器 (復活隊友，7秒)',
     shopCar:'🚗 越野車 (撞怪秒殺+速度快+可撞樹)',
     shopScuba:'🤿 潛水裝備 (氧氣消耗減半)',
+    shopBankKey:'🔑 銀行鑰匙 (開啟銀行金庫)',
     floorUpTag:'⬆ 上樓',
     floorDownTag:'⬇ 下樓',
     elevatorTag:'🛗 電梯（直達頂樓）',
@@ -2070,6 +2125,20 @@ const LANGS = {
     bossStage4:'😈 Boss进入最终阶段！！红色警戒！',
     eliteAppear:'👾 精英怪出现！',
     cityUnlocked:'🎉 城市地图已解锁！',
+    bankName:"银行",
+    enterBank:"进入银行，大厅人多小心",
+    bankCleared:"银行敌人已清空，金库解锁！去商店买🔑钥匙开锁吧",
+    vaultRoom:"金库",
+    vaultOpenedTag:"已开启",
+    vaultUnlockedTag:"已解锁·需要钥匙",
+    vaultLockedTag:"锁定",
+    vaultHint:"按E开锁",
+    vaultEmpty:"金库已被搬空",
+    vaultLocked:"金库还锁着，先干掉银行里所有人！",
+    vaultNeedKey:"需要🔑银行钥匙！去商店购买",
+    vaultOpened:"金库打开！获得",
+    buyKey:"已购买🔑银行钥匙！",
+    alreadyKey:"你已经有银行钥匙了",
     indoorAttack:'被室内杀手🙂攻击了！-8HP',
     elevatorTop:'🛗 电梯直达顶楼！第',
     indoorHint:'靠近上楼/下楼楼梯/电梯/出口按E交互',
@@ -2149,6 +2218,7 @@ const LANGS = {
     shopRevive:'💉 救助器 (复活队友，7秒)',
     shopCar:'🚗 越野车 (撞怪秒杀+速度快+可撞树)',
     shopScuba:'🤿 潜水装备 (氧气消耗减半)',
+    shopBankKey:'🔑 银行钥匙 (开启银行金库)',
     floorUpTag:'⬆ 上楼',
     floorDownTag:'⬇ 下楼',
     elevatorTag:'🛗 电梯（直达顶楼）',
@@ -2294,6 +2364,20 @@ const LANGS = {
     bossStage4:'😈 Boss entered FINAL phase!! Red alert!',
     eliteAppear:'👾 Elite mob appeared!',
     cityUnlocked:'🎉 City map unlocked!',
+    bankName:"Bank",
+    enterBank:"Entered the Bank! Crowded, be careful",
+    bankCleared:"Bank cleared! Vault unlocked! Buy a 🔑 key at the shop to open it",
+    vaultRoom:"Vault",
+    vaultOpenedTag:"OPENED",
+    vaultUnlockedTag:"UNLOCKED · KEY REQUIRED",
+    vaultLockedTag:"LOCKED",
+    vaultHint:"Press E to unlock",
+    vaultEmpty:"The vault is empty",
+    vaultLocked:"Vault still locked! Kill everyone in the bank first!",
+    vaultNeedKey:"You need the 🔑 bank key! Buy it at the shop",
+    vaultOpened:"Vault opened! +",
+    buyKey:"🔑 Bank key purchased!",
+    alreadyKey:"You already have the bank key",
     indoorAttack:'was attacked by indoor killer 🙂! -8HP',
     elevatorTop:'🛗 Elevator to the top floor! Floor ',
     indoorHint:'Near stairs/elevator/exit, press E to interact',
@@ -2373,6 +2457,7 @@ const LANGS = {
     shopRevive:'💉 Rescuer (revive teammate, 7s)',
     shopCar:'🚗 Off-road Car (ram kills + fast + can dig trees)',
     shopScuba:'🤿 Scuba Gear (oxygen drain halved)',
+    shopBankKey:'🔑 Bank Key (open the vault)',
     floorUpTag:'⬆ Up',
     floorDownTag:'⬇ Down',
     elevatorTag:'🛗 Elevator (straight to top)',
@@ -2547,6 +2632,20 @@ const LANGS = {
     bossStage4:'😈 ボス最終段階！！レッドアラート！',
     eliteAppear:'👾 エリートモンスター出現！',
     cityUnlocked:'🎉 都市マップ解放！',
+    bankName:"銀行",
+    enterBank:"銀行に入った！人が多いぞ",
+    bankCleared:"銀行を制圧！金庫のロックが解除された！ショップで🔑鍵を買おう",
+    vaultRoom:"金庫室",
+    vaultOpenedTag:"開放中",
+    vaultUnlockedTag:"解錠済·鍵が必要",
+    vaultLockedTag:"施錠中",
+    vaultHint:"Eで開錠",
+    vaultEmpty:"金庫はもう空だ",
+    vaultLocked:"金庫はまだロック中！銀行の全員を倒せ！",
+    vaultNeedKey:"🔑銀行の鍵が必要！ショップで買って",
+    vaultOpened:"金庫を開けた！獲得",
+    buyKey:"🔑銀行の鍵を購入した！",
+    alreadyKey:"もう銀行の鍵を持っている",
     indoorAttack:'室内の殺し屋🙂に攻撃された！-8HP',
     elevatorTop:'🛗 エレベーターで最上階へ！',
     indoorHint:'階段/エレベーター/出口の近くでEキーで操作',
@@ -2626,6 +2725,7 @@ const LANGS = {
     shopRevive:'💉 救助セット (味方復活、7秒)',
     shopCar:'🚗 オフロード車 (衝突即死+速い+木を掘れる)',
     shopScuba:'🤿 潜水装備 (酸素消費半減)',
+    shopBankKey:'🔑 銀行の鍵 (金庫を開く)',
     floorUpTag:'⬆ 上へ',
     floorDownTag:'⬇ 下へ',
     elevatorTag:'🛗 エレベーター（最上階直行）',
@@ -2774,6 +2874,20 @@ const LANGS = {
     bossStage4:'😈 보스 최종 단계!! 레드 알람!',
     eliteAppear:'👾 정예 몬스터 등장!',
     cityUnlocked:'🎉 도시 맵 해금!',
+    bankName:"은행",
+    enterBank:"은행에 들어갔다! 사람 많음, 조심",
+    bankCleared:"은행 정리 완료! 금고 잠금 해제! 상점에서 🔑 열쇠를 사자",
+    vaultRoom:"금고실",
+    vaultOpenedTag:"개방됨",
+    vaultUnlockedTag:"잠금 해제·열쇠 필요",
+    vaultLockedTag:"잠김",
+    vaultHint:"E 키로 열기",
+    vaultEmpty:"금고가 이미 비었다",
+    vaultLocked:"금고는 아직 잠김! 은행 안 모두를 처치해라!",
+    vaultNeedKey:"🔑 은행 열쇠 필요! 상점에서 구매",
+    vaultOpened:"금고 개방! 획득",
+    buyKey:"🔑 은행 열쇠 구매 완료!",
+    alreadyKey:"이미 은행 열쇠가 있다",
     indoorAttack:'실내 킬러🙂에게 공격받았다! -8HP',
     elevatorTop:'🛗 엘리베이터로 최상층 직행! ',
     indoorHint:'계단/엘리베이터/출구 근처에서 E로 상호작용',
@@ -2853,6 +2967,7 @@ const LANGS = {
     shopRevive:'💉 구조 키트 (팀원 부활, 7초)',
     shopCar:'🚗 오프로드 차 (충돌 즉사+빠름+나무 파기)',
     shopScuba:'🤿 잠수 장비 (산소 소모 절반)',
+    shopBankKey:'🔑 은행 열쇠 (금고 열기)',
     floorUpTag:'⬆ 위로',
     floorDownTag:'⬇ 아래로',
     elevatorTag:'🛗 엘리베이터 (최상층 직행)',
@@ -3060,6 +3175,20 @@ const LANGS = {
     bossStage4:'😈 Boss en PHASE FINALE !! Alerte rouge !',
     eliteAppear:'👾 Monstre d\'élite apparu !',
     cityUnlocked:'🎉 Carte ville débloquée !',
+    bankName:"Banque",
+    enterBank:"Vous êtes entré dans la banque ! Attention, il y a du monde",
+    bankCleared:"Banque nettoyée ! Coffre déverrouillé ! Achetez une clé 🔑 à la boutique",
+    vaultRoom:"Chambre forte",
+    vaultOpenedTag:"OUVERT",
+    vaultUnlockedTag:"DÉVERROUILLÉ · CLÉ REQUISE",
+    vaultLockedTag:"VERROUILLÉ",
+    vaultHint:"Appuyez sur E pour ouvrir",
+    vaultEmpty:"La chambre forte est vide",
+    vaultLocked:"Coffre toujours verrouillé ! Tuez tout le monde dans la banque !",
+    vaultNeedKey:"Il vous faut la clé 🔑 ! Achetez-la à la boutique",
+    vaultOpened:"Coffre ouvert ! +",
+    buyKey:"Clé 🔑 de banque achetée !",
+    alreadyKey:"Vous avez déjà la clé de la banque",
     indoorAttack:'attaqué par le tueur intérieur 🙂 ! -8PV',
     elevatorTop:'🛗 Ascenseur direct au dernier étage ! Étage ',
     indoorHint:'Près des escaliers/ascenseur/sortie, appuie sur E',
@@ -3139,6 +3268,7 @@ const LANGS = {
     shopRevive:'💉 Kit de secours (ressuscite, 7s)',
     shopCar:'🚗 4x4 (écrase + rapide + creuse)',
     shopScuba:'🤿 Équipement de plongée (oxygène ÷2)',
+    shopBankKey:'🔑 Clé de banque (ouvrir le coffre)',
     floorUpTag:'⬆ Monter',
     floorDownTag:'⬇ Descendre',
     elevatorTag:'🛗 Ascenseur (direct au dernier)',
@@ -3346,6 +3476,20 @@ const LANGS = {
     bossStage4:'😈 Boss in ENDPHASE!! Roter Alarm!',
     eliteAppear:'👾 Elite-Monster erschienen!',
     cityUnlocked:'🎉 Stadtkarte freigeschaltet!',
+    bankName:"Bank",
+    enterBank:"Bank betreten! Viele Leute, Vorsicht",
+    bankCleared:"Bank gesäubert! Tresor entsperrt! Kauf einen 🔑 Schlüssel im Laden",
+    vaultRoom:"Tresorraum",
+    vaultOpenedTag:"OFFEN",
+    vaultUnlockedTag:"ENTSPERRT · SCHLÜSSEL NÖTIG",
+    vaultLockedTag:"GESPERRT",
+    vaultHint:"Drücke E zum Öffnen",
+    vaultEmpty:"Der Tresor ist leer",
+    vaultLocked:"Tresor noch gesperrt! Töte zuerst alle in der Bank!",
+    vaultNeedKey:"Du brauchst den 🔑 Bankschlüssel! Kauf ihn im Laden",
+    vaultOpened:"Tresor geöffnet! +",
+    buyKey:"🔑 Bankschlüssel gekauft!",
+    alreadyKey:"Du hast den Bankschlüssel schon",
     indoorAttack:'von Innenkiller 🙂 angegriffen! -8HP',
     elevatorTop:'🛗 Aufzug direkt in den obersten Stock! Etage ',
     indoorHint:'In der Nähe von Treppe/Aufzug/Ausgang E drücken',
@@ -3425,6 +3569,7 @@ const LANGS = {
     shopRevive:'💉 Rettungsset (Teamkollege wiederbeleben, 7s)',
     shopCar:'🚗 Geländewagen (Rammen tötet + schnell + gräbt)',
     shopScuba:'🤿 Tauchausrüstung (Sauerstoff ÷2)',
+    shopBankKey:'🔑 Bankschlüssel (Tresor öffnen)',
     floorUpTag:'⬆ Hoch',
     floorDownTag:'⬇ Runter',
     elevatorTag:'🛗 Aufzug (direkt nach oben)',
@@ -3632,6 +3777,20 @@ const LANGS = {
     bossStage4:'😈 ¡Boss en FASE FINAL!! ¡Alerta roja!',
     eliteAppear:'👾 ¡Monstruo de élite apareció!',
     cityUnlocked:'🎉 ¡Mapa ciudad desbloqueado!',
+    bankName:"Banco",
+    enterBank:"¡Entraste al banco! Está lleno, cuidado",
+    bankCleared:"¡Banco limpiado! ¡Bóveda desbloqueada! Compra una llave 🔑 en la tienda",
+    vaultRoom:"Bóveda",
+    vaultOpenedTag:"ABIERTA",
+    vaultUnlockedTag:"DESBLOQUEADA · NECESITA LLAVE",
+    vaultLockedTag:"BLOQUEADA",
+    vaultHint:"Pulsa E para abrir",
+    vaultEmpty:"La bóveda está vacía",
+    vaultLocked:"¡La bóveda sigue cerrada! ¡Mata a todos en el banco primero!",
+    vaultNeedKey:"¡Necesitas la llave 🔑 del banco! Cómprala en la tienda",
+    vaultOpened:"¡Bóveda abierta! +",
+    buyKey:"¡Llave 🔑 de banco comprada!",
+    alreadyKey:"Ya tienes la llave del banco",
     indoorAttack:'atacado por el asesino interior 🙂! -8PV',
     elevatorTop:'🛗 ¡Ascensor directo al último piso! Piso ',
     indoorHint:'Cerca de escaleras/ascensor/salida, pulsa E',
@@ -3711,6 +3870,7 @@ const LANGS = {
     shopRevive:'💉 Rescatador (revive a tu compañero, 7s)',
     shopCar:'🚗 Todoterreno (atropella + rápido + cava)',
     shopScuba:'🤿 Equipo de buceo (oxígeno ÷2)',
+    shopBankKey:'🔑 Llave de banco (abrir la bóveda)',
     floorUpTag:'⬆ Subir',
     floorDownTag:'⬇ Bajar',
     elevatorTag:'🛗 Ascensor (directo al último)',
@@ -3918,6 +4078,20 @@ const LANGS = {
     bossStage4:'😈 Босс в ФИНАЛЬНОЙ фазе!! Красная тревога!',
     eliteAppear:'👾 Элитный монстр появился!',
     cityUnlocked:'🎉 Городская карта открыта!',
+    bankName:"Банк",
+    enterBank:"Вы вошли в банк! Там людно, осторожно",
+    bankCleared:"Банк зачищен! Сейф разблокирован! Купите ключ 🔑 в магазине",
+    vaultRoom:"Хранилище",
+    vaultOpenedTag:"ОТКРЫТО",
+    vaultUnlockedTag:"РАЗБЛОКИРОВАНО · НУЖЕН КЛЮЧ",
+    vaultLockedTag:"ЗАКРЫТО",
+    vaultHint:"Нажмите E, чтобы открыть",
+    vaultEmpty:"Хранилище уже пусто",
+    vaultLocked:"Сейф ещё закрыт! Сначала убейте всех в банке!",
+    vaultNeedKey:"Нужен ключ 🔑! Купите его в магазине",
+    vaultOpened:"Сейф открыт! +",
+    buyKey:"Ключ 🔑 куплен!",
+    alreadyKey:"У вас уже есть ключ от банка",
     indoorAttack:'атакован внутренним убийцей 🙂! -8HP',
     elevatorTop:'🛗 Лифт прямо на верхний этаж! Этаж ',
     indoorHint:'Рядом с лестницей/лифтом/выходом нажми E',
@@ -3997,6 +4171,7 @@ const LANGS = {
     shopRevive:'💉 Спасатель (воскрешает, 7с)',
     shopCar:'🚗 Внедорожник (таран убивает + быстрый + роет)',
     shopScuba:'🤿 Акваланг (кислород ÷2)',
+    shopBankKey:'🔑 Ключ от банка (открыть сейф)',
     floorUpTag:'⬆ Вверх',
     floorDownTag:'⬇ Вниз',
     elevatorTag:'🛗 Лифт (прямо наверх)',
@@ -4243,6 +4418,8 @@ function applyLanguage(){
   if(shopCarText) shopCarText.textContent = t('shopCar');
   const shopScubaText = document.getElementById('shopScubaText');
   if(shopScubaText) shopScubaText.textContent = t('shopScuba');
+  const shopBankKeyText = document.getElementById('shopBankKeyText');
+  if(shopBankKeyText) shopBankKeyText.textContent = t('shopBankKey');
   // 功能面板
   const cheatPanelTitle = document.getElementById('cheatPanelTitle');
   if(cheatPanelTitle) cheatPanelTitle.textContent = t('cheatPanelTitle');
@@ -4717,6 +4894,9 @@ function saveGame(slot){
     // 潜水系统
     hasScuba: G.hasScuba || false,
     isUnderwater: G.isUnderwater || false,
+    // 银行系统
+    hasBankKey: G.hasBankKey || false,
+    bankVaultOpened: G.bankVaultOpened || [],
   };
   // 双人模式：保存2P状态
   if(G.isCoop && G.player2){
@@ -4803,6 +4983,14 @@ function loadGame(slot){
     G.cityBossSpawned = false; // 重置城市Boss生成状态
     G.inBuilding = null; // 重置室内状态
     G.buildingFloor = 1; // 重置楼层
+    G.inBank = -1; // 重置银行室内
+    G.bankInterior = null;
+    G.hasBankKey = d.hasBankKey || false; // 恢复银行钥匙
+    G.bankVaultOpened = d.bankVaultOpened || [];
+    G._nearBankIndex = null;
+    G._nearBankIndex2 = null;
+    G._nearVault = false;
+    G._nearVault2 = false;
     G._nearBuildingIndex = null; // 重置建筑入口检测
     G._nearBuildingIndex2 = null; // 重置2P建筑入口检测
     G._nearStair = false; // 重置楼梯检测
@@ -6290,10 +6478,22 @@ function goDownFloor(){
 
 // 检查玩家是否靠近建筑入口（室外时）
 function checkBuildingEntrance(){
-  if(G.currentMap !== 'city' || G.inBuilding !== null) return;
+  if(G.currentMap !== 'city' || G.inBuilding !== null || G.inBank !== -1) return;
   
   // 检查1P
   G._nearBuildingIndex = null;
+  // 银行入口检测（1P）
+  G._nearBankIndex = null;
+  if(G.player && !G.player.dead){
+    for(let bi = 0; bi < G.banks.length; bi++){
+      const b = G.banks[bi];
+      const cx = b.x + b.w/2, cy = b.y + b.h/2;
+      if(Math.hypot(G.player.x + G.player.w/2 - cx, G.player.y + G.player.h/2 - cy) < 55){
+        G._nearBankIndex = bi;
+        break;
+      }
+    }
+  }
   if(G.player && !G.player.dead){
     for(let i = 0; i < G.cityBuildings.length; i++){
       const b = G.cityBuildings[i];
@@ -6304,6 +6504,19 @@ function checkBuildingEntrance(){
       const dy = G.player.y + G.player.h/2 - entranceCenterY;
       if(Math.hypot(dx, dy) < 50){
         G._nearBuildingIndex = i;
+        break;
+      }
+    }
+  }
+  
+  // 银行入口检测（2P）
+  G._nearBankIndex2 = null;
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    for(let bi = 0; bi < G.banks.length; bi++){
+      const b = G.banks[bi];
+      const cx = b.x + b.w/2, cy = b.y + b.h/2;
+      if(Math.hypot(G.player2.x + G.player2.w/2 - cx, G.player2.y + G.player2.h/2 - cy) < 55){
+        G._nearBankIndex2 = bi;
         break;
       }
     }
@@ -6328,8 +6541,15 @@ function checkBuildingEntrance(){
 }
 
 // 渲染室内场景
-function drawIndoor(){
+function drawIndoorWorld(camX, camY){
   if(G.currentMap !== 'city' || G.inBuilding === null) return;
+  // 相机默认跟随1P（单人全屏），双人分屏时由调用方传入
+  if(camX === undefined){
+    camX = G.player ? clamp(G.player.x + G.player.w/2 - INDOOR_W/2, 0, Math.max(0, INDOOR_W - INDOOR_W)) : 0;
+    camY = G.player ? clamp(G.player.y + G.player.h/2 - INDOOR_H/2, 0, Math.max(0, INDOOR_H - INDOOR_H)) : 0;
+  }
+  ctx.save();
+  ctx.translate(-camX, -camY);
   const building = G.cityBuildings[G.inBuilding];
   if(!building) return;
   const maxFloor = building.floors;
@@ -6337,10 +6557,10 @@ function drawIndoor(){
   // ===== 室内背景 =====
   // 天花板
   ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(0, 0, W, 80);
+  ctx.fillRect(0, 0, INDOOR_W, 80);
   // 天花板灯光
   for(let i = 0; i < 5; i++){
-    const lx = 150 + i * (W - 300) / 4;
+    const lx = 150 + i * (INDOOR_W - 300) / 4;
     ctx.fillStyle = '#fffacd';
     ctx.fillRect(lx - 30, 20, 60, 8);
     // 光晕
@@ -6352,52 +6572,52 @@ function drawIndoor(){
   }
   // 墙壁（上下）
   ctx.fillStyle = '#2d2d2d';
-  ctx.fillRect(0, 80, W, 40);
-  ctx.fillRect(0, H - 120, W, 40);
+  ctx.fillRect(0, 80, INDOOR_W, 40);
+  ctx.fillRect(0, INDOOR_H - 120, INDOOR_W, 40);
   // 墙壁纹理（砖块）
   ctx.strokeStyle = '#252525';
   ctx.lineWidth = 1;
   for(let y = 85; y < 115; y += 12){
-    for(let x = 0; x < W; x += 40){
+    for(let x = 0; x < INDOOR_W; x += 40){
       ctx.strokeRect(x + (y % 24 === 0 ? 20 : 0), y, 40, 12);
     }
   }
-  for(let y = H - 115; y < H - 85; y += 12){
-    for(let x = 0; x < W; x += 40){
+  for(let y = INDOOR_H - 115; y < INDOOR_H - 85; y += 12){
+    for(let x = 0; x < INDOOR_W; x += 40){
       ctx.strokeRect(x + (y % 24 === 0 ? 20 : 0), y, 40, 12);
     }
   }
   // 左右墙壁
   ctx.fillStyle = '#2d2d2d';
-  ctx.fillRect(0, 80, 40, H - 160);
-  ctx.fillRect(W - 40, 80, 40, H - 160);
+  ctx.fillRect(0, 80, 40, INDOOR_H - 160);
+  ctx.fillRect(INDOOR_W - 40, 80, 40, INDOOR_H - 160);
   
   // ===== 地板 =====
   ctx.fillStyle = '#3a3a3a';
-  ctx.fillRect(40, 120, W - 80, H - 240);
+  ctx.fillRect(40, 120, INDOOR_W - 80, INDOOR_H - 240);
   // 地板瓷砖纹理
   ctx.strokeStyle = '#333';
   ctx.lineWidth = 1;
-  for(let x = 40; x < W - 40; x += 50){
+  for(let x = 40; x < INDOOR_W - 40; x += 50){
     ctx.beginPath();
     ctx.moveTo(x, 120);
-    ctx.lineTo(x, H - 120);
+    ctx.lineTo(x, INDOOR_H - 120);
     ctx.stroke();
   }
-  for(let y = 120; y < H - 120; y += 50){
+  for(let y = 120; y < INDOOR_H - 120; y += 50){
     ctx.beginPath();
     ctx.moveTo(40, y);
-    ctx.lineTo(W - 40, y);
+    ctx.lineTo(INDOOR_W - 40, y);
     ctx.stroke();
   }
   // 地板反光
   ctx.fillStyle = 'rgba(255,255,255,0.02)';
-  ctx.fillRect(40, 120, W - 80, (H - 240) / 2);
+  ctx.fillRect(40, 120, INDOOR_W - 80, (INDOOR_H - 240) / 2);
   
   // ===== 房间门（走廊两边）=====
   const doorPositions = [
-    {x: 100, y: 160}, {x: 100, y: 320}, {x: 100, y: H - 360},
-    {x: W - 140, y: 160}, {x: W - 140, y: 320}, {x: W - 140, y: H - 360}
+    {x: 100, y: 160}, {x: 100, y: 320}, {x: 100, y: INDOOR_H - 360},
+    {x: INDOOR_W - 140, y: 160}, {x: INDOOR_W - 140, y: 320}, {x: INDOOR_W - 140, y: INDOOR_H - 360}
   ];
   doorPositions.forEach((door, idx) => {
     // 门框
@@ -6426,7 +6646,7 @@ function drawIndoor(){
   
   // ===== 上楼楼梯（左下角）=====
   if(G.buildingFloor < maxFloor){
-    const sx = 60, sy = H - 200, sw = 120, sh = 80;
+    const sx = 60, sy = INDOOR_H - 200, sw = 120, sh = 80;
     // 楼梯间背景
     ctx.fillStyle = '#2a2a2a';
     ctx.fillRect(sx - 5, sy - 5, sw + 10, sh + 10);
@@ -6503,7 +6723,7 @@ function drawIndoor(){
   }
   
   // ===== 电梯（右下角）=====
-  const ex = W - 180, ey = H - 200, ew = 120, eh = 80;
+  const ex = INDOOR_W - 180, ey = INDOOR_H - 200, ew = 120, eh = 80;
   // 电梯间背景
   ctx.fillStyle = '#1f1f1f';
   ctx.fillRect(ex - 8, ey - 8, ew + 16, eh + 16);
@@ -6562,7 +6782,7 @@ function drawIndoor(){
   
   // ===== 出口（一楼）=====
   if(G.buildingFloor === 1){
-    const ox = W / 2 - 40, oy = H - 130, ow = 80, oh = 90;
+    const ox = INDOOR_W / 2 - 40, oy = INDOOR_H - 130, ow = 80, oh = 90;
     // 出口门框
     ctx.fillStyle = '#5d4037';
     ctx.fillRect(ox - 5, oy - 5, ow + 10, oh + 10);
@@ -6650,16 +6870,19 @@ function drawIndoor(){
   
   // ===== 楼层显示 =====
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(W / 2 - 120, 15, 240, 50);
+  ctx.fillRect(INDOOR_W / 2 - 120, 15, 240, 50);
   ctx.strokeStyle = '#ffd700';
+  // ===== 楼层信息（屏幕固定，不随相机）=====
+  ctx.restore();
   ctx.lineWidth = 2;
+  ctx.strokeStyle = '#ffd700';
   ctx.strokeRect(W / 2 - 120, 15, 240, 50);
   ctx.fillStyle = '#ffd700';
   ctx.font = 'bold 22px serif';
   ctx.textAlign = 'center';
   ctx.fillText(t('floorInfoA') + G.buildingFloor + t('floorInfoB') + maxFloor + t('floorInfoC'), W / 2, 48);
   
-  // ===== 操作提示 =====
+  // ===== 操作提示（屏幕固定）=====
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
   ctx.fillRect(W / 2 - 200, H - 35, 400, 25);
   ctx.fillStyle = '#ccc';
@@ -6668,26 +6891,33 @@ function drawIndoor(){
   ctx.fillText(t('buildingHint'), W / 2, H - 18);
 }
 
+// 单人/双人调用入口：全屏室内（相机自动跟随1P）
+function drawIndoor(){
+  if(G.currentMap !== 'city' || G.inBuilding === null) return;
+  drawIndoorWorld();
+}
+
 // 更新室内逻辑
 function updateIndoor(){
   if(G.currentMap !== 'city' || G.inBuilding === null) return;
+  if(G.inBank !== -1) return; // 银行室内走 updateBankInterior
   if(!G.player || G.player.dead) return;
   
   // 限制1P在室内走廊范围内移动
-  G.player.x = clamp(G.player.x, 50, W - 90);
-  G.player.y = clamp(G.player.y, 120, H - 160);
+  G.player.x = clamp(G.player.x, 50, INDOOR_W - 90);
+  G.player.y = clamp(G.player.y, 120, INDOOR_H - 160);
   // 限制2P在室内走廊范围内移动（双人模式）
   if(G.isCoop && G.player2 && !G.coopP2Dead){
-    G.player2.x = clamp(G.player2.x, 50, W - 90);
-    G.player2.y = clamp(G.player2.y, 120, H - 160);
+    G.player2.x = clamp(G.player2.x, 50, INDOOR_W - 90);
+    G.player2.y = clamp(G.player2.y, 120, INDOOR_H - 160);
   }
   
   // 上楼楼梯位置（左下角）
-  const stairUpX = 130, stairUpY = H - 150;
+  const stairUpX = 130, stairUpY = INDOOR_H - 150;
   // 下楼楼梯位置（左上角）
   const stairDownX = 130, stairDownY = 150;
   // 电梯位置（右下角）
-  const elevX = W - 130, elevY = H - 150;
+  const elevX = INDOOR_W - 130, elevY = INDOOR_H - 150;
   
   // 检查1P是否靠近上楼楼梯（顶楼时不可上楼）
   const building = G.cityBuildings[G.inBuilding];
@@ -6717,7 +6947,7 @@ function updateIndoor(){
   
   // 检查1P是否靠近出口（一楼）
   if(G.buildingFloor === 1){
-    const exitX = W/2, exitY = H - 85; // 出口门中心位置（和绘制位置一致）
+    const exitX = INDOOR_W/2, exitY = INDOOR_H - 85; // 出口门中心位置（和绘制位置一致）
     const dxExit = G.player.x + G.player.w/2 - exitX;
     const dyExit = G.player.y + G.player.h/2 - exitY;
     G._nearExit = Math.hypot(dxExit, dyExit) < 70;
@@ -6746,7 +6976,7 @@ function updateIndoor(){
     if(Math.hypot(dxElev2, dyElev2) < 60) G._nearElevator = true;
     // 2P出口
     if(G.buildingFloor === 1){
-      const exitX = W/2, exitY = H - 85; // 出口门中心位置（和绘制位置一致）
+      const exitX = INDOOR_W/2, exitY = INDOOR_H - 85; // 出口门中心位置（和绘制位置一致）
       const dxExit2 = G.player2.x + G.player2.w/2 - exitX;
       const dyExit2 = G.player2.y + G.player2.h/2 - exitY;
       if(Math.hypot(dxExit2, dyExit2) < 70) G._nearExit = true;
@@ -6767,10 +6997,14 @@ function updateIndoor(){
       // 30%概率是杀手
       const isKiller = Math.random() < 0.3;
       G.indoorNPCs.npcs.push({
-        x: 220 + Math.random() * (W - 440),
-        y: 170 + Math.random() * (H - 360),
+        x: 220 + Math.random() * (INDOOR_W - 440),
+        y: 170 + Math.random() * (INDOOR_H - 360),
         emoji: '🙂',
         isKiller: isKiller,
+        hp: isKiller ? 25 : 12,
+        maxHp: isKiller ? 25 : 12,
+        dead: false,
+        hurtFlash: 0,
         vx: (Math.random() - 0.5) * 0.6,
         vy: (Math.random() - 0.5) * 0.6,
         talkTimer: Math.random() * 300,
@@ -6783,6 +7017,8 @@ function updateIndoor(){
   }
   // 更新NPC移动和对话
   G.indoorNPCs.npcs.forEach((npc, idx) => {
+    if(npc.dead) return; // 已死亡NPC不再行动
+    if(npc.hurtFlash > 0) npc.hurtFlash--;
     // 杀手：追击附近的玩家
     if(npc.isKiller){
       // 找到最近的玩家
@@ -6836,9 +7072,9 @@ function updateIndoor(){
     npc.y += npc.vy;
     // 边界反弹（确保在走廊范围内）
     if(npc.x < 200){ npc.x = 200; npc.vx = Math.abs(npc.vx); }
-    if(npc.x > W - 200){ npc.x = W - 200; npc.vx = -Math.abs(npc.vx); }
+    if(npc.x > INDOOR_W - 200){ npc.x = INDOOR_W - 200; npc.vx = -Math.abs(npc.vx); }
     if(npc.y < 160){ npc.y = 160; npc.vy = Math.abs(npc.vy); }
-    if(npc.y > H - 180){ npc.y = H - 180; npc.vy = -Math.abs(npc.vy); }
+    if(npc.y > INDOOR_H - 180){ npc.y = INDOOR_H - 180; npc.vy = -Math.abs(npc.vy); }
     // 换楼层逻辑：走到楼梯/电梯/出口位置后消失，在下一层重新生成
     npc.changeFloorTimer--;
     if(npc.changeFloorTimer <= 0){
@@ -6847,16 +7083,16 @@ function updateIndoor(){
       let targetX, targetY;
       if(useElevator){
         // 电梯位置（右下角）
-        targetX = W - 130;
-        targetY = H - 150;
+        targetX = INDOOR_W - 130;
+        targetY = INDOOR_H - 150;
       } else {
         // 随机走上楼或下楼楼梯
         if(Math.random() < 0.5 && G.buildingFloor < npc.maxFloor){
-          targetX = 130; targetY = H - 150; // 上楼楼梯
+          targetX = 130; targetY = INDOOR_H - 150; // 上楼楼梯
         } else if(G.buildingFloor > 1){
           targetX = 130; targetY = 150; // 下楼楼梯
         } else {
-          targetX = W/2; targetY = H - 60; // 出口
+          targetX = INDOOR_W/2; targetY = INDOOR_H - 60; // 出口
         }
       }
       // 向目标移动
@@ -6896,6 +7132,398 @@ function updateIndoor(){
         : normalTalks[Math.floor(Math.random() * normalTalks.length)];
     }
   });
+}
+
+
+// ==================== 银行室内系统 ====================
+// 进入银行
+function enterBank(bi, playerNum){
+  if(G.currentMap !== 'city' || G.inBank !== -1) return;
+  const bank = G.banks[bi];
+  if(!bank) return;
+  G.inBank = bi;
+  G.inBuilding = null;
+  // 保存室外位置（触发进入的玩家）
+  const enteringPlayer = playerNum === 2 ? G.player2 : G.player;
+  if(enteringPlayer){
+    G._outdoorPlayerX = enteringPlayer.x;
+    G._outdoorPlayerY = enteringPlayer.y;
+  }
+  // 玩家放到银行大厅门口
+  if(G.player){
+    G.player.x = INDOOR_W/2 - 40;
+    G.player.y = INDOOR_H - 260;
+  }
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    G.player2.x = INDOOR_W/2 + 60;
+    G.player2.y = INDOOR_H - 260;
+  }
+  G.bankInterior = createBankInterior(bi);
+  G._nearExit = false;
+  G._nearVault = false;
+  G._nearVault2 = false;
+  showToast(t('enterBank'));
+  updateUI();
+}
+
+// 生成银行室内内容
+function createBankInterior(bi){
+  const interior = { bank: bi, cleared: false, npcs: [] };
+  // 金库（右侧金库房间内）
+  interior.vault = {
+    x: INDOOR_W - 620, y: INDOOR_H/2 - 90, w: 130, h: 180,
+    unlocked: false,
+    opened: (G.bankVaultOpened || []).includes(bi)
+  };
+  // 顾客🙂×4（不攻击，但要清掉才算清场）
+  for(let i=0;i<4;i++){
+    interior.npcs.push(makeBankNPC('customer', rand(300, INDOOR_W-700), rand(350, INDOOR_H-400)));
+  }
+  // 银行人员🤵×2（近战弱攻击）
+  for(let i=0;i<2;i++){
+    interior.npcs.push(makeBankNPC('staff', INDOOR_W/2 - 160 + i*110, INDOOR_H/2 - 80));
+  }
+  // 杀手🔪×2（追击近战）
+  for(let i=0;i<2;i++){
+    interior.npcs.push(makeBankNPC('killer', rand(400, INDOOR_W-700), rand(400, INDOOR_H-450)));
+  }
+  // 警察👮×2（追击远程射击）
+  for(let i=0;i<2;i++){
+    interior.npcs.push(makeBankNPC('cop', rand(400, INDOOR_W-700), rand(400, INDOOR_H-450)));
+  }
+  return interior;
+}
+
+function makeBankNPC(type, x, y){
+  const hpMap = {customer:10, staff:18, killer:30, cop:28};
+  const n = {
+    x, y, w:44, h:44,
+    emoji: type==='staff' ? '🤵' : (type==='killer' ? '🔪' : (type==='cop' ? '👮' : '🙂')),
+    type,
+    hp: hpMap[type], maxHp: hpMap[type],
+    dead: false, hurtFlash: 0,
+    vx: (Math.random()-0.5)*0.8,
+    vy: (Math.random()-0.5)*0.8,
+    atkCd: 0,
+  };
+  return n;
+}
+
+// 更新银行室内
+function updateBankInterior(){
+  if(G.currentMap !== 'city' || G.inBank === -1 || !G.bankInterior) return;
+  const interior = G.bankInterior;
+  const vault = interior.vault;
+  
+  // 靠近金库检测
+  G._nearVault = false;
+  if(G.player && !G.player.dead){
+    G._nearVault = Math.hypot(G.player.x+G.player.w/2 - (vault.x+vault.w/2), G.player.y+G.player.h/2 - (vault.y+vault.h/2)) < 75;
+  }
+  G._nearVault2 = false;
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    G._nearVault2 = Math.hypot(G.player2.x+G.player2.w/2 - (vault.x+vault.w/2), G.player2.y+G.player2.h/2 - (vault.y+vault.h/2)) < 75;
+  }
+  
+  // 靠近出口检测（大厅门）
+  const exitX = INDOOR_W/2, exitY = INDOOR_H - 105;
+  G._nearExit = false;
+  if(G.player && !G.player.dead){
+    G._nearExit = Math.hypot(G.player.x+G.player.w/2 - exitX, G.player.y+G.player.h/2 - exitY) < 75;
+  }
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    if(Math.hypot(G.player2.x+G.player2.w/2 - exitX, G.player2.y+G.player2.h/2 - exitY) < 75) G._nearExit = true;
+  }
+  
+  // 更新NPC
+  interior.npcs.forEach(npc=>{
+    if(npc.dead) return;
+    if(npc.hurtFlash > 0) npc.hurtFlash--;
+    if(npc.type === 'customer'){
+      // 顾客：随机走动
+      if(Math.random() < 0.01){ npc.vx = (Math.random()-0.5)*0.7; npc.vy = (Math.random()-0.5)*0.7; }
+    } else {
+      // 敌性NPC：追击最近的玩家
+      let target = null, minDist = 280;
+      if(G.player && !G.player.dead){
+        const d = Math.hypot(G.player.x+G.player.w/2-npc.x, G.player.y+G.player.h/2-npc.y);
+        if(d < minDist){ minDist = d; target = G.player; }
+      }
+      if(G.isCoop && G.player2 && !G.coopP2Dead){
+        const d = Math.hypot(G.player2.x+G.player2.w/2-npc.x, G.player2.y+G.player2.h/2-npc.y);
+        if(d < minDist){ minDist = d; target = G.player2; }
+      }
+      if(target){
+        const dx = (target.x+target.w/2)-npc.x, dy = (target.y+target.h/2)-npc.y;
+        const len = Math.hypot(dx,dy)||1;
+        const spd = npc.type==='staff' ? 1.1 : 1.7;
+        npc.vx = dx/len*spd;
+        npc.vy = dy/len*spd;
+        if(npc.atkCd > 0) npc.atkCd--;
+        // 近战攻击（员工/杀手）
+        if(npc.type !== 'cop' && minDist < 45 && npc.atkCd <= 0){
+          npc.atkCd = 55;
+          const dmg = npc.type==='staff' ? 4 : 8;
+          target.hp -= dmg;
+          target.hurtFlash = 10;
+          spawnParticles(target.x+target.w/2, target.y+target.h/2, '#ff0000', 8);
+          playSound('hurt');
+          showToast((target===G.player?'1P ':'2P ') + t('indoorAttack'));
+          if(target.hp <= 0){
+            target.dead = true;
+            handlePlayerDeath(target, target===G.player2);
+          }
+        }
+        // 警察远程射击
+        if(npc.type === 'cop' && minDist < 320 && npc.atkCd <= 0){
+          npc.atkCd = 85;
+          const angle = Math.atan2(dy, dx);
+          G.projectiles.push({
+            x: npc.x, y: npc.y,
+            vx: Math.cos(angle)*6, vy: Math.sin(angle)*6,
+            damage: 5, from: 'bankCop', color: '#3399ff', size: 6, life: 130,
+          });
+          playSound('shoot');
+        }
+      } else {
+        if(Math.random() < 0.01){ npc.vx = (Math.random()-0.5)*0.6; npc.vy = (Math.random()-0.5)*0.6; }
+      }
+    }
+    // 移动 + 边界
+    npc.x += npc.vx; npc.y += npc.vy;
+    npc.x = clamp(npc.x, 120, INDOOR_W-120);
+    npc.y = clamp(npc.y, 170, INDOOR_H-190);
+  });
+  
+  // 击杀所有人 → 金库解锁
+  if(!interior.cleared){
+    const alive = interior.npcs.filter(n=> !n.dead).length;
+    if(alive === 0){
+      interior.cleared = true;
+      vault.unlocked = true;
+      showToast(t('bankCleared'));
+    }
+  }
+}
+
+// 渲染银行室内世界（大地图，带相机）
+function drawBankIndoorWorld(camX, camY){
+  if(G.currentMap !== 'city' || G.inBank === -1) return;
+  if(camX === undefined){
+    camX = G.player ? clamp(G.player.x+G.player.w/2 - W/2, 0, Math.max(0, INDOOR_W - W)) : 0;
+    camY = G.player ? clamp(G.player.y+G.player.h/2 - H/2, 0, Math.max(0, INDOOR_H - H)) : 0;
+  }
+  ctx.save();
+  ctx.translate(-camX, -camY);
+  // ===== 银行大厅背景（大理石地板）=====
+  ctx.fillStyle = '#c8b8a0';
+  ctx.fillRect(0, 0, INDOOR_W, INDOOR_H);
+  ctx.strokeStyle = 'rgba(120,100,80,0.4)';
+  ctx.lineWidth = 1;
+  for(let x=0;x<INDOOR_W;x+=70){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,INDOOR_H); ctx.stroke(); }
+  for(let y=0;y<INDOOR_H;y+=70){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(INDOOR_W,y); ctx.stroke(); }
+  // 吊顶
+  ctx.fillStyle = '#8a7a68';
+  ctx.fillRect(0, 0, INDOOR_W, 110);
+  for(let i=0;i<8;i++){
+    const lx = 150 + i*((INDOOR_W-300)/7);
+    ctx.fillStyle = '#fffacd';
+    ctx.fillRect(lx-25, 15, 50, 8);
+    ctx.fillStyle = 'rgba(255,250,205,0.25)';
+    ctx.fillRect(lx-60, 23, 120, 60);
+  }
+  // 左右墙壁
+  ctx.fillStyle = '#6d5d4d';
+  ctx.fillRect(0, 110, 30, INDOOR_H-110);
+  ctx.fillRect(INDOOR_W-30, 110, 30, INDOOR_H-110);
+  // 银行标识
+  ctx.fillStyle = '#3d5a3d';
+  ctx.font = 'bold 46px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🏦 ' + t('bankName'), INDOOR_W/2, 92);
+  // 柜台（中部一排）
+  ctx.fillStyle = '#7a6a55';
+  ctx.fillRect(INDOOR_W/2 - 260, INDOOR_H/2 - 40, 520, 70);
+  ctx.fillStyle = '#5d4f3c';
+  ctx.fillRect(INDOOR_W/2 - 260, INDOOR_H/2 - 40, 520, 12);
+  for(let i=0;i<5;i++){
+    const wx = INDOOR_W/2 - 220 + i*100;
+    ctx.fillStyle = 'rgba(200,220,255,0.5)';
+    ctx.fillRect(wx, INDOOR_H/2 - 26, 80, 50);
+    ctx.strokeStyle = '#4a3f30';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(wx, INDOOR_H/2 - 26, 80, 50);
+  }
+  // ATM（左侧）
+  ctx.fillStyle = '#445566';
+  ctx.fillRect(200, 300, 90, 130);
+  ctx.fillStyle = '#3399ff';
+  ctx.fillRect(206, 310, 78, 42);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 22px serif';
+  ctx.fillText('ATM', 245, 338);
+  // 保险柜（左侧装饰）
+  ctx.fillStyle = '#666';
+  ctx.fillRect(360, 330, 60, 70);
+  ctx.fillStyle = '#888';
+  ctx.beginPath(); ctx.arc(390, 365, 12, 0, Math.PI*2); ctx.fill();
+  
+  // ===== 金库房间（右侧）=====
+  ctx.fillStyle = '#5a4f42';
+  ctx.fillRect(INDOOR_W-640, INDOOR_H/2-220, 560, 440);
+  ctx.fillStyle = '#9a8a72';
+  ctx.fillRect(INDOOR_W-620, INDOOR_H/2-200, 540, 400);
+  ctx.fillStyle = 'rgba(255,215,0,0.35)';
+  ctx.font = 'bold 30px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('💰 ' + t('vaultRoom'), INDOOR_W-350, INDOOR_H/2-230);
+  const vault = G.bankInterior ? G.bankInterior.vault : null;
+  if(vault){
+    // 金库大门
+    ctx.fillStyle = '#2f2f2f';
+    ctx.fillRect(vault.x-10, vault.y-10, vault.w+20, vault.h+20);
+    ctx.fillStyle = '#555';
+    ctx.fillRect(vault.x, vault.y, vault.w, vault.h);
+    ctx.fillStyle = '#888';
+    for(let r=0;r<3;r++) for(let c=0;c<4;c++){
+      ctx.beginPath(); ctx.arc(vault.x+15+c*33, vault.y+22+r*68, 5, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#777';
+    ctx.beginPath(); ctx.arc(vault.x+vault.w/2, vault.y+vault.h/2, 22, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#999';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(vault.x+vault.w/2, vault.y+vault.h/2, 22, 0, Math.PI*2); ctx.stroke();
+    // 状态文字
+    ctx.font = 'bold 20px serif';
+    if(vault.opened){
+      ctx.fillStyle = '#00ff88';
+      ctx.fillText(t('vaultOpenedTag'), vault.x+vault.w/2, vault.y-24);
+    } else if(vault.unlocked){
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText(t('vaultUnlockedTag'), vault.x+vault.w/2, vault.y-24);
+    } else {
+      ctx.fillStyle = '#ff5555';
+      ctx.fillText('🔒 ' + t('vaultLockedTag'), vault.x+vault.w/2, vault.y-24);
+    }
+    if(G._nearVault || G._nearVault2){
+      ctx.fillStyle = 'rgba(255,215,0,0.25)';
+      ctx.fillRect(vault.x-12, vault.y-12, vault.w+24, vault.h+24);
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 15px serif';
+      ctx.fillText(t('vaultHint'), vault.x+vault.w/2, vault.y+vault.h+22);
+    }
+  }
+  
+  // ===== 出口门（大厅下方中央）=====
+  const ox = INDOOR_W/2 - 40, oy = INDOOR_H - 150, ow = 80, oh = 110;
+  ctx.fillStyle = '#3d2f1f';
+  ctx.fillRect(ox-5, oy-5, ow+10, oh+10);
+  ctx.fillStyle = '#8b4513';
+  ctx.fillRect(ox, oy, ow, oh);
+  ctx.fillStyle = 'rgba(135,206,235,0.3)';
+  ctx.fillRect(ox+10, oy+15, ow-20, 35);
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath(); ctx.arc(ox+ow-15, oy+oh/2, 5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#00ff00';
+  ctx.font = 'bold 18px serif';
+  ctx.fillText(t('exitTag'), ox+ow/2, oy-14);
+  if(G._nearExit){
+    ctx.fillStyle = 'rgba(0,255,0,0.15)';
+    ctx.fillRect(ox-5, oy-5, ow+10, oh+10);
+  }
+  
+  // ===== 渲染NPC =====
+  if(G.bankInterior){
+    G.bankInterior.npcs.forEach(npc=>{
+      if(npc.dead) return;
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath(); ctx.ellipse(npc.x, npc.y+18, 16, 6, 0, 0, Math.PI*2); ctx.fill();
+      if(npc.type==='killer'){
+        ctx.fillStyle = 'rgba(255,0,0,0.25)';
+        ctx.beginPath(); ctx.arc(npc.x, npc.y, 30, 0, Math.PI*2); ctx.fill();
+      } else if(npc.type==='cop'){
+        ctx.fillStyle = 'rgba(50,150,255,0.25)';
+        ctx.beginPath(); ctx.arc(npc.x, npc.y, 30, 0, Math.PI*2); ctx.fill();
+      } else if(npc.type==='staff'){
+        ctx.fillStyle = 'rgba(255,215,0,0.2)';
+        ctx.beginPath(); ctx.arc(npc.x, npc.y, 26, 0, Math.PI*2); ctx.fill();
+      }
+      if(npc.hurtFlash > 0) ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 1;
+      ctx.font = '36px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(npc.emoji, npc.x, npc.y);
+      if(npc.type!=='customer' && npc.hp < npc.maxHp){
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(npc.x-20, npc.y-34, 40, 5);
+        ctx.fillStyle = '#ff4444';
+        ctx.fillRect(npc.x-20, npc.y-34, 40*(npc.hp/npc.maxHp), 5);
+      }
+    });
+  }
+  ctx.restore();
+}
+
+// 银行室内全屏入口（相机自动跟随1P）
+function drawBankIndoor(){
+  if(G.currentMap !== 'city' || G.inBank === -1) return;
+  drawBankIndoorWorld();
+}
+
+// 退出银行
+function exitBank(){
+  if(G.currentMap !== 'city' || G.inBank === -1) return;
+  G.inBank = -1;
+  G.bankInterior = null;
+  G._nearVault = false;
+  G._nearVault2 = false;
+  G._nearExit = false;
+  if(G.player){
+    G.player.x = G._outdoorPlayerX || 100;
+    G.player.y = G._outdoorPlayerY || 100;
+  }
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    G.player2.x = (G._outdoorPlayerX || 100) + 80;
+    G.player2.y = (G._outdoorPlayerY || 100) + 20;
+  }
+  G._nearBankIndex = null;
+  G._nearBankIndex2 = null;
+  showToast(t('exitBuilding'));
+  updateUI();
+  saveGame();
+}
+
+// 尝试打开金库
+function tryOpenVault(){
+  if(G.currentMap !== 'city' || G.inBank === -1 || !G.bankInterior) return;
+  const vault = G.bankInterior.vault;
+  if(vault.opened){
+    showToast(t('vaultEmpty'));
+    return;
+  }
+  if(!vault.unlocked){
+    showToast(t('vaultLocked'));
+    return;
+  }
+  if(!G.hasBankKey){
+    showToast(t('vaultNeedKey'));
+    return;
+  }
+  // 开锁成功
+  vault.opened = true;
+  if(!G.bankVaultOpened.includes(G.inBank)) G.bankVaultOpened.push(G.inBank);
+  const reward = 500;
+  if(G.isCoop && G.player2 && !G.coopP2Dead){
+    if(G.player) G.player.gold += reward/2;
+    G.player2.gold += reward/2;
+  } else {
+    if(G.player) G.player.gold += reward;
+  }
+  updateUI();
+  spawnParticles(vault.x+vault.w/2, vault.y+vault.h/2, '#ffd700', 45);
+  showToast(t('vaultOpened') + reward + t('gold'));
+  saveGame();
 }
 
 // 更新金币（拾取逻辑）
@@ -7543,7 +8171,45 @@ function hitAllMobs(hitBox, dmg){
         }
       }
     });
-    // 城市地图：也能打银行守卫
+    // 室内楼层NPC也能打（普通大楼）
+  if(G.inBuilding !== null && G.indoorNPCs && G.indoorNPCs.npcs){
+    G.indoorNPCs.npcs.forEach(npc=>{
+      if(npc.dead) return;
+      const nb = {x:npc.x-22, y:npc.y-22, w:44, h:44};
+      if(rectOverlap(hitBox, nb)){
+        npc.hp -= dmg; npc.hurtFlash = 8;
+        spawnParticles(npc.x, npc.y, '#ff4444', 5);
+        playSound('hurt');
+        if(npc.hp <= 0){
+          npc.dead = true;
+          makeCorpse({x:npc.x, y:npc.y, w:44, h:44, face:npc.emoji});
+          G.killCount++;
+          spawnParticles(npc.x, npc.y, '#ff0000', 15);
+          playSound('kill');
+        }
+      }
+    });
+  }
+  // 银行室内NPC也能打
+  if(G.inBank !== -1 && G.bankInterior && G.bankInterior.npcs){
+    G.bankInterior.npcs.forEach(npc=>{
+      if(npc.dead) return;
+      const nb = {x:npc.x-22, y:npc.y-22, w:44, h:44};
+      if(rectOverlap(hitBox, nb)){
+        npc.hp -= dmg; npc.hurtFlash = 8;
+        spawnParticles(npc.x, npc.y, '#ff4444', 5);
+        playSound('hurt');
+        if(npc.hp <= 0){
+          npc.dead = true;
+          makeCorpse({x:npc.x, y:npc.y, w:44, h:44, face:npc.emoji});
+          G.killCount++;
+          spawnParticles(npc.x, npc.y, '#ff0000', 15);
+          playSound('kill');
+        }
+      }
+    });
+  }
+  // 城市地图：也能打银行守卫
     G.bankGuards.forEach(g=>{
       if(!g.dead && rectOverlap(hitBox, g)){
         g.hp -= dmg;
@@ -7990,10 +8656,10 @@ function update(){
   if(G.dashCooldown > 0) G.dashCooldown--;
   if(G.dashCooldown2 > 0) G.dashCooldown2--; // 2P独立冲刺冷却
   if(!(G.isCoop && G.coopP1Dead)){
-    if(G.inBuilding !== null){
-      // 室内：限制在室内范围内
-      p.x = clamp(p.x, 60, W - 100);
-      p.y = clamp(p.y, 110, H - 120);
+    if(G.inBuilding !== null || G.inBank !== -1){
+      // 室内/银行室内：限制在室内大地图范围内
+      p.x = clamp(p.x, 60, INDOOR_W - 100);
+      p.y = clamp(p.y, 110, INDOOR_H - 120);
     } else {
       p.x = clamp(p.x, 0, WORLD_W-p.w);
       p.y = clamp(p.y, 0, WORLD_H-p.h);
@@ -8166,10 +8832,10 @@ function update(){
         }
       }
     }
-    if(G.inBuilding !== null){
-      // 室内：限制在室内范围内
-      p2.x = clamp(p2.x, 60, W - 100);
-      p2.y = clamp(p2.y, 110, H - 120);
+    if(G.inBuilding !== null || G.inBank !== -1){
+      // 室内/银行室内：限制在室内大地图范围内
+      p2.x = clamp(p2.x, 60, INDOOR_W - 100);
+      p2.y = clamp(p2.y, 110, INDOOR_H - 120);
     } else {
       p2.x = clamp(p2.x, 0, WORLD_W-p2.w);
       p2.y = clamp(p2.y, 0, WORLD_H-p2.h);
@@ -8231,24 +8897,24 @@ function update(){
     }
   }
 
-  // 更新怪物
-  updateMobs();
+  // 更新怪物（银行室内时暂停外部世界）
+  if(G.inBank === -1) updateMobs();
   // 更新Boss
-  updateBosses();
+  if(G.inBank === -1) updateBosses();
   // 更新NPC
-  updateNPCs();
+  if(G.inBank === -1) updateNPCs();
   // 更新杀手NPC（城市地图）
-  if(G.currentMap === 'city') updateKillers();
+  if(G.currentMap === 'city' && G.inBank === -1) updateKillers();
   // 更新城市汽车（城市地图）
-  if(G.currentMap === 'city') updateCars();
+  if(G.currentMap === 'city' && G.inBank === -1) updateCars();
   // 更新银行守卫（城市地图）
-  if(G.currentMap === 'city') updateBankGuards();
+  if(G.currentMap === 'city' && G.inBank === -1) updateBankGuards();
   // 更新警车（城市地图）
-  if(G.currentMap === 'city') updatePoliceCars();
+  if(G.currentMap === 'city' && G.inBank === -1) updatePoliceCars();
   // 更新警察（城市地图）
-  if(G.currentMap === 'city') updatePoliceOfficers();
+  if(G.currentMap === 'city' && G.inBank === -1) updatePoliceOfficers();
   // 更新城市Boss🥺
-  if(G.currentMap === 'city') updateCityBoss();
+  if(G.currentMap === 'city' && G.inBank === -1) updateCityBoss();
   // 城市Boss生成：击杀数达到120时生成（潜伏，不通报，伪装成普通NPC）
   if(G.currentMap === 'city' && G.killCount >= 120 && !G.cityBossSpawned){
     G.cityBossSpawned = true;
@@ -8260,6 +8926,7 @@ function update(){
   if(G.currentMap === 'city'){
     checkBuildingEntrance();
     updateIndoor();
+    updateBankInterior();
   }
   // 更新金币拾取
   updateCoins();
@@ -9271,6 +9938,48 @@ function updateProjectiles(){
         G.npcs.wanderer.hurtFlash = 8;
         hit = true;
       }
+      // 室内楼层NPC也能远程打
+      if(G.inBuilding !== null && G.indoorNPCs && G.indoorNPCs.npcs){
+        for(let ni = G.indoorNPCs.npcs.length-1; ni >= 0; ni--){
+          const n = G.indoorNPCs.npcs[ni];
+          if(n.dead) continue;
+          const nb = {x:n.x-22, y:n.y-22, w:44, h:44};
+          if(rectOverlap(box, nb)){
+            n.hp -= pr.dmg; n.hurtFlash = 8;
+            spawnParticles(n.x, n.y, '#ff6600', 5);
+            hit = true;
+            if(n.hp <= 0){
+              n.dead = true;
+              makeCorpse({x:n.x, y:n.y, w:44, h:44, face:n.emoji});
+              G.killCount++;
+              spawnParticles(n.x, n.y, '#ff0000', 15);
+              playSound('kill');
+            }
+            break;
+          }
+        }
+      }
+      // 银行室内NPC也能远程打
+      if(G.inBank !== -1 && G.bankInterior && G.bankInterior.npcs){
+        for(let ni = G.bankInterior.npcs.length-1; ni >= 0; ni--){
+          const n = G.bankInterior.npcs[ni];
+          if(n.dead) continue;
+          const nb = {x:n.x-22, y:n.y-22, w:44, h:44};
+          if(rectOverlap(box, nb)){
+            n.hp -= pr.dmg; n.hurtFlash = 8;
+            spawnParticles(n.x, n.y, '#ff6600', 5);
+            hit = true;
+            if(n.hp <= 0){
+              n.dead = true;
+              makeCorpse({x:n.x, y:n.y, w:44, h:44, face:n.emoji});
+              G.killCount++;
+              spawnParticles(n.x, n.y, '#ff0000', 15);
+              playSound('kill');
+            }
+            break;
+          }
+        }
+      }
       // 城市地图：远程也能打杀手NPC
       if(G.currentMap === 'city'){
         for(let ki = G.killers.length-1; ki >= 0; ki--){
@@ -9370,14 +10079,15 @@ function updateProjectiles(){
         G.projectiles.splice(i,1);
       }
     } else {
-      // 打玩家（双人模式：1P和2P都能被打中，室内的玩家不被室外投射物击中）
+      // 打玩家（双人模式：1P和2P都能被打中，室内玩家不被室外投射物击中；银行室内仅银行警察🔫可击中）
       let projectileHit = false;
-      if(rectOverlap(box,p) && p.invincible<=0 && !G.inBuilding){
+      const indoorNoHit = G.inBuilding !== null || (G.inBank !== -1 && pr.from !== 'bankCop');
+      if(rectOverlap(box,p) && p.invincible<=0 && !indoorNoHit){
         damagePlayer(pr.dmg);
         spawnParticles(p.x+p.w/2, p.y+p.h/2, '#00ffff', 5);
         projectileHit = true;
       }
-      if(G.isCoop && G.player2 && !G.coopP2Dead && rectOverlap(box,G.player2) && G.player2.invincible<=0 && !G.inBuilding){
+      if(G.isCoop && G.player2 && !G.coopP2Dead && rectOverlap(box,G.player2) && G.player2.invincible<=0 && !indoorNoHit){
         damagePlayer2(pr.dmg);
         spawnParticles(G.player2.x+G.player2.w/2, G.player2.y+G.player2.h/2, '#00ffff', 5);
         projectileHit = true;
@@ -9675,15 +10385,53 @@ function render(){
     return;
   }
   
-  // 室内场景：优先渲染室内
-  if(G.currentMap === 'city' && G.inBuilding !== null){
-    drawIndoor();
+  // 室内场景：优先渲染室内（银行室内/大楼室内，全屏覆盖）
+  if(G.currentMap === 'city' && (G.inBuilding !== null || G.inBank !== -1)){
+    if(G.isCoop){
+      // 双人：左右分屏室内（各自相机跟随各自玩家）
+      // 左半屏：1P
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, W/2, H);
+      ctx.clip();
+      const icam1x = clamp(G.player.x + G.player.w/2 - W/4, 0, Math.max(0, INDOOR_W - W/2));
+      const icam1y = clamp(G.player.y + G.player.h/2 - H/2, 0, Math.max(0, INDOOR_H - H));
+      if(G.inBank !== -1) drawBankIndoorWorld(icam1x, icam1y);
+      else drawIndoorWorld(icam1x, icam1y);
+      if(G.player && !G.player.dead) drawPlayer();
+      if(G.inBuilding !== null && G.cityBoss && G.cityBoss.hp > 0 && G.cityBoss.inBuilding !== null && G.cityBoss.buildingFloor === G.buildingFloor){
+        drawCityBoss();
+      }
+      G.projectiles.forEach(pr=>drawProjectile(pr));
+      drawParticles();
+      ctx.restore();
+      // 右半屏：2P
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(W/2, 0, W/2, H);
+      ctx.clip();
+      const icam2x = clamp((G.player2 ? G.player2.x + G.player2.w/2 : 0) - W/4, 0, Math.max(0, INDOOR_W - W/2));
+      const icam2y = clamp((G.player2 ? G.player2.y + G.player2.h/2 : 0) - H/2, 0, Math.max(0, INDOOR_H - H));
+      if(G.inBank !== -1) drawBankIndoorWorld(icam2x, icam2y);
+      else drawIndoorWorld(icam2x, icam2y);
+      if(G.player2 && !G.coopP2Dead && !G.player2.dead) drawPlayer2();
+      G.projectiles.forEach(pr=>drawProjectile(pr));
+      drawParticles();
+      ctx.restore();
+      return;
+    }
+    // 单人：全屏室内
+    if(G.inBank !== -1){
+      drawBankIndoor();
+    } else {
+      drawIndoor();
+      // 渲染Boss（如果在同一层）
+      if(G.cityBoss && G.cityBoss.hp > 0 && G.cityBoss.inBuilding !== null && G.cityBoss.buildingFloor === G.buildingFloor){
+        drawCityBoss();
+      }
+    }
     // 渲染玩家
     if(G.player && !G.player.dead) drawPlayer();
-    // 渲染Boss（如果在同一层）
-    if(G.cityBoss && G.cityBoss.hp > 0 && G.cityBoss.inBuilding !== null && G.cityBoss.buildingFloor === G.buildingFloor){
-      drawCityBoss();
-    }
     // 渲染投射物
     G.projectiles.forEach(pr=>drawProjectile(pr));
     // 渲染粒子
@@ -12180,6 +12928,22 @@ document.getElementById('buyCar').addEventListener('click', ()=>{
   } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
 });
 
+// 购买银行钥匙
+document.getElementById('buyBankKey').addEventListener('click', ()=>{
+  const buyer = getShopBuyer();
+  if(G.hasBankKey){
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('alreadyKey'));
+    return;
+  }
+  if(G.cheat.infGold || buyer.gold>=100){
+    if(!G.cheat.infGold) buyer.gold-=100;
+    G.hasBankKey = true;
+    showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('buyKey'));
+    updateUI();
+    saveGame();
+  } else showToast((G.isCoop ? G.shopOpener + ' ' : '') + t('noGold'));
+});
+
 // 购买潜水装备
 document.getElementById('buyScuba').addEventListener('click', ()=>{
   const buyer = getShopBuyer();
@@ -12221,6 +12985,21 @@ function handleEKey(playerNum){
     }
     toggleCar(playerNum);
     return;
+  }
+  
+  // 银行室内场景
+  if(G.inBank !== -1){
+    // 靠近出口 → 退出银行
+    if(G._nearExit){
+      exitBank();
+      return;
+    }
+    // 靠近金库 → 尝试开锁
+    const nearVault = playerNum === 2 ? G._nearVault2 : G._nearVault;
+    if(nearVault){
+      tryOpenVault();
+      return;
+    }
   }
   
   // 室内场景
@@ -12275,6 +13054,13 @@ function handleEKey(playerNum){
   const nearIdx = playerNum === 2 ? G._nearBuildingIndex2 : G._nearBuildingIndex;
   if(nearIdx !== null && nearIdx !== undefined){
     enterBuilding(nearIdx, playerNum);
+    return;
+  }
+  
+  // 靠近银行入口 → 进入银行
+  const nearBank = playerNum === 2 ? G._nearBankIndex2 : G._nearBankIndex;
+  if(nearBank !== null && nearBank !== undefined){
+    enterBank(nearBank, playerNum);
     return;
   }
   
