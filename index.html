@@ -743,6 +743,7 @@ input:checked + .slider:before{transform:translateX(24px)}
         <input id="p2pRoomInput" placeholder="输入好友的房间ID" maxlength="64" style="width:100%;padding:8px;margin-bottom:6px;border:1px solid #666;border-radius:6px;background:#222;color:#fff;font-size:14px;text-align:center">
         <button id="btnJoinRoom" style="width:100%;padding:9px;background:#2980b9;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">🔗 加入房间</button>
         <div id="p2pStatus" style="margin-top:6px;font-size:12px;color:#aaa;text-align:center">未连接</div>
+        <button id="btnCopyRoom" style="display:none;width:100%;padding:9px;margin-top:6px;background:#e67e22;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">📋 复制邀请码</button>
       </div>
       <div id="clearBadge" style="display:none"></div>
       <div class="menu-hint">📱 移动端：左下摇杆移动 · 右下攻击/挖掘<br>💻 电脑端：WASD/方向键移动 · J攻击 · K挖掘 · L手雷 · Q切武器 · Enter开始</div>
@@ -14647,6 +14648,8 @@ gameLoop();
       if(extra) txt += ' ' + extra;
       el.textContent = txt;
       el.style.color = info.c;
+      var cb = document.getElementById('btnCopyRoom');
+      if(cb){ cb.style.display = (st === 'connected' && S.role === 'host' && S.roomId) ? 'block' : 'none'; }
     }
     function cleanupPeer(){
       if(S.peer){ try{ S.peer.destroy(); }catch(e){} }
@@ -14753,6 +14756,28 @@ gameLoop();
       if(S.peer || S.status === 'connecting'){ alert('已有联机会话，刷新页面可重新开始'); return; }
       S.roomId = id; S.retries = 0;
       attemptJoin(id);
+    };
+    // 一键复制邀请码
+    function copyTextFallback(text){
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0'; ta.style.pointerEvents = 'none';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+    }
+    document.getElementById('btnCopyRoom').onclick = function(){
+      if(!S.roomId){ alert('还没有房间ID'); return; }
+      var done = function(){
+        var b = document.getElementById('btnCopyRoom');
+        if(b){ b.textContent = '✅ 已复制'; setTimeout(function(){ var b2 = document.getElementById('btnCopyRoom'); if(b2) b2.textContent = '📋 复制邀请码'; }, 1500); }
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(S.roomId).then(done).catch(function(){ copyTextFallback(S.roomId); done(); });
+      } else {
+        copyTextFallback(S.roomId); done();
+      }
     };
     // 每帧同步坐标（约每3帧发一次省流量）
     G.syncP2P = function(){
