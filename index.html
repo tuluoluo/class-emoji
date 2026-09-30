@@ -14241,6 +14241,7 @@ function startGame(){
   document.getElementById('shopPanel').style.display = 'none';
   closeDialog();
   showToast(t('gameStart'), 3000);
+  if(G._p2pAutoStart){ G._p2pAutoStart = false; return; } // 联机自动进入不写本地存档
   saveGame(); // 立即保存，创建存档
 }
 
@@ -14692,6 +14693,19 @@ gameLoop();
       if(d.facing) G.remotePlayer.facing = d.facing;
       if(d.face) G.remotePlayer.face = d.face;
       if(d.nick) G.remotePlayer.nick = d.nick;
+      // 联机自动进世界：还没进游戏时，按对方发来的地图自动开始
+      if(!G.p2pEnteredWorld && d.map){
+        G.p2pEnteredWorld = true;
+        if(G.state !== 'playing' && typeof startGame === 'function'){
+          try{
+            G.selectedMap = (d.map === 'city') ? 'city' : 'grassland';
+            G._p2pAutoStart = true;
+            startGame();
+            G._p2pAutoStart = false;
+            if(typeof showToast === 'function') showToast('🛰️ ' + (S.role === 'client' ? '已加入房主的世界' : '好友已进入世界') + (G.currentMap === 'city' ? '（城市）' : '（草原）'), 3000);
+          }catch(e){}
+        }
+      }
     };
     var wire = function(conn){
       conn.on('data', onData);
@@ -14724,6 +14738,7 @@ gameLoop();
     function attemptJoin(roomId){
       cleanupPeer();
       setStatus('connecting');
+      G.p2pEnteredWorld = false; // 重置自动进入标志
       var p = new Peer();
       S.peer = p;
       var done = false;
@@ -14737,6 +14752,12 @@ gameLoop();
           S.connected = true; S.role = 'client'; S.retries = 0;
           wire(conn);
           setStatus('connected');
+          // 已加入：等待房主地图数据自动进世界；6秒没收到则提示
+          setTimeout(function(){
+            if(!G.p2pEnteredWorld && G.state !== 'playing'){
+              if(typeof showToast === 'function') showToast('🛰️ 已连接，等待房主进入世界...', 3000);
+            }
+          }, 6000);
         });
         // 8秒没连上算失败
         setTimeout(function(){ if(!S.connected && !done) fail(); }, 8000);
@@ -14755,13 +14776,23 @@ gameLoop();
         if(done) return;
         done = true;
         S.role = 'host'; S.roomId = id; S.retries = 0;
-        setStatus('connected', '等待好友加入...');
+        setStatus('connected', '先进游戏等着，好友加入后会自动进来');
         alert('你的房间ID：' + id + '\n把ID发给好友，好友点「加入房间」输入即可');
+        // 自动打开地图选择：房主选好地图先进世界，好友加入后自动进同一张图
+        setTimeout(function(){
+          if(typeof startGame !== 'function') return;
+          var play = document.getElementById('playBtn');
+          if(play && G.state !== 'playing'){ play.click(); }
+        }, 400);
       });
       p.on('connection', function(conn){
         S.conn = conn; S.connected = true;
         wire(conn);
         setStatus('connected');
+        // 好友已加入：如果房主还没进游戏，提醒快选地图
+        if(G.state !== 'playing' && typeof showToast === 'function'){
+          showToast('🛰️ 好友已加入！快选地图开始游戏', 3000);
+        }
       });
       p.on('error', function(){
         if(done) return;
@@ -14814,7 +14845,7 @@ gameLoop();
       if(!S.connected || !S.conn || !G.player) return;
       S.frame++;
       if(S.frame % 3 !== 0) return;
-      try{ S.conn.send({ x:G.player.x, y:G.player.y, facing:G.player.facing||1, face:'😡', nick:'玩家' }); }catch(e){}
+      try{ S.conn.send({ x:G.player.x, y:G.player.y, facing:G.player.facing||1, face:'😡', nick:'玩家', map:(G.currentMap || 'grassland') }); }catch(e){}
     };
     // 渲染远端玩家（世界坐标）
     G.drawRemotePlayer = function(){
@@ -15097,7 +15128,7 @@ gameLoop();
       if(!G.p2p || !G.p2p.connected || !G.p2p.conn || !G.player) return;
       G.p2p.frame = (G.p2p.frame || 0) + 1;
       if(G.p2p.frame % 3 !== 0) return;
-      try{ G.p2p.conn.send({ x:G.player.x, y:G.player.y, facing:G.player.facing||1, face:'😡', nick:(G.accountName ? G.accountName() : '玩家') }); }catch(e){}
+      try{ G.p2p.conn.send({ x:G.player.x, y:G.player.y, facing:G.player.facing||1, face:'😡', nick:(G.accountName ? G.accountName() : '玩家'), map:(G.currentMap || 'grassland') }); }catch(e){}
     };
   }
 })();
