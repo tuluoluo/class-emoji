@@ -14618,66 +14618,145 @@ initMenuScene();
 updateContinueBtn(); // 检测是否有存档
 gameLoop();
 
-// ========== PeerJS P2P 联机模块（新增，不触碰原有逻辑） ==========
+// ========== PeerJS P2P 联机模块（新增，不触碰原有逻辑） v2：状态文字 + 重试3次 + 自动重连 ==========
 (function(){
   var start = function(){
     if(!document.getElementById('btnCreateRoom')) return;
-    var S = { peer:null, conn:null, role:null, connected:false, frame:0 };
-    G.p2p = S;
-    var setStatus = function(t, c){
-      var el = document.getElementById('p2pStatus');
-      if(el){ el.textContent = t; el.style.color = c || '#aaa'; }
+    var S = {
+      peer:null, conn:null, role:null, connected:false, frame:0,
+      status:'idle', roomId:'', retries:0, maxRetries:3
     };
+    G.p2p = S;
+    var ST = {
+      idle:      { t:'⏳ 等待连接',  c:'#aaa' },
+      connecting:{ t:'🔗 连接中...', c:'#f39c12' },
+      connected: { t:'✅ 连接成功',  c:'#2ecc71' },
+      failed:    { t:'❌ 连接失败',  c:'#ff6b6b' },
+      offline:   { t:'💤 对方离线',  c:'#95a5a6' }
+    };
+    function setStatus(st, extra){
+      S.status = st;
+      var el = document.getElementById('p2pStatus');
+      if(!el) return;
+      var info = ST[st] || { t:st, c:'#aaa' };
+      var txt = info.t;
+      if(st === 'connected' && S.roomId && S.role === 'host') txt = '🏠 房间ID: ' + S.roomId + ' · ' + info.t;
+      if(extra) txt += ' ' + extra;
+      el.textContent = txt;
+      el.style.color = info.c;
+    }
+    function cleanupPeer(){
+      if(S.peer){ try{ S.peer.destroy(); }catch(e){} }
+      S.peer = null; S.conn = null; S.connected = false;
+    }
     var onData = function(d){
       if(!d || typeof d.x !== 'number' || typeof d.y !== 'number') return;
       if(!G.remotePlayer) G.remotePlayer = { x:d.x, y:d.y, w:44, h:44, face:'😡', facing:1 };
       G.remotePlayer.x = d.x; G.remotePlayer.y = d.y;
       if(d.facing) G.remotePlayer.facing = d.facing;
       if(d.face) G.remotePlayer.face = d.face;
-    };
-    var onClose = function(){
-      S.connected = false;
-      G.remotePlayer = null;
-      setStatus('❌ 好友已断开', '#ff6b6b');
+      if(d.nick) G.remotePlayer.nick = d.nick;
     };
     var wire = function(conn){
       conn.on('data', onData);
-      conn.on('close', onClose);
+      conn.on('close', onPeerClose);
+      conn.on('error', onPeerClose);
     };
-    document.getElementById('btnCreateRoom').onclick = function(){
-      if(S.peer){ alert('已创建/加入过房间，刷新页面可重新开始'); return; }
-      S.peer = new Peer();
-      S.peer.on('open', function(id){
-        S.role = 'host';
-        setStatus('🏠 房间ID: ' + id, '#2ecc71');
+    // 断开：显示离线，client自动重连，host等待对方重新连入
+    function onPeerClose(){
+      if(!S.connected) return;
+      S.connected = false;
+      setStatus('offline');
+      if(S.role === 'client' && S.roomId){
+        S.retries = 0;
+        setStatus('connecting', '(自动重连)');
+        setTimeout(function(){ attemptJoin(S.roomId); }, 800);
+      }
+    }
+    // 加入失败：最多重试3次
+    function onJoinFail(roomId){
+      if(S.connected) return;
+      S.retries++;
+      if(S.retries < S.maxRetries){
+        setStatus('connecting', '(第' + (S.retries + 1) + '次尝试)');
+        setTimeout(function(){ attemptJoin(roomId); }, 1000);
+      } else {
+        cleanupPeer();
+        setStatus('failed');
+      }
+    }
+    function attemptJoin(roomId){
+      cleanupPeer();
+      setStatus('connecting');
+      var p = new Peer();
+      S.peer = p;
+      var done = false;
+      var fail = function(){ if(done) return; done = true; onJoinFail(roomId); };
+      p.on('open', function(){
+        var conn = p.connect(roomId, { reliable:true });
+        S.conn = conn;
+        conn.on('open', function(){
+          if(done) return;
+          done = true;
+          S.connected = true; S.role = 'client'; S.retries = 0;
+          wire(conn);
+          setStatus('connected');
+        });
+        // 8秒没连上算失败
+        setTimeout(function(){ if(!S.connected && !done) fail(); }, 8000);
+      });
+      p.on('error', fail);
+      p.on('disconnected', fail);
+    }
+    // 创建房间（网络失败也重试3次）
+    function attemptHost(){
+      cleanupPeer();
+      setStatus('connecting');
+      var p = new Peer();
+      S.peer = p;
+      var done = false;
+      p.on('open', function(id){
+        if(done) return;
+        done = true;
+        S.role = 'host'; S.roomId = id; S.retries = 0;
+        setStatus('connected', '等待好友加入...');
         alert('你的房间ID：' + id + '\n把ID发给好友，好友点「加入房间」输入即可');
       });
-      S.peer.on('connection', function(conn){
-        S.conn = conn; S.connected = true; wire(conn);
-        setStatus('✅ 好友已加入！', '#2ecc71');
+      p.on('connection', function(conn){
+        S.conn = conn; S.connected = true;
+        wire(conn);
+        setStatus('connected');
       });
-      S.peer.on('error', function(err){ alert('创建失败: ' + err.type); });
+      p.on('error', function(){
+        if(done) return;
+        done = true;
+        S.retries++;
+        if(S.retries < S.maxRetries){
+          setStatus('connecting', '(第' + (S.retries + 1) + '次尝试)');
+          setTimeout(attemptHost, 1000);
+        } else {
+          cleanupPeer();
+          setStatus('failed');
+        }
+      });
+    }
+    document.getElementById('btnCreateRoom').onclick = function(){
+      if(S.peer || S.status === 'connecting'){ alert('已有联机会话，刷新页面可重新开始'); return; }
+      attemptHost();
     };
     document.getElementById('btnJoinRoom').onclick = function(){
       var id = document.getElementById('p2pRoomInput').value.trim();
       if(!id){ alert('请输入好友的房间ID'); return; }
-      if(S.peer){ alert('已创建/加入过房间，刷新页面可重新开始'); return; }
-      S.peer = new Peer();
-      S.peer.on('open', function(){
-        var conn = S.peer.connect(id, { reliable:true });
-        conn.on('open', function(){
-          S.conn = conn; S.connected = true; S.role = 'client'; wire(conn);
-          setStatus('✅ 已加入房间，开始联机！', '#2ecc71');
-        });
-      });
-      S.peer.on('error', function(err){ alert('加入失败: ' + err.type); });
+      if(S.peer || S.status === 'connecting'){ alert('已有联机会话，刷新页面可重新开始'); return; }
+      S.roomId = id; S.retries = 0;
+      attemptJoin(id);
     };
-    // 每帧同步坐标（挂到游戏循环，约每3帧发一次省流量）
+    // 每帧同步坐标（约每3帧发一次省流量）
     G.syncP2P = function(){
       if(!S.connected || !S.conn || !G.player) return;
       S.frame++;
       if(S.frame % 3 !== 0) return;
-      try{ S.conn.send({ x:G.player.x, y:G.player.y, facing:G.player.facing||1, face:'😡' }); }catch(e){}
+      try{ S.conn.send({ x:G.player.x, y:G.player.y, facing:G.player.facing||1, face:'😡', nick:'玩家' }); }catch(e){}
     };
     // 渲染远端玩家（世界坐标）
     G.drawRemotePlayer = function(){
@@ -14692,12 +14771,12 @@ gameLoop();
       ctx.textBaseline = 'middle';
       ctx.fillText(r.face, 0, 0);
       ctx.restore();
-      // 标签
       ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.font = '12px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🛰️ 好友', r.x + r.w/2, r.y - 8);
+      ctx.fillText('🛰️ ' + (r.nick || '好友'), r.x + r.w/2, r.y - 8);
     };
+    setStatus('idle');
   };
   if(typeof Peer !== 'undefined'){
     start();
@@ -14708,6 +14787,7 @@ gameLoop();
     document.head.appendChild(s2);
   }
 })();
+
 
 </script>
 <!-- Boss各阶段图片预加载 -->
