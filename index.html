@@ -732,10 +732,15 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div class="menu-content">
       <h1 class="game-title" id="gameTitle">像素草原战斗</h1>
       <p class="game-subtitle">生存 · 打怪 · 探索大草原</p>
+      <div id="accountBar" style="display:none;margin:8px auto;padding:6px 12px;background:rgba(0,0,0,0.55);border:1px solid #555;border-radius:20px;width:fit-content;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="document.getElementById('accountBtn').click()">
+        <img id="accountBarAvatar" style="width:28px;height:28px;border-radius:50%;border:2px solid #f1c40f" alt="">
+        <span id="accountBarName" style="color:#fff;font-size:14px;font-weight:bold"></span>
+      </div>
       <button id="playBtn" class="menu-play">▶ 开始新游戏</button>
       <button id="coopBtn" class="menu-play" style="background:#8e44ad">👥 双人模式</button>
       <button id="continueBtn" class="menu-continue">📂 继续游戏</button>
       <button id="menuSettingsBtn" class="menu-settings">⚙ 设置</button>
+      <button id="accountBtn" class="menu-settings" style="background:#27ae60;color:#fff">👤 账号</button>
       <button id="announcementBtn" class="menu-settings" style="background:#f39c12;color:#fff">📢 公告</button>
       <div id="p2pBox" style="margin-top:12px;padding:10px;background:rgba(0,0,0,0.55);border:2px solid #555;border-radius:8px;width:min(88%,340px);margin-left:auto;margin-right:auto">
         <div style="color:#2ecc71;font-weight:bold;font-size:14px;margin-bottom:6px">🛰️ P2P联机（PeerJS）</div>
@@ -747,6 +752,30 @@ input:checked + .slider:before{transform:translateX(24px)}
       </div>
       <div id="clearBadge" style="display:none"></div>
       <div class="menu-hint">📱 移动端：左下摇杆移动 · 右下攻击/挖掘<br>💻 电脑端：WASD/方向键移动 · J攻击 · K挖掘 · L手雷 · Q切武器 · Enter开始</div>
+    </div>
+  </div>
+
+  <!-- 账号面板 -->
+  <div id="accountPanel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center">
+    <div style="width:min(92%,380px);max-height:88%;overflow-y:auto;background:#1c1c1e;border:2px solid #555;border-radius:12px;padding:16px;box-shadow:0 0 30px rgba(0,0,0,0.8)">
+      <h3 id="accountTitle" style="color:#fff;margin:0 0 10px;text-align:center">👤 账号系统</h3>
+      <div id="accountCurrent" style="text-align:center;margin-bottom:10px"></div>
+      <div id="accountList" style="margin-bottom:10px"></div>
+      <div style="border-top:1px solid #444;padding-top:10px">
+        <div style="color:#aaa;font-size:13px;margin-bottom:6px" id="accountCreateTitle">🆕 创建账号</div>
+        <input id="accountNameInput" maxlength="16" style="width:100%;padding:8px;margin-bottom:6px;border:1px solid #666;border-radius:6px;background:#222;color:#fff;font-size:14px;box-sizing:border-box" placeholder="">
+        <input id="accountPassInput" maxlength="32" style="width:100%;padding:8px;margin-bottom:6px;border:1px solid #666;border-radius:6px;background:#222;color:#fff;font-size:14px;box-sizing:border-box" placeholder="">
+        <input type="file" id="accountAvatarInput" accept="image/*" style="display:none">
+        <button id="accountPickAvatar" style="width:100%;padding:8px;margin-bottom:6px;background:#34495e;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">🖼 </button>
+        <button id="accountCreateBtn" style="width:100%;padding:9px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">✅ </button>
+      </div>
+      <div style="border-top:1px solid #444;padding-top:10px;margin-top:6px">
+        <div style="color:#aaa;font-size:13px;margin-bottom:6px" id="accountTransferTitle">🔁 跨设备</div>
+        <button id="accountExportBtn" style="width:100%;padding:8px;margin-bottom:6px;background:#8e44ad;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">📤 </button>
+        <input id="accountImportInput" maxlength="4000" style="width:100%;padding:8px;margin-bottom:6px;border:1px solid #666;border-radius:6px;background:#222;color:#fff;font-size:12px;box-sizing:border-box" placeholder="">
+        <button id="accountImportBtn" style="width:100%;padding:8px;background:#2980b9;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">📥 </button>
+      </div>
+      <button id="accountCloseBtn" style="width:100%;padding:9px;margin-top:10px;background:#555;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">✖ </button>
     </div>
   </div>
 
@@ -1005,7 +1034,7 @@ function initAudio(){
 // ==================== 八国语言系统 ====================
 const LANGS = {
   chinglish: {
-    name:"Chinglish", announcement:"📢 Announcement", announcementTitle:"Game Announcement", a1:'🛰️ P2P Lianji LAI LE!', a1d:'Xin gongneng! Dian "Create Room" na fangjian ID, haoyou shuru ID, BAM—tongyi ge shijie, hu xiang kanjian duifang! Bu yong zhuce, bu yong fuwuqi, gonggong server zhilian, yyds!', a2:'🔄 Lianji geng wen le', a2d:'Jiabao fail? Auto chongshi 3 ci! Status shishi xianshi: ⏳ Dengdai / ✅ Chengong / ❌ Shibai / 💤 Duifang offline. Duanxian auto chonglian, duiyou pao le dou gei ni zhuai huilai!', a3:'📜 Zhuye hui hua le', a3d:'Gongneng tai duo fang bu xia? Zhucaidan xianzai keyi shangxia huadong, shouti yi hua, shezhi/gonggao/lianji/cundang quan dou kan de dao, shoujidang kuangxi!', a4:'🐛 Lianji xiao tieshi', a4d:'Lianji shi shuangfang bixu xuan tong yi zhang ditu (caoyuan jiu caoyuan, chengshi jiu chengshi), buran duifang hui pao dao cuowu de ciyuan——zhe shi wuli guilv, bu shi bug.', a5:'💰 Ge zi suan ge zi de', a5d:'Lianji shi jinbi, xueliang, jisha shu dou shi ge suan ge de, shui dasi guai shui na qian, gongping gongzheng, tongsou wuqi.', a6:'🎉 Gengxin zonglan', a6d:'Benci gengxin san jian tao: P2P lianji (han zidong chongshi/shishi zhuangtai/duanxian chonglian), zhuye ke huadong, gonggao quan yuyan hua——yi ci gengxin, san zhong kuaile!', a7:'📜 Gonggao lan caidan', a7d:'Gonggao lan dixia you chuxian yi zhang zhouba zhi: "Zuozhe yao shi zai wang le xie gonggao, jiu zi fa san bei naicha." — Benci yi fa, wu nian.',menuHintMobile:"📱 Mobile: left joystick go, right attack/dig", menuHintDesktop:"💻 PC: WASD/arrow go, J attack, K dig, L grenade, Q switch, Enter start", coopBtn:"Co-op mode", guiBtn:"Gui", prankBtnName:"Prank", gunCalibLabel:"🔫 Gun calibration la", gunCalibHint:"Tune gun to muzzle point right + natural grip, then click save", gunCalibReset:"Auto reset", gunCalibDone:"✅ Save", gunCalibSaved:"✅ Saved la! Work for all map and co-op mode", askGold:"Ask gold coin la", shopTitle:"🤬 Arms shop la", 
+    name:"Chinglish", announcement:"📢 Announcement", announcementTitle:"Game Announcement", a1:'👤 Zhanghao Xitong SHANG XIAN!', a1d:'Benji chuangjian zhanghao: shu ge mingzi, chuan ge touxiang jiu gaoding, zuiduo 3 ge suishi qiehuan, shui de cundang yi qing er chu!', a2:'🔐 Kua shebei denglu, zhantie ji yong', a2d:'Bu yong zhuce, bu yong fuwuqi! Dian Daochu zhanghao ma fuzhi yi duan ma, ling yi tai shebei Daoru denglu zhantie jin qu, zhanghao miao guoqu, fuzhi zhantie jiu shi liliang!', a3:'🖼 Touxiang suibian chuan', a3d:'Bendi shangchuan touxiang, zidong yasuo cheng xiao yuan lian, shouji xiangce zhijie xuan, chou tu ye neng bian meng!', a4:'💡 Xiao tieshi', a4d:'Zhanghao cun zai benji liulanqi li, qing huanchun hui diu. Daochu zhanghao ma = ni de baoxian dan, jide beifen!', a5:'🔒 Mima ke she', a5d:'Chuangjian shi neng tian mima (kexuan), kua shebei daoru tongming zhanghao yao mima dui de shang cai rang fugai——fang junzi bu fang xiaoren, dan mianzi shang yao guo de qu.', a6:'🎉 Gengxin zonglan', a6d:'Benci gengxin: zhanghao xitong + touxiang shangchuan + qianyima kua shebei denglu——san jian tao, yi ci daowei, tongsou wuqi!', a7:'📜 Gonggao lan caidan', a7d:'Gonggao lan dixia you chuxian yi zhang zhouba zhi: Zuozhe zheci gengxin yao shi zai wang le xie gonggao, wo jiu ba zhanghao mima she cheng admin admin.——Yi fa, wu nian.',accountBtn:'Zhanghao', accountTitle:'Zhanghao Xitong', accountCur:'Dangqian zhanghao ', accountNoAcct:'Hai mei zhanghao, xian chuangjian yige ba!', accountCreateTitle:'Chuangjian zhanghao', accountName:'Shuru mingzi', accountPass:'Mima (kexuan, yongyu kua shebei denglu)', accountPickAvatar:'Shangchuan touxiang (kexuan)', accountPicked:'Yixuan touxiang', accountCreateBtn:'Chuangjian', accountCreated:'Chuangjian chenggong!', accountNeedName:'Qing xian shuru mingzi', accountSlotsFull:'Zuiduo zhi neng chuangjian 3 ge zhanghao', accountSwitch:'Qiehuan', accountDelConfirm:'Queding shanchu gai zhanghao?', accountTransferTitle:'Kua shebei denglu', accountExportBtn:'Daochu zhanghao ma', accountExportManual:'Zhanghao ma (fuzhi hou fa gei ling yi tai shebei zhantie daoru):', accountExported:'Zhanghao ma yi fuzhi! Dao ling yi tai shebei zhantie daoru jike', accountImportPh:'Zhantie zhanghao ma (ling yi tai shebei daochu de)', accountImportNeed:'Qing xian zhantie zhanghao ma', accountImportBtn:'Daoru denglu', accountImportFail:'Zhanghao ma wuxiao', accountImportPassFail:'Mima bu pipei, wufa fugai gai zhanghao', accountImported:'Denglu chenggong!', menuHintMobile:"📱 Mobile: left joystick go, right attack/dig", menuHintDesktop:"💻 PC: WASD/arrow go, J attack, K dig, L grenade, Q switch, Enter start", coopBtn:"Co-op mode", guiBtn:"Gui", prankBtnName:"Prank", gunCalibLabel:"🔫 Gun calibration la", gunCalibHint:"Tune gun to muzzle point right + natural grip, then click save", gunCalibReset:"Auto reset", gunCalibDone:"✅ Save", gunCalibSaved:"✅ Saved la! Work for all map and co-op mode", askGold:"Ask gold coin la", shopTitle:"🤬 Arms shop la", 
     start:"Start play game",
     continue:"Continue play game",
     rules:"Game rule",
@@ -1362,7 +1391,7 @@ const LANGS = {
     hpPoints:" hp points",
   },
   wenyan: {
-    name:"文言文", announcement:"📢 公告", announcementTitle:"遊戲公告", a1:'🛰️ 聯機既成', a1d:'點「建室」得室號，友錄之立入，二人同遊一界，相望可見！無需註冊、無需伺服，直通公網，妙哉！', a2:'🔄 聯機愈穩', a2d:'入室不成，自試再三；其狀實時可察：⏳待之 / ✅成之 / ❌敗之 / 💤友離線。中斷則自連，友遁亦拽之歸！', a3:'📜 主頁可滑', a3d:'功能繁雜，主選單今可上下滑動，一揮手而萬物可見，手持之黨狂喜！', a4:'🐛 聯機小箋', a4d:'聯機之時，二人當同擇一圖（草原則草原，城市則城市），否則友將遁入異次元——此乃物理，非bug也。', a5:'💰 財帛各計', a5d:'聯機之時，金幣、氣血、殺數各計其數，殺怪者得金，童叟無欺。', a6:'🎉 更替總覽', a6d:'此番更替有三：聯機（含自試/實察/自連）、主頁可滑、公告悉數譯之——一更三樂，童叟無欺！', a7:'📜 公告欄彩蛋', a7d:'公告欄下復見一紙，書曰：「作者若再忘書公告，自罰奶茶三杯。」——今已罰之，勿念。',menuHintMobile:"📱 手機：左搖桿行 · 右攻/掘", menuHintDesktop:"💻 電腦端：WASD/方向鍵行 · J攻 · K掘 · L雷 · Q易兵 · Enter始", coopBtn:"雙人模式", guiBtn:"桂", prankBtnName:"蛊", gunCalibLabel:"🔫 槍口校準", gunCalibHint:"調槍至槍口朝右、持握自然，畢則點完成", gunCalibReset:"復自動", gunCalibDone:"✅ 成而存", gunCalibSaved:"✅ 已存！此角度通用於諸圖及雙人", askGold:"索金", shopTitle:"🤬 軍火商鋪", 
+    name:"文言文", announcement:"📢 公告", announcementTitle:"遊戲公告", a1:'👤 帳號之制既立！', a1d:'本機立帳：錄名、傳像即成，至多三帳，隨時更換，各帳之檔分明！', a2:'🔐 異器登錄，粘貼即入', a2d:'無需註冊、無需伺服！點「出帳碼」錄之，異器粘貼即入帳——複製粘貼乃神力也！', a3:'🖼 頭像任傳', a3d:'本機傳像，自動縮為小圓臉，相冊直選，醜圖亦可變萌！', a4:'💡 小箋', a4d:'帳存本機瀏覽器中，清緩存則失。出帳碼即保險單，切記備份！', a5:'🔒 密可設', a5d:'立帳時可設密（選），異器導入同名之帳須密合方可覆——防君子不防小人，然體面須存。', a6:'🎉 更替總覽', a6d:'此番更替：帳號之制 + 傳像 + 遷移碼異器登錄——三事並舉，童叟無欺！', a7:'📜 公告欄彩蛋', a7d:'公告欄下復見一紙，書曰：作者此番若再忘書公告，當以密admin admin謝罪。——已罰，勿試。',accountBtn:'帳', accountTitle:'帳號之制', accountCur:'今帳 ', accountNoAcct:'尚無帳號，先立一帳。', accountCreateTitle:'立帳', accountName:'錄名', accountPass:'密（可選，異器登錄用）', accountPickAvatar:'傳像（可選）', accountPicked:'像已定', accountCreateBtn:'立', accountCreated:'帳已成！', accountNeedName:'先錄名', accountSlotsFull:'至多三帳', accountSwitch:'換', accountDelConfirm:'欲刪此帳乎？', accountTransferTitle:'異器登錄', accountExportBtn:'出帳碼', accountExportManual:'帳碼（錄之，付異器粘貼入）：', accountExported:'帳碼已錄！至異器粘貼即可入', accountImportPh:'粘帳碼（異器所出）', accountImportNeed:'先粘帳碼', accountImportBtn:'入帳登錄', accountImportFail:'帳碼無效', accountImportPassFail:'密不合，不可覆此帳', accountImported:'登錄成矣！', menuHintMobile:"📱 手機：左搖桿行 · 右攻/掘", menuHintDesktop:"💻 電腦端：WASD/方向鍵行 · J攻 · K掘 · L雷 · Q易兵 · Enter始", coopBtn:"雙人模式", guiBtn:"桂", prankBtnName:"蛊", gunCalibLabel:"🔫 槍口校準", gunCalibHint:"調槍至槍口朝右、持握自然，畢則點完成", gunCalibReset:"復自動", gunCalibDone:"✅ 成而存", gunCalibSaved:"✅ 已存！此角度通用於諸圖及雙人", askGold:"索金", shopTitle:"🤬 軍火商鋪", 
     start:"開局",
     continue:"續戰",
     rules:"規則",
@@ -1718,7 +1747,7 @@ const LANGS = {
     coopStart:"👥 雙人合作起！1P:WASD+J  2P:方向鍵+1",
     hpPoints:" 點氣血",
   },  hant: {
-    name:'繁體中文',  announcement:'📢 公告', announcementTitle:'遊戲公告', a1:'🛰️ P2P 連線正式上線！', a1d:'點「建立房間」拿房間ID，好友輸入ID秒加入，兩個人能在同一個世界跑來跑去、互相看見對方！免註冊、免伺服器，公共伺服器直連，yyds！', a2:'🔄 連線更穩了', a2d:'加入失敗自動重試3次，不用再眼巴巴看轉圈；狀態即時顯示：⏳等待連線 / ✅連線成功 / ❌連線失敗 / 💤對方離線；中途斷線自動重連，隊友跑了都給你拉回來！', a3:'📜 主頁會滑了', a3d:'功能堆太多放不下？主選單現在可以上下滑動，手指一劃，設定/公告/連線/存檔全都看得到，手機黨狂喜！', a4:'🐛 連線小貼士', a4d:'連線時雙方必須選同一張地圖（草原就草原，城市就城市），不然對方會跑到錯誤的次元——這是物理規律，不是bug。', a5:'💰 各自算各自的', a5d:'連線時金幣、血量、擊殺數都是各算各的，誰打死怪誰拿錢，公平公正，童叟無欺。', a6:'🎉 更新總覽', a6d:'本次更新三件套：P2P連線（含自動重試/即時狀態/斷線重連）、主頁可滑動、公告全語言化——一次更新，三種快樂，童叟無欺！', a7:'📜 公告欄彩蛋', a7d:'公告欄底下又出現一張皺巴巴的紙：「作者要是再忘了寫公告，就自罰三杯珍珠奶茶。」——本次已罰，勿念。',menuHintMobile:'📱 移動端：左下搖桿移動 · 右下攻擊/挖掘', menuHintDesktop:'💻 電腦端：WASD/方向鍵移動 · J攻擊 · K挖掘 · L手雷 · Q切武器 · Enter開始', coopBtn:'雙人模式', guiBtn:'桂', prankBtnName:'蠱', gunCalibLabel:'🔫 槍口校準', gunCalibHint:'把槍調到“槍口朝右、正常握持”的樣子，調好後點完成', gunCalibReset:'恢復自動', gunCalibDone:'✅ 完成保存', gunCalibSaved:'✅ 已保存！此角度已對所有地圖和雙人模式生效', askGold:'索要金幣', shopTitle:'🤬 軍火商店',  start:'開始遊戲', continue:'繼續遊戲', rules:'遊戲規則', settings:'設置', gunFlip:'槍姿修正', saveDeadTag:'已陣亡', saveDead:'該存檔已在戰鬥中陣亡，無法復活',
+    name:'繁體中文',  announcement:'📢 公告', announcementTitle:'遊戲公告', a1:'👤 帳號系統上線！', a1d:'本機建立帳號：輸個名字、傳個頭像就搞定，最多3個隨時切換，誰是誰的存檔一清二楚！', a2:'🔐 跨裝置登入，貼上即用', a2d:'不用註冊、不用伺服器！點「匯出帳號碼」複製一段碼，另一台裝置「匯入登入」貼上進去，帳號秒過去，複製貼上就是力量！', a3:'🖼 頭像隨便傳', a3d:'本地上傳頭像，自動壓縮成小圓臉，手機相簿直接選，醜圖也能變萌！', a4:'💡 小貼士', a4d:'帳號存在本機瀏覽器裡，清快取會丟。匯出帳號碼 = 你的保險單，記得備份！', a5:'🔒 密碼可設', a5d:'建立時能填密碼（可選），跨裝置匯入同名帳號要密碼對得上才讓覆蓋——防君子不防小人，但面子上要過得去。', a6:'🎉 更新總覽', a6d:'本次更新：帳號系統 + 頭像上傳 + 遷移碼跨裝置登入——三件套，一次到位，童叟無欺！', a7:'📜 公告欄彩蛋', a7d:'公告欄底下又出現一張皺巴巴的紙：「作者：這次更新要是再忘了寫公告，就把帳號密碼設成admin admin。」——已罰，勿試。',accountBtn:'帳號', accountTitle:'帳號系統', accountCur:'目前帳號 ', accountNoAcct:'還沒有帳號，先建立一個吧', accountCreateTitle:'建立帳號', accountName:'輸入名字', accountPass:'密碼（可選，用於跨裝置登入）', accountPickAvatar:'上傳頭像（可選）', accountPicked:'已選頭像', accountCreateBtn:'建立', accountCreated:'建立成功！', accountNeedName:'請先輸入名字', accountSlotsFull:'最多只能建立3個帳號', accountSwitch:'切換', accountDelConfirm:'確定刪除該帳號？', accountTransferTitle:'跨裝置登入', accountExportBtn:'匯出帳號碼', accountExportManual:'帳號碼（複製後發給另一台裝置貼上匯入）：', accountExported:'帳號碼已複製！到另一台裝置貼上匯入即可', accountImportPh:'貼上帳號碼（另一台裝置匯出的）', accountImportNeed:'請先貼上帳號碼', accountImportBtn:'匯入登入', accountImportFail:'帳號碼無效', accountImportPassFail:'密碼不匹配，無法覆蓋該帳號', accountImported:'登入成功！', menuHintMobile:'📱 移動端：左下搖桿移動 · 右下攻擊/挖掘', menuHintDesktop:'💻 電腦端：WASD/方向鍵移動 · J攻擊 · K挖掘 · L手雷 · Q切武器 · Enter開始', coopBtn:'雙人模式', guiBtn:'桂', prankBtnName:'蠱', gunCalibLabel:'🔫 槍口校準', gunCalibHint:'把槍調到“槍口朝右、正常握持”的樣子，調好後點完成', gunCalibReset:'恢復自動', gunCalibDone:'✅ 完成保存', gunCalibSaved:'✅ 已保存！此角度已對所有地圖和雙人模式生效', askGold:'索要金幣', shopTitle:'🤬 軍火商店',  start:'開始遊戲', continue:'繼續遊戲', rules:'遊戲規則', settings:'設置', gunFlip:'槍姿修正', saveDeadTag:'已陣亡', saveDead:'該存檔已在戰鬥中陣亡，無法復活',
     hp:'HP', kills:'擊殺', gold:'金幣', day:'白天', night:'夜晚',
     close:'關閉', chat:'聊聊', shop:'商店', restart:'重新開始', menu:'返回主菜單',
     weapon:'武器', sound:'遊戲聲音', viewRules:'查看', exitGame:'退出到主頁', clearSave:'清除本地存檔',
@@ -2002,7 +2031,7 @@ const LANGS = {
     hpPoints:'點血量',
   },
   zh: {
-    name:'中文',  announcement:'📢 公告', announcementTitle:'游戏公告', a1:'🛰️ P2P联机上线！', a1d:'新功能！点「创建房间」拿房间ID，好友输入ID秒加入，两个人能在同一个世界跑来跑去、互相看见对方！不用注册、不用搭服务器，公共服务器直连，yyds！', a2:'🔄 联机更稳了', a2d:'加入失败自动重试3次，不用眼巴巴看转圈；状态实时显示：⏳等待连接 / ✅连接成功 / ❌连接失败 / 💤对方离线，一眼看懂；中途掉线自动重连，队友跑了都给你拽回来！', a3:'📜 主页会滑了', a3d:'功能堆太多放不下？主菜单现在可以上下滑动，手指一划，设置/公告/联机/存档全都能看到，手机党狂喜！', a4:'🐛 联机小贴士', a4d:'联机时双方必须选同一张地图（草原就草原，城市就城市），不然对方会跑到错误的次元——这是物理规律，不是bug。', a5:'💰 各自算各自的', a5d:'联机时金币、血量、击杀数都是各算各的，谁打死怪谁拿钱，公平公正，童叟无欺。', a6:'🎉 更新总览', a6d:'本次更新三件套：P2P联机（含自动重试/实时状态/断线重连）、主页可滑动、公告全语言化——一次更新，三种快乐，童叟无欺！', a7:'📜 公告栏彩蛋', a7d:'公告栏底下又出现一张皱巴巴的纸：「作者要是再忘了写公告，就自罚三杯奶茶。」——本次已罚，勿念。',menuHintMobile:'📱 移动端：左下摇杆移动 · 右下攻击/挖掘', menuHintDesktop:'💻 电脑端：WASD/方向键移动 · J攻击 · K挖掘 · L手雷 · Q切武器 · Enter开始', coopBtn:'双人模式', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 枪口校准', gunCalibHint:'把枪调到“枪口朝右、正常握持”的样子，调好后点完成', gunCalibReset:'恢复自动', gunCalibDone:'✅ 完成保存', gunCalibSaved:'✅ 已保存！此角度已对所有地图和双人模式生效', askGold:'索要金币', shopTitle:'🤬 军火商店',  start:'开始游戏', continue:'继续游戏', rules:'游戏规则', settings:'设置', gunFlip:'枪姿修正', saveDeadTag:'已阵亡', saveDead:'该存档已在战斗中阵亡，无法复活',
+    name:'中文',  announcement:'📢 公告', announcementTitle:'游戏公告', a1:'👤 账号系统上线！', a1d:'本机创建账号：输个名字、传个头像就搞定，最多3个随时切换，谁是谁的存档一清二楚！', a2:'🔐 跨设备登录，粘贴即用', a2d:'不用注册、不用服务器！点「导出账号码」复制一段码，另一台设备「导入登录」粘贴进去，账号秒过去，复制粘贴就是力量！', a3:'🖼 头像随便传', a3d:'本地上传头像，自动压缩成小圆脸，手机相册直接选，丑图也能变萌！', a4:'💡 小贴士', a4d:'账号存在本机浏览器里，清缓存会丢。导出账号码 = 你的保险单，记得备份！', a5:'🔒 密码可设', a5d:'创建时能填密码（可选），跨设备导入同名账号要密码对得上才让覆盖——防君子不防小人，但面子上要过得去。', a6:'🎉 更新总览', a6d:'本次更新：账号系统 + 头像上传 + 迁移码跨设备登录——三件套，一次到位，童叟无欺！', a7:'📜 公告栏彩蛋', a7d:'公告栏底下又出现一张皱巴巴的纸：「作者：这次更新要是再忘了写公告，就把账号密码设成admin admin。」——已罚，勿试。',accountBtn:'账号', accountTitle:'账号系统', accountCur:'当前账号 ', accountNoAcct:'还没有账号，先创建一个吧', accountCreateTitle:'创建账号', accountName:'输入名字', accountPass:'密码（可选，用于跨设备登录）', accountPickAvatar:'上传头像（可选）', accountPicked:'已选头像', accountCreateBtn:'创建', accountCreated:'创建成功！', accountNeedName:'请先输入名字', accountSlotsFull:'最多只能创建3个账号', accountSwitch:'切换', accountDelConfirm:'确定删除该账号？', accountTransferTitle:'跨设备登录', accountExportBtn:'导出账号码', accountExportManual:'账号码（复制后发给另一台设备粘贴导入）：', accountExported:'账号码已复制！到另一台设备粘贴导入即可', accountImportPh:'粘贴账号码（另一台设备导出的）', accountImportNeed:'请先粘贴账号码', accountImportBtn:'导入登录', accountImportFail:'账号码无效', accountImportPassFail:'密码不匹配，无法覆盖该账号', accountImported:'登录成功！', menuHintMobile:'📱 移动端：左下摇杆移动 · 右下攻击/挖掘', menuHintDesktop:'💻 电脑端：WASD/方向键移动 · J攻击 · K挖掘 · L手雷 · Q切武器 · Enter开始', coopBtn:'双人模式', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 枪口校准', gunCalibHint:'把枪调到“枪口朝右、正常握持”的样子，调好后点完成', gunCalibReset:'恢复自动', gunCalibDone:'✅ 完成保存', gunCalibSaved:'✅ 已保存！此角度已对所有地图和双人模式生效', askGold:'索要金币', shopTitle:'🤬 军火商店',  start:'开始游戏', continue:'继续游戏', rules:'游戏规则', settings:'设置', gunFlip:'枪姿修正', saveDeadTag:'已阵亡', saveDead:'该存档已在战斗中阵亡，无法复活',
     hp:'HP', kills:'击杀', gold:'金币', day:'白天', night:'夜晚',
     close:'关闭', chat:'聊聊', shop:'商店', restart:'重新开始', menu:'返回主菜单',
     weapon:'武器', sound:'游戏声音', viewRules:'查看', exitGame:'退出到主页', clearSave:'清除本地存档',
@@ -2283,7 +2312,7 @@ const LANGS = {
     hpPoints:'点血量',
   },
   en: {
-    name:'English',  announcement:'📢 Announcement', announcementTitle:'Game Announcement', a1:'🛰️ P2P Multiplayer is LIVE!', a1d:'New feature! Hit "Create Room" to grab a room ID, your friend types it in and you are in the same world, running around and seeing each other! No sign-up, no server, straight through the public broker. ez clap!', a2:'🔄 More stable than your Wi-Fi', a2d:'Join failed? Auto-retry up to 3 times. Live status: ⏳ Waiting / ✅ Connected / ❌ Failed / 💤 Buddy offline. Got disconnected? Auto-reconnect brings your buddy right back.', a3:'📜 The menu scrolls now', a3d:'Too many buttons to fit? The main menu now scrolls. One swipe and everything is right there. Mobile users rejoice!', a4:'🐛 Co-op tip', a4d:'Both players must pick the SAME map (grassland or city). Different maps mean your buddy teleports to the wrong dimension. That is physics, not a bug.', a5:'💰 Separate pockets', a5d:'Coins, HP and kill counts are per player. Whoever lands the killing blow keeps the loot. Fair and square.', a6:'🎉 Patch roundup', a6d:'Three in one: P2P co-op (auto-retry, live status, auto-reconnect), scrollable main menu, and fully localized patch notes. Three joys, one update!', a7:'📜 Board easter egg', a7d:'A crumpled note appeared under the board: "If the dev forgets the patch notes again, he owes the whole class bubble tea." — Already paid. Do not ask.',menuHintMobile:'📱 Mobile: left joystick move · right attack/dig', menuHintDesktop:'💻 PC: WASD/Arrows move · J attack · K dig · L grenade · Q switch · Enter start', coopBtn:'Co-op Mode', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Gun Calibration', gunCalibHint:'Adjust the gun so the muzzle points right with a natural grip, then press save', gunCalibReset:'Auto Reset', gunCalibDone:'✅ Save', gunCalibSaved:'✅ Saved! Applies to all maps and co-op mode', askGold:'Ask gold', shopTitle:'🤬 Arms Shop',  start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings', gunFlip:'Gun Flip Fix', saveDeadTag:'Fallen', saveDead:'This save fell in battle and cannot be revived',
+    name:'English',  announcement:'📢 Announcement', announcementTitle:'Game Announcement', a1:'👤 Account system is HERE!', a1d:'Create accounts locally: type a name, pick an avatar, done. Up to 3 accounts, switch anytime — each save knows its owner!', a2:'🔐 Cross-device login, paste and go', a2d:'No sign-up, no server! Hit Export account code, copy the code, paste it on another device and log in. Copy-paste is a superpower!', a3:'🖼 Any avatar you want', a3d:'Upload an avatar from your device, auto-cropped into a tiny round face. Even a potato pic becomes a glow-up!', a4:'💡 Pro tip', a4d:'Accounts live in your browser. Clearing cache = goodbye accounts. Export your code — it is your insurance policy!', a5:'🔒 Optional password', a5d:'You can set a password when creating. Same-name import needs the right password to overwrite — keeps honest people honest.', a6:'🎉 Patch roundup', a6d:'This update: account system + avatar upload + migration-code cross-device login. Three in one, no catch!', a7:'📜 Board easter egg', a7d:'A crumpled note appeared under the board: If the dev forgets the patch notes again, his password becomes admin admin. — Already fined. Do not test it.',accountBtn:'Account', accountTitle:'Account System', accountCur:'Current account ', accountNoAcct:'No account yet — create one!', accountCreateTitle:'Create account', accountName:'Enter name', accountPass:'Password (optional, for cross-device login)', accountPickAvatar:'Upload avatar (optional)', accountPicked:'Avatar set', accountCreateBtn:'Create', accountCreated:'Account created!', accountNeedName:'Enter a name first', accountSlotsFull:'You can only create 3 accounts', accountSwitch:'Switch', accountDelConfirm:'Delete this account?', accountTransferTitle:'Cross-device login', accountExportBtn:'Export account code', accountExportManual:'Account code (copy and paste it on another device):', accountExported:'Account code copied! Paste it on another device to log in', accountImportPh:'Paste account code (exported on another device)', accountImportNeed:'Paste an account code first', accountImportBtn:'Import & log in', accountImportFail:'Invalid account code', accountImportPassFail:'Password mismatch, cannot overwrite this account', accountImported:'Logged in!', menuHintMobile:'📱 Mobile: left joystick move · right attack/dig', menuHintDesktop:'💻 PC: WASD/Arrows move · J attack · K dig · L grenade · Q switch · Enter start', coopBtn:'Co-op Mode', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Gun Calibration', gunCalibHint:'Adjust the gun so the muzzle points right with a natural grip, then press save', gunCalibReset:'Auto Reset', gunCalibDone:'✅ Save', gunCalibSaved:'✅ Saved! Applies to all maps and co-op mode', askGold:'Ask gold', shopTitle:'🤬 Arms Shop',  start:'Start Game', continue:'Continue', rules:'Game Rules', settings:'Settings', gunFlip:'Gun Flip Fix', saveDeadTag:'Fallen', saveDead:'This save fell in battle and cannot be revived',
     hp:'HP', kills:'Kills', gold:'Gold', day:'Day', night:'Night',
     close:'Close', chat:'Chat', shop:'Shop', restart:'Restart', menu:'Main Menu',
     weapon:'Weapon', sound:'Game Sound', viewRules:'View', exitGame:'Exit to Menu', clearSave:'Clear Save',
@@ -2559,7 +2588,7 @@ const LANGS = {
     weatherThunder:'⛈️ Thunder! Watch out for lightning!',
   },
   ja: {
-    name:'日本語',  announcement:'📢 お知らせ', announcementTitle:'ゲームお知らせ', a1:'🛰️ P2Pマルチプレイ登場！', a1d:'新機能！「ルーム作成」でIDをゲット、友達がIDを入力したら即マッチ！同じ世界を走り回ってお互いが見える！登録不要・サーバー不要、パブリックサーバー直結、マジで神！', a2:'🔄 接続がもっと安定', a2d:'失敗しても自動リトライ最大3回。状態表示：⏳待機中 / ✅接続成功 / ❌接続失敗 / 💤相手オフライン。切断しても自動で再接続、友達を絶対に置いてかない！', a3:'📜 メニューがスクロール可能に', a3d:'ボタンが多すぎて入りきらない？ホームメニューは上下スクロールできるようになった。スワイプひとつで全部見える、スマホ勢歓喜！', a4:'🐛 マルチの豆知識', a4d:'マルチでは同じマップを選ぶべし（草原なら草原、都市なら都市）。違うと相手が別次元にテレポートする——これは物理であってバグではない。', a5:'💰 財布は別々', a5d:'コイン・HP・キル数は各自のもの。トドメを刺した人が戦利品をゲット。公平公正！', a6:'🎉 更新まとめ', a6d:'今回の更新は三本立て：P2Pマルチ（自動リトライ/リアルタイム状態/自動再接続）、メニューのスクロール対応、公告の全言語対応——一度の更新で三つの喜び！', a7:'📜 掲示板の裏話', a7d:'掲示板の下にまたシワシワの紙が：「作者がまた更新メモを忘れたら、タピオカ3杯自腹。」——今回は罰金済み。',menuHintMobile:'📱 モバイル：左下スティックで移動・右下で攻撃/掘る', menuHintDesktop:'💻 PC：WASD/矢印キーで移動・J攻撃・K掘る・L手榴弾・Q武器切替・Enter開始', coopBtn:'協力モード', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 銃口キャリブレーション', gunCalibHint:'銃口が右を向き、自然な握りになるよう調整してから保存', gunCalibReset:'自動に戻す', gunCalibDone:'✅ 保存', gunCalibSaved:'✅ 保存済み！全マップと2人モードに適用', askGold:'コインを求む', shopTitle:'🤬 武器ショップ',  start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定', gunFlip:'銃の姿勢修正', saveDeadTag:'戦死', saveDead:'このセーブは戦闘で死亡したため、復活できません',
+    name:'日本語',  announcement:'📢 お知らせ', announcementTitle:'ゲームお知らせ', a1:'👤 アカウントシステム登場！', a1d:'名前を入れてアバターを選ぶだけ、最大3つまで作れてすぐ切り替え！誰のセーブか一目瞭然！', a2:'🔐 別端末ログイン、貼るだけ', a2d:'登録不要・サーバー不要！「アカウントコードを出力」でコピーして、別端末で貼り付ければ即ログイン。コピペは正義！', a3:'🖼 アバター自由', a3d:'端末からアップロード、自動で丸く切り抜き。写メだって盛れる！', a4:'💡 豆知識', a4d:'アカウントはブラウザ内保存。キャッシュ消去＝アカウント消滅。コードを出力して保険をかけよう！', a5:'🔒 パスワード任意', a5d:'作成時にパスワード設定可。同名インポートはパスワード一致でないと上書き不可——君子を防ぎ、小人は防げないが、体裁は整う。', a6:'🎉 更新まとめ', a6d:'今回：アカウント + アバター + マイグレーションコード。三本立て、一気に！', a7:'📜 掲示板の裏話', a7d:'掲示板の下にまたシワシワの紙：「作者がまた公告を忘れたら、パスワードをadmin adminにします。」——罰金済み。試さないで。',accountBtn:'アカウント', accountTitle:'アカウントシステム', accountCur:'現在のアカウント ', accountNoAcct:'まだアカウントがありません。作ってみよう！', accountCreateTitle:'アカウント作成', accountName:'名前を入力', accountPass:'パスワード（任意・別端末ログイン用）', accountPickAvatar:'アバターをアップロード（任意）', accountPicked:'アバター設定済み', accountCreateBtn:'作成', accountCreated:'作成成功！', accountNeedName:'名前を入力してね', accountSlotsFull:'アカウントは3つまでしか作れません', accountSwitch:'切り替え', accountDelConfirm:'このアカウントを削除しますか？', accountTransferTitle:'別端末ログイン', accountExportBtn:'アカウントコードを出力', accountExportManual:'アカウントコード（コピーして別端末に貼り付け）：', accountExported:'アカウントコードをコピーしました！別端末に貼り付けてログイン', accountImportPh:'アカウントコードを貼り付け（別端末で出力したもの）', accountImportNeed:'先にアカウントコードを貼り付けて', accountImportBtn:'インポートしてログイン', accountImportFail:'アカウントコードが無効', accountImportPassFail:'パスワード不一致、このアカウントは上書きできません', accountImported:'ログイン成功！', menuHintMobile:'📱 モバイル：左下スティックで移動・右下で攻撃/掘る', menuHintDesktop:'💻 PC：WASD/矢印キーで移動・J攻撃・K掘る・L手榴弾・Q武器切替・Enter開始', coopBtn:'協力モード', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 銃口キャリブレーション', gunCalibHint:'銃口が右を向き、自然な握りになるよう調整してから保存', gunCalibReset:'自動に戻す', gunCalibDone:'✅ 保存', gunCalibSaved:'✅ 保存済み！全マップと2人モードに適用', askGold:'コインを求む', shopTitle:'🤬 武器ショップ',  start:'ゲーム開始', continue:'続ける', rules:'ゲームルール', settings:'設定', gunFlip:'銃の姿勢修正', saveDeadTag:'戦死', saveDead:'このセーブは戦闘で死亡したため、復活できません',
     hp:'HP', kills:'キル', gold:'ゴールド', day:'昼', night:'夜',
     close:'閉じる', chat:'話す', shop:'ショップ', restart:'リスタート', menu:'メインメニュー',
     weapon:'武器', sound:'ゲーム音声', viewRules:'見る', exitGame:'メニューへ', clearSave:'セーブ削除',
@@ -2836,7 +2865,7 @@ const LANGS = {
     weatherThunder:'⛈️ 雷だ！落雷注意！',
   },
   ko: {
-    name:'한국어',  announcement:'📢 공지', announcementTitle:'게임 공지', a1:'🛰️ P2P 멀티플레이 출시!', a1d:'새 기능! \'방 만들기\'로 방 ID를 받고, 친구가 ID를 입력하면 바로 입장! 같은 세상을 뛰어다니며 서로 보인다! 회원가입 필요 없음, 공용 서버 직결, 레전드!', a2:'🔄 연결이 더 안정적', a2d:'실패 시 자동 재시도 최대 3회. 상태 표시: ⏳대기 중 / ✅연결 성공 / ❌연결 실패 / 💤상대 오프라인. 끊겨도 자동 재연결, 친구를 절대 안 놓쳐!', a3:'📜 메뉴 스크롤 가능', a3d:'버튼이 너무 많아? 메인 메뉴를 이제 위아래로 스크롤할 수 있어. 한 번 쓸면 다 보인다, 폰 유저 환호!', a4:'🐛 멀티 팁', a4d:'멀티에선 같은 맵을 골라야 해 (초원이면 초원, 도시면 도시). 다르면 상대가 다른 차원으로 순간이동해——이건 물리 법칙이지 버그가 아냐.', a5:'💰 주머니는 따로', a5d:'코인·체력·처치 수는 각자 몫. 마지막 일격을 넣은 사람이 전리품을 가져가. 공정 공정!', a6:'🎉 업데이트 총정리', a6d:'이번 업데이트 3종 세트: P2P 멀티(자동 재시도/실시간 상태/자동 재연결), 메뉴 스크롤, 공지 전체 언어 지원——한 번에 세 가지 기쁨!', a7:'📜 게시판 이스터에그', a7d:'게시판 아래 또 구겨진 쪽지: "개발자가 또 공지 안 쓰면 밀크티 3잔 쏜다." — 이번엔 이미 냈음.',menuHintMobile:'📱 모바일: 왼쪽 조이스틱 이동 · 오른쪽 공격/파기', menuHintDesktop:'💻 PC: WASD/방향키 이동 · J 공격 · K 파기 · L 수류탄 · Q 무기전환 · Enter 시작', coopBtn:'협동 모드', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 총구 보정', gunCalibHint:'총구가 오른쪽을 향하고 자연스럽게 쥐도록 조정한 후 저장', gunCalibReset:'자동 복원', gunCalibDone:'✅ 저장', gunCalibSaved:'✅ 저장됨! 모든 맵과 2인 모드에 적용', askGold:'동전 요구', shopTitle:'🤬 무기 상점',  start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정', gunFlip:'총기 자세 수정', saveDeadTag:'전사', saveDead:'이 저장은 전투에서 사망하여 부활할 수 없습니다',
+    name:'한국어',  announcement:'📢 공지', announcementTitle:'게임 공지', a1:'👤 계정 시스템 출시!', a1d:'이름 입력하고 아바타 고르면 끝, 최대 3개까지 만들고 바로 전환! 누구 세이브인지 한눈에!', a2:'🔐 다른 기기 로그인, 붙여넣기 끝', a2d:'회원가입도 서버도 필요 없음! 계정 코드 내보내기로 복사해서 다른 기기에 붙여넣으면 즉시 로그인. 복붙은 힘이다!', a3:'🖼 아바타 자유', a3d:'기기에서 업로드, 자동으로 동그랗게 잘라줌. 감자 사진도 글로우업!', a4:'💡 꿀팁', a4d:'계정은 브라우저에 저장돼요. 캐시 삭제 = 계정 삭제. 코드를 내보내 보험을 들어두세요!', a5:'🔒 비밀번호 선택', a5d:'만들 때 비밀번호 설정 가능. 같은 이름 가져오기는 비밀번호가 맞아야 덮어쓸 수 있어요 — 군자는 막고 소인은 못 막지만 체면은 지킨다.', a6:'🎉 업데이트 총정리', a6d:'이번엔: 계정 + 아바타 + 마이그레이션 코드. 3종 세트 한 방에!', a7:'📜 게시판 이스터에그', a7d:'게시판 아래 또 구겨진 쪽지: 개발자가 또 공지 까먹으면 비밀번호를 admin admin으로 바꾼다. — 이미 벌금 냄. 시도하지 마세요.',accountBtn:'계정', accountTitle:'계정 시스템', accountCur:'현재 계정 ', accountNoAcct:'아직 계정이 없어요. 하나 만들어 보세요!', accountCreateTitle:'계정 만들기', accountName:'이름 입력', accountPass:'비밀번호 (선택, 다른 기기 로그인용)', accountPickAvatar:'아바타 업로드 (선택)', accountPicked:'아바타 설정됨', accountCreateBtn:'만들기', accountCreated:'계정 생성 완료!', accountNeedName:'이름을 먼저 입력하세요', accountSlotsFull:'계정은 3개까지만 만들 수 있어요', accountSwitch:'전환', accountDelConfirm:'이 계정을 삭제할까요?', accountTransferTitle:'다른 기기 로그인', accountExportBtn:'계정 코드 내보내기', accountExportManual:'계정 코드 (복사해서 다른 기기에 붙여넣기):', accountExported:'계정 코드가 복사됐어요! 다른 기기에 붙여넣어 로그인하세요', accountImportPh:'계정 코드 붙여넣기 (다른 기기에서 내보낸 것)', accountImportNeed:'먼저 계정 코드를 붙여넣으세요', accountImportBtn:'가져와서 로그인', accountImportFail:'잘못된 계정 코드', accountImportPassFail:'비밀번호 불일치, 이 계정을 덮어쓸 수 없어요', accountImported:'로그인 성공!', menuHintMobile:'📱 모바일: 왼쪽 조이스틱 이동 · 오른쪽 공격/파기', menuHintDesktop:'💻 PC: WASD/방향키 이동 · J 공격 · K 파기 · L 수류탄 · Q 무기전환 · Enter 시작', coopBtn:'협동 모드', guiBtn:'桂', prankBtnName:'蛊', gunCalibLabel:'🔫 총구 보정', gunCalibHint:'총구가 오른쪽을 향하고 자연스럽게 쥐도록 조정한 후 저장', gunCalibReset:'자동 복원', gunCalibDone:'✅ 저장', gunCalibSaved:'✅ 저장됨! 모든 맵과 2인 모드에 적용', askGold:'동전 요구', shopTitle:'🤬 무기 상점',  start:'게임 시작', continue:'계속', rules:'게임 규칙', settings:'설정', gunFlip:'총기 자세 수정', saveDeadTag:'전사', saveDead:'이 저장은 전투에서 사망하여 부활할 수 없습니다',
     hp:'HP', kills:'킬', gold:'골드', day:'낮', night:'밤',
     close:'닫기', chat:'대화', shop:'상점', restart:'다시 시작', menu:'메인 메뉴',
     weapon:'무기', sound:'게임 소리', viewRules:'보기', exitGame:'메뉴로 나가기', clearSave:'세이브 삭제',
@@ -3139,7 +3168,7 @@ const LANGS = {
     r9:'원거리 5피해, 상점 120골드, 조준 조이스틱',
   },
   fr: {
-    name:'Français',  announcement:'📢 Annonce', announcementTitle:'Annonce du jeu', a1:'🛰️ Le multijoueur P2P est LÀ !', a1d:'Nouveauté ! Clique sur « Créer une salle » pour obtenir un ID, ton pote le tape et BIM—même monde, vous courez partout en vous voyant ! Sans inscription, sans serveur, connexion directe. C\'est du propre !', a2:'🔄 Plus stable que ton WiFi', a2d:'Échec ? Retry auto jusqu\'à 3 fois. Statut en direct : ⏳ En attente / ✅ Connecté / ❌ Échec / 💤 Pote hors-ligne. Coupé ? Reco auto, ton pote revient comme si de rien n\'était.', a3:'📜 Le menu défile maintenant', a3d:'Trop de boutons ? Le menu principal défile. Un geste et tout est là. Les mobinautes applaudissent !', a4:'🐛 Astuce multijoueur', a4d:'Les deux joueurs doivent choisir la MÊME carte (prairie ou ville). Sinon ton pote se téléporte dans une autre dimension. C\'est de la physique, pas un bug.', a5:'💰 Poches séparées', a5d:'Pièces, PV et kills sont à chacun. Celui qui porte le coup fatal garde le butin. Ni vu ni connu !', a6:'🎉 Récap de la mise à jour', a6d:'Trois en un : co-op P2P (retry auto, statut en direct, reco auto), menu défilant, et notes de patch localisées. Trois joies, une mise à jour !', a7:'📜 Œuf de Pâques', a7d:'Un mot roulé en boule sous le panneau : « Si le dev oublie encore les notes de patch, il offre 3 thés au lait. » — Déjà payé.',menuHintMobile:'📱 Mobile : joystick gauche pour bouger · droite pour attaquer/creuser', menuHintDesktop:'💻 PC : WASD/flèches pour bouger · J attaque · K creuser · L grenade · Q changer · Entrée pour commencer', coopBtn:'Mode Coop', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Calibrage du canon', gunCalibHint:'Réglez le pistolet pour que le canon pointe à droite avec une prise naturelle, puis enregistrez', gunCalibReset:'Réinitialiser auto', gunCalibDone:'✅ Enregistrer', gunCalibSaved:'✅ Enregistré ! Appliqué à toutes les cartes et au mode coop', askGold:'Demander de l\'or', shopTitle:'🤬 Armurerie',  start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres', gunFlip:'Correction posture arme', saveDeadTag:'Tombé', saveDead:'Cette sauvegarde est tombée au combat, impossible de revenir à la vie',
+    name:'Français',  announcement:'📢 Annonce', announcementTitle:'Annonce du jeu', a1:'👤 Le système de comptes est LÀ !', a1d:'Crée des comptes en local : un nom, un avatar, c\'est tout. Jusqu\'à 3 comptes, change quand tu veux — chaque save connaît son proprio !', a2:'🔐 Connexion multi-appareils, copie-colle', a2d:'Pas d\'inscription, pas de serveur ! Exporte le code, copie-le, colle-le sur un autre appareil et entre. Le copier-coller, c\'est un superpouvoir !', a3:'🖼 Avatar au choix', a3d:'Importe un avatar depuis ton appareil, recadré en petit visage rond. Même une photo de patate devient canon !', a4:'💡 Astuce de pro', a4d:'Les comptes vivent dans ton navigateur. Vider le cache = adieu les comptes. Exporte ton code, c\'est ton assurance !', a5:'🔒 Mot de passe optionnel', a5d:'Tu peux mettre un mot de passe à la création. Un import du même nom doit avoir le bon mot de passe pour écraser — ça tient les honnêtes gens honnêtes.', a6:'🎉 Récap de la mise à jour', a6d:'Cette fois : comptes + avatars + code de migration. Trois en un, sans piège !', a7:'📜 Œuf de Pâques', a7d:'Un mot roulé en boule sous le panneau : si le dev oublie encore les notes, son mot de passe devient admin admin. — Déjà payé. Ne teste pas.',accountBtn:'Compte', accountTitle:'Système de comptes', accountCur:'Compte actuel ', accountNoAcct:'Pas encore de compte — crées-en un !', accountCreateTitle:'Créer un compte', accountName:'Entrer un nom', accountPass:'Mot de passe (optionnel, connexion multi-appareils)', accountPickAvatar:'Avatar (optionnel)', accountPicked:'Avatar défini', accountCreateBtn:'Créer', accountCreated:'Compte créé !', accountNeedName:'Entre un nom d\'abord', accountSlotsFull:'Tu ne peux créer que 3 comptes', accountSwitch:'Changer', accountDelConfirm:'Supprimer ce compte ?', accountTransferTitle:'Connexion multi-appareils', accountExportBtn:'Exporter le code', accountExportManual:'Code de compte (copie et colle-le sur un autre appareil) :', accountExported:'Code copié ! Colle-le sur un autre appareil pour te connecter', accountImportPh:'Coller le code (exporté sur un autre appareil)', accountImportNeed:'Colle un code d\'abord', accountImportBtn:'Importer & connecter', accountImportFail:'Code invalide', accountImportPassFail:'Mot de passe incorrect, impossible de remplacer ce compte', accountImported:'Connecté !', menuHintMobile:'📱 Mobile : joystick gauche pour bouger · droite pour attaquer/creuser', menuHintDesktop:'💻 PC : WASD/flèches pour bouger · J attaque · K creuser · L grenade · Q changer · Entrée pour commencer', coopBtn:'Mode Coop', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Calibrage du canon', gunCalibHint:'Réglez le pistolet pour que le canon pointe à droite avec une prise naturelle, puis enregistrez', gunCalibReset:'Réinitialiser auto', gunCalibDone:'✅ Enregistrer', gunCalibSaved:'✅ Enregistré ! Appliqué à toutes les cartes et au mode coop', askGold:'Demander de l\'or', shopTitle:'🤬 Armurerie',  start:'Commencer', continue:'Continuer', rules:'Règles', settings:'Paramètres', gunFlip:'Correction posture arme', saveDeadTag:'Tombé', saveDead:'Cette sauvegarde est tombée au combat, impossible de revenir à la vie',
     hp:'PV', kills:'Tués', gold:'Or', day:'Jour', night:'Nuit',
     close:'Fermer', chat:'Parler', shop:'Boutique', restart:'Recommencer', menu:'Menu Principal',
     weapon:'Arme', sound:'Son du Jeu', viewRules:'Voir', exitGame:'Quitter au Menu', clearSave:'Effacer Sauvegarde',
@@ -3442,7 +3471,7 @@ const LANGS = {
     r9:'5 dégâts à distance, 120 or en boutique, joystick de visée',
   },
   de: {
-    name:'Deutsch',  announcement:'📢 Ankündigung', announcementTitle:'Spiel-Ankündigung', a1:'🛰️ P2P-Mehrspieler ist DA!', a1d:'Neues Feature! „Raum erstellen" klicken, ID bekommen, Kumpel tippt ID ein und ZACK—gleiche Welt, ihr seht euch! Keine Anmeldung, kein Server, direkt über den öffentlichen Broker. Absolut clean!', a2:'🔄 Stabiler als dein WLAN', a2d:'Fehlgeschlagen? Auto-Retry bis zu 3×. Live-Status: ⏳ Warten / ✅ Verbunden / ❌ Fehlgeschlagen / 💤 Kumpel offline. Verbindung weg? Auto-Reconnect, Kumpel ist sofort wieder da.', a3:'📜 Menü scrollt jetzt', a3d:'Zu viele Buttons? Das Hauptmenü scrollt. Ein Wisch, alles da. Handy-User freuen sich!', a4:'🐛 Co-op Tipp', a4d:'Beide Spieler müssen die GLEICHE Karte wählen (Grasland oder Stadt). Sonst teleportiert dein Kumpel in eine andere Dimension. Das ist Physik, kein Bug.', a5:'💰 Getrennte Taschen', a5d:'Münzen, HP und Kills gehören jedem selbst. Wer den finalen Schlag landet, behält die Beute. Fair und ehrlich!', a6:'🎉 Update-Übersicht', a6d:'Drei in einem: P2P-Co-op (Auto-Retry, Live-Status, Auto-Reconnect), scrollbares Menü und lokalisierte Patch-Notizen. Drei Freuden, ein Update!', a7:'📜 Brett-Easteregg', a7d:'Ein zerknüllter Zettel unterm Brett: „Vergisst der Dev wieder die Patch-Notizen, gibt er 3 Bubble Teas aus." — Schon bezahlt.',menuHintMobile:'📱 Mobil: linker Joystick bewegen · rechts Angriff/Graben', menuHintDesktop:'💻 PC: WASD/Pfeile bewegen · J Angriff · K Graben · L Granate · Q Waffe wechseln · Enter starten', coopBtn:'Koop-Modus', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Laufkalibrierung', gunCalibHint:'Stelle die Waffe so ein, dass der Lauf nach rechts zeigt und der Griff natürlich ist, dann speichern', gunCalibReset:'Auto zurücksetzen', gunCalibDone:'✅ Speichern', gunCalibSaved:'✅ Gespeichert! Gilt für alle Karten und den Koop-Modus', askGold:'Gold fordern', shopTitle:'🤬 Waffenladen',  start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen', gunFlip:'Waffen-Haltung korrigieren', saveDeadTag:'Gefallen', saveDead:'Dieser Spielstand ist im Kampf gefallen und kann nicht wiederbelebt werden',
+    name:'Deutsch',  announcement:'📢 Ankündigung', announcementTitle:'Spiel-Ankündigung', a1:'👤 Kontosystem ist DA!', a1d:'Konten lokal anlegen: Name tippen, Avatar wählen, fertig. Bis zu 3 Konten, jederzeit wechseln — jeder Save kennt seinen Besitzer!', a2:'🔐 Gerätewechsel per Copy-Paste', a2d:'Keine Anmeldung, kein Server! Konto-Code exportieren, kopieren, auf anderem Gerät einfügen, fertig. Copy-Paste ist eine Superkraft!', a3:'🖼 Jeder Avatar', a3d:'Avatar vom Gerät hochladen, automatisch zum runden Gesichtchen gecroppt. Selbst Kartoffel-Fotos werden zu Glow-ups!', a4:'💡 Profi-Tipp', a4d:'Konten leben im Browser. Cache leeren = Konten weg. Exportier deinen Code, das ist deine Versicherung!', a5:'🔒 Passwort optional', a5d:'Passwort bei Erstellung möglich. Gleicher Name beim Import braucht das richtige Passwort zum Überschreiben — hält ehrliche Leute ehrlich.', a6:'🎉 Update-Übersicht', a6d:'Diesmal: Konten + Avatare + Migrationscode. Drei in einem, ohne Haken!', a7:'📜 Brett-Easteregg', a7d:'Ein zerknüllter Zettel unterm Brett: vergisst der Dev wieder die Notizen, wird sein Passwort admin admin. — Schon bezahlt. Nicht testen.',accountBtn:'Konto', accountTitle:'Kontosystem', accountCur:'Aktuelles Konto ', accountNoAcct:'Noch kein Konto — leg eins an!', accountCreateTitle:'Konto erstellen', accountName:'Name eingeben', accountPass:'Passwort (optional, für Gerätewechsel)', accountPickAvatar:'Avatar hochladen (optional)', accountPicked:'Avatar gesetzt', accountCreateBtn:'Erstellen', accountCreated:'Konto erstellt!', accountNeedName:'Erst einen Namen eingeben', accountSlotsFull:'Du kannst nur 3 Konten erstellen', accountSwitch:'Wechseln', accountDelConfirm:'Dieses Konto löschen?', accountTransferTitle:'Geräteübergreifend', accountExportBtn:'Konto-Code exportieren', accountExportManual:'Konto-Code (kopieren und auf anderem Gerät einfügen):', accountExported:'Code kopiert! Füge ihn auf einem anderen Gerät ein', accountImportPh:'Konto-Code einfügen (auf anderem Gerät exportiert)', accountImportNeed:'Erst einen Code einfügen', accountImportBtn:'Importieren & einloggen', accountImportFail:'Ungültiger Code', accountImportPassFail:'Passwort falsch, Konto kann nicht überschrieben werden', accountImported:'Eingeloggt!', menuHintMobile:'📱 Mobil: linker Joystick bewegen · rechts Angriff/Graben', menuHintDesktop:'💻 PC: WASD/Pfeile bewegen · J Angriff · K Graben · L Granate · Q Waffe wechseln · Enter starten', coopBtn:'Koop-Modus', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Laufkalibrierung', gunCalibHint:'Stelle die Waffe so ein, dass der Lauf nach rechts zeigt und der Griff natürlich ist, dann speichern', gunCalibReset:'Auto zurücksetzen', gunCalibDone:'✅ Speichern', gunCalibSaved:'✅ Gespeichert! Gilt für alle Karten und den Koop-Modus', askGold:'Gold fordern', shopTitle:'🤬 Waffenladen',  start:'Spiel Starten', continue:'Fortsetzen', rules:'Spielregeln', settings:'Einstellungen', gunFlip:'Waffen-Haltung korrigieren', saveDeadTag:'Gefallen', saveDead:'Dieser Spielstand ist im Kampf gefallen und kann nicht wiederbelebt werden',
     hp:'HP', kills:'Kills', gold:'Gold', day:'Tag', night:'Nacht',
     close:'Schließen', chat:'Plaudern', shop:'Laden', restart:'Neustart', menu:'Hauptmenü',
     weapon:'Waffe', sound:'Spielton', viewRules:'Ansehen', exitGame:'Zum Menü', clearSave:'Speichern Löschen',
@@ -3745,7 +3774,7 @@ const LANGS = {
     r9:'5 Schaden Distanz, 120 Gold im Laden, Ziel-Joystick',
   },
   es: {
-    name:'Español',  announcement:'📢 Anuncio', announcementTitle:'Anuncio del juego', a1:'🛰️ ¡Multijugador P2P EN VIVO!', a1d:'¡Novedad! Pulsa "Crear sala" y consigue una ID, tu amigo la escribe y ¡BUM—mismo mundo, corriendo y viéndoos! Sin registrarte, sin servidor, conexión directa. ¡Qué máquina!', a2:'🔄 Más estable que tu WiFi', a2d:'¿Fallo? Reintento automático hasta 3 veces. Estado en vivo: ⏳ Esperando / ✅ Conectado / ❌ Fallo / 💤 Amigo desconectado. ¿Se cortó? Reconexión automática, tu amigo vuelve como si nada.', a3:'📜 El menú ya se desliza', a3d:'¿Demasiados botones? El menú principal se desliza. Un gesto y todo está ahí. ¡Los móviles aplauden!', a4:'🐛 Consejo cooperativo', a4d:'Ambos deben elegir el MISMO mapa (pradera o ciudad). Si no, tu amigo se teletransporta a otra dimensión. Eso es física, no un bug.', a5:'💰 Bolsillos separados', a5d:'Monedas, HP y muertes son de cada uno. Quien da el golpe final se queda el botín. ¡Justo y limpio!', a6:'🎉 Resumen de la actualización', a6d:'Tres en uno: cooperativo P2P (reintento, estado en vivo, reconexión), menú deslizable y notas localizadas. ¡Tres alegrías, una actualización!', a7:'📜 Huevo de Pascua', a7d:'Un papel arrugado bajo el tablón: "Si el dev vuelve a olvidar las notas, invita a 3 tés con leche." — Ya pagado.',menuHintMobile:'📱 Móvil: joystick izquierdo mover · derecho atacar/cavar', menuHintDesktop:'💻 PC: WASD/flechas mover · J atacar · K cavar · L granada · Q cambiar · Enter empezar', coopBtn:'Modo Cooperativo', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Calibración del cañón', gunCalibHint:'Ajusta la pistola para que el cañón apunte a la derecha con un agarre natural, luego guarda', gunCalibReset:'Restablecer auto', gunCalibDone:'✅ Guardar', gunCalibSaved:'✅ ¡Guardado! Aplica a todos los mapas y al modo cooperativo', askGold:'Pedir oro', shopTitle:'🤬 Armería',  start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes', gunFlip:'Corregir postura del arma', saveDeadTag:'Caído', saveDead:'Esta partida cayó en combate y no puede revivir',
+    name:'Español',  announcement:'📢 Anuncio', announcementTitle:'Anuncio del juego', a1:'👤 ¡El sistema de cuentas está AQUÍ!', a1d:'Crea cuentas en local: pon un nombre, elige un avatar y listo. Hasta 3 cuentas, cambia cuando quieras — ¡cada save sabe quién es su dueño!', a2:'🔐 Otro dispositivo, copia y pega', a2d:'¡Sin registrarte, sin servidor! Pulsa Exportar código, cópialo, pégalo en otro dispositivo y entra. ¡Copiar y pegar es un superpoder!', a3:'🖼 El avatar que quieras', a3d:'Sube un avatar desde tu dispositivo, recortado en carita redonda. ¡Hasta una foto de patata queda brutal!', a4:'💡 Consejo de pro', a4d:'Las cuentas viven en tu navegador. Borrar caché = adiós cuentas. ¡Exporta tu código, es tu seguro!', a5:'🔒 Contraseña opcional', a5d:'Puedes poner contraseña al crear. Importar con el mismo nombre necesita la contraseña correcta para sobrescribir — mantiene a la gente honesta honesta.', a6:'🎉 Resumen de la actualización', a6d:'Esta vez: cuentas + avatares + código de migración. ¡Tres en uno, sin trampa!', a7:'📜 Huevo de Pascua', a7d:'Un papel arrugado bajo el tablón: si el dev vuelve a olvidar las notas, su contraseña será admin admin. — Ya pagado. No lo pruebes.',accountBtn:'Cuenta', accountTitle:'Sistema de cuentas', accountCur:'Cuenta actual ', accountNoAcct:'Aún no hay cuenta — ¡crea una!', accountCreateTitle:'Crear cuenta', accountName:'Poner nombre', accountPass:'Contraseña (opcional, para otro dispositivo)', accountPickAvatar:'Subir avatar (opcional)', accountPicked:'Avatar listo', accountCreateBtn:'Crear', accountCreated:'¡Cuenta creada!', accountNeedName:'Primero pon un nombre', accountSlotsFull:'Solo puedes crear 3 cuentas', accountSwitch:'Cambiar', accountDelConfirm:'¿Borrar esta cuenta?', accountTransferTitle:'Inicio en otro dispositivo', accountExportBtn:'Exportar código', accountExportManual:'Código de cuenta (copia y pégalo en otro dispositivo):', accountExported:'¡Código copiado! Pégalo en otro dispositivo para entrar', accountImportPh:'Pegar código (exportado en otro dispositivo)', accountImportNeed:'Primero pega un código', accountImportBtn:'Importar y entrar', accountImportFail:'Código inválido', accountImportPassFail:'Contraseña incorrecta, no se puede sobrescribir', accountImported:'¡Dentro!', menuHintMobile:'📱 Móvil: joystick izquierdo mover · derecho atacar/cavar', menuHintDesktop:'💻 PC: WASD/flechas mover · J atacar · K cavar · L granada · Q cambiar · Enter empezar', coopBtn:'Modo Cooperativo', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Calibración del cañón', gunCalibHint:'Ajusta la pistola para que el cañón apunte a la derecha con un agarre natural, luego guarda', gunCalibReset:'Restablecer auto', gunCalibDone:'✅ Guardar', gunCalibSaved:'✅ ¡Guardado! Aplica a todos los mapas y al modo cooperativo', askGold:'Pedir oro', shopTitle:'🤬 Armería',  start:'Empezar', continue:'Continuar', rules:'Reglas', settings:'Ajustes', gunFlip:'Corregir postura del arma', saveDeadTag:'Caído', saveDead:'Esta partida cayó en combate y no puede revivir',
     hp:'HP', kills:'Bajas', gold:'Oro', day:'Día', night:'Noche',
     close:'Cerrar', chat:'Hablar', shop:'Tienda', restart:'Reiniciar', menu:'Menú Principal',
     weapon:'Arma', sound:'Sonido del Juego', viewRules:'Ver', exitGame:'Salir al Menú', clearSave:'Borrar Partida',
@@ -4048,7 +4077,7 @@ const LANGS = {
     r9:'5 daño a distancia, 120 oro en tienda, joystick de puntería',
   },
   ru: {
-    name:'Русский',  announcement:'📢 Объявление', announcementTitle:'Объявление игры', a1:'🛰️ P2P-мультиплеер ВЫШЕЛ!', a1d:'Новинка! Жми «Создать комнату», получай ID, друг вводит его — и БАМ, вы в одном мире, бегаете и видите друг друга! Без регистрации, без сервера, прямо через публичный брокер. Красота!', a2:'🔄 Стабильнее твоего Wi-Fi', a2d:'Не получилось? Авто-повтор до 3 раз. Статус в реальном времени: ⏳ Ожидание / ✅ Подключено / ❌ Ошибка / 💤 Друг офлайн. Обрыв? Авто-переподключение, друг вернётся как ни в чём не бывало.', a3:'📜 Меню теперь листается', a3d:'Слишком много кнопок? Главное меню листается. Один свайп — всё на месте. Мобильные ликуют!', a4:'🐛 Совет для коопа', a4d:'Оба игрока должны выбрать ОДНУ карту (луг или город). Иначе друг телепортируется в другое измерение. Это физика, а не баг.', a5:'💰 Кошельки раздельные', a5d:'Монеты, HP и убийства — у каждого свои. Кто нанёс последний удар, тот и забрал добычу. Честно и по делу!', a6:'🎉 Итоги обновления', a6d:'Три в одном: P2P-кооп (авто-повтор, статус в реальном времени, автопереподключение), прокрутка меню и локализованные патчноуты. Три радости — одно обновление!', a7:'📜 Пасхалка на доске', a7d:'Скомканная записка под доской: «Если дев снова забудет патчноуты, он ставит 3 бабл-ти». — Уже заплачено.',menuHintMobile:'📱 Мобильный: левый джойстик — движение · правый — атака/копка', menuHintDesktop:'💻 ПК: WASD/стрелки — движение · J атака · K копать · L граната · Q смена · Enter старт', coopBtn:'Кооператив', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Калибровка дула', gunCalibHint:'Настройте пистолет так, чтобы дуло смотрело вправо с естественным хватом, затем сохраните', gunCalibReset:'Сброс авто', gunCalibDone:'✅ Сохранить', gunCalibSaved:'✅ Сохранено! Действует на все карты и кооператив', askGold:'Просить золото', shopTitle:'🤬 Оружейный магазин',  start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки', gunFlip:'Коррекция хвата оружия', saveDeadTag:'Пал', saveDead:'Это сохранение пало в бою и не может воскреснуть',
+    name:'Русский',  announcement:'📢 Объявление', announcementTitle:'Объявление игры', a1:'👤 Система аккаунтов ВЫШЛА!', a1d:'Создавай аккаунты локально: имя, аватар — готово. До 3 аккаунтов, переключайся когда хочешь — каждый сейв знает своего хозяина!', a2:'🔐 Вход с другого устройства, копи-паст', a2d:'Без регистрации, без сервера! Экспорт кода, скопируй, вставь на другом устройстве — готово. Copy-paste — это суперсила!', a3:'🖼 Любой аватар', a3d:'Загрузи аватар с устройства, автоматически обрежется в круглую мордашку. Даже картошка станет красоткой!', a4:'💡 Совет профи', a4d:'Аккаунты живут в браузере. Чистка кэша = прощай аккаунты. Экспортируй код — это твоя страховка!', a5:'🔒 Пароль по желанию', a5d:'Можно задать пароль при создании. Импорт с тем же именем требует правильный пароль — честных людей держит честными.', a6:'🎉 Итоги обновления', a6d:'В этот раз: аккаунты + аватары + миграционный код. Три в одном, без подвоха!', a7:'📜 Пасхалка на доске', a7d:'Скомканная записка под доской: если дев снова забудет патчноуты, его пароль станет admin admin. — Уже заплачено. Не проверяй.',accountBtn:'Аккаунт', accountTitle:'Система аккаунтов', accountCur:'Текущий аккаунт ', accountNoAcct:'Аккаунта ещё нет — создай!', accountCreateTitle:'Создать аккаунт', accountName:'Введи имя', accountPass:'Пароль (опц., для входа на другом устройстве)', accountPickAvatar:'Загрузить аватар (опц.)', accountPicked:'Аватар установлен', accountCreateBtn:'Создать', accountCreated:'Аккаунт создан!', accountNeedName:'Сначала введи имя', accountSlotsFull:'Можно создать только 3 аккаунта', accountSwitch:'Сменить', accountDelConfirm:'Удалить этот аккаунт?', accountTransferTitle:'Вход на другом устройстве', accountExportBtn:'Экспорт кода', accountExportManual:'Код аккаунта (скопируй и вставь на другом устройстве):', accountExported:'Код скопирован! Вставь его на другом устройстве', accountImportPh:'Вставь код (экспортированный на другом устройстве)', accountImportNeed:'Сначала вставь код', accountImportBtn:'Импорт и вход', accountImportFail:'Неверный код', accountImportPassFail:'Пароль не совпадает, аккаунт нельзя перезаписать', accountImported:'Вошёл!', menuHintMobile:'📱 Мобильный: левый джойстик — движение · правый — атака/копка', menuHintDesktop:'💻 ПК: WASD/стрелки — движение · J атака · K копать · L граната · Q смена · Enter старт', coopBtn:'Кооператив', guiBtn:'Gui', prankBtnName:'Prank', gunCalibLabel:'🔫 Калибровка дула', gunCalibHint:'Настройте пистолет так, чтобы дуло смотрело вправо с естественным хватом, затем сохраните', gunCalibReset:'Сброс авто', gunCalibDone:'✅ Сохранить', gunCalibSaved:'✅ Сохранено! Действует на все карты и кооператив', askGold:'Просить золото', shopTitle:'🤬 Оружейный магазин',  start:'Начать Игру', continue:'Продолжить', rules:'Правила', settings:'Настройки', gunFlip:'Коррекция хвата оружия', saveDeadTag:'Пал', saveDead:'Это сохранение пало в бою и не может воскреснуть',
     hp:'HP', kills:'Убийств', gold:'Золото', day:'День', night:'Ночь',
     close:'Закрыть', chat:'Говорить', shop:'Магазин', restart:'Заново', menu:'Главное Меню',
     weapon:'Оружие', sound:'Звук Игры', viewRules:'Смотреть', exitGame:'Выйти в Меню', clearSave:'Удалить Сохранение',
@@ -4527,6 +4556,7 @@ function applyLanguage(){
   if(restartBtn) restartBtn.textContent = t('restart');
   const menuBtn = document.getElementById('menuBtn');
   if(menuBtn) menuBtn.textContent = t('menu');
+  if(window.__accountRefresh) window.__accountRefresh();
 }
 function buildRulesContent(){
   const c = document.getElementById('rulesContent');
@@ -14813,6 +14843,262 @@ gameLoop();
     s2.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
     s2.onload = start;
     document.head.appendChild(s2);
+  }
+})();
+
+// ================= 简易账号系统（本地3账号 + 迁移码跨设备） =================
+(function(){
+  var KEY = 'classEmoji_accounts_v1';
+  var FACE_DEFAULT = ['😀','😄','😎','🤠','🥳','😇','🤖','🐸'];
+  var MAX = 3;
+  var A = { list: [], cur: 0 };
+  try{ var saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if(saved && saved.list) A = saved; }catch(e){}
+  if(typeof A.cur !== 'number') A.cur = 0;
+  if(!A.list) A.list = [];
+
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(A)); }catch(e){ alert('存储失败（空间不足？）'); } }
+  function current(){ return A.list[A.cur] || null; }
+  function T(k){ try{ return t(k); }catch(e){ return k; } }
+  function avatarImg(av){ return '<img src="' + av + '" style="width:34px;height:34px;border-radius:50%;border:2px solid #f1c40f;vertical-align:middle">'; }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function defaultAvatar(){
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="32" fill="#f1c40f"/><text x="32" y="44" font-size="38" text-anchor="middle">' + FACE_DEFAULT[Math.floor(Math.random()*FACE_DEFAULT.length)] + '</text></svg>'
+    );
+  }
+
+  // 头像压缩到64x64
+  function pickAvatar(){
+    var input = document.getElementById('accountAvatarInput');
+    var f = input.files && input.files[0];
+    if(!f) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var c = document.createElement('canvas');
+        c.width = 64; c.height = 64;
+        var cx = c.getContext('2d');
+        var s = Math.min(img.width, img.height);
+        cx.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, 64, 64);
+        A._pendingAvatar = c.toDataURL('image/png');
+        var btn = document.getElementById('accountPickAvatar');
+        if(btn){ btn.innerHTML = '🖼 ' + T('accountPicked') + ' ' + avatarImg(A._pendingAvatar); }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(f);
+  }
+
+  function createAccount(){
+    var nameEl = document.getElementById('accountNameInput');
+    var passEl = document.getElementById('accountPassInput');
+    var name = (nameEl.value || '').trim();
+    if(!name){ alert(T('accountNeedName')); return; }
+    if(A.list.length >= MAX){ alert(T('accountSlotsFull')); return; }
+    A.list.push({ name: name, pass: passEl.value || '', avatar: A._pendingAvatar || defaultAvatar() });
+    A.cur = A.list.length - 1;
+    A._pendingAvatar = null;
+    save();
+    nameEl.value = ''; passEl.value = '';
+    var ab = document.getElementById('accountPickAvatar');
+    if(ab) ab.textContent = '🖼 ' + T('accountPickAvatar');
+    refresh();
+    if(typeof G !== 'undefined' && G.syncP2P){ } // nick 走 G.accountName
+    alert(T('accountCreated'));
+  }
+
+  function switchAccount(i){
+    if(i < 0 || i >= A.list.length) return;
+    A.cur = i;
+    save();
+    refresh();
+  }
+
+  function removeAccount(i){
+    if(i < 0 || i >= A.list.length) return;
+    if(!confirm(T('accountDelConfirm'))) return;
+    A.list.splice(i, 1);
+    if(A.cur >= A.list.length) A.cur = Math.max(0, A.list.length - 1);
+    save();
+    refresh();
+  }
+
+  // 迁移码：EA1 + base64url(JSON)
+  function exportCode(){
+    var ac = current();
+    if(!ac){ alert(T('accountNoAcct')); return; }
+    var payload = JSON.stringify({ n: ac.name, p: ac.pass || '', a: ac.avatar });
+    var code = 'EA1.' + btoa(unescape(encodeURIComponent(payload)));
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(code).then(function(){
+        alert(T('accountExported'));
+      }).catch(function(){
+        prompt(T('accountExportManual'), code);
+      });
+    } else {
+      prompt(T('accountExportManual'), code);
+    }
+  }
+
+  function importCode(){
+    var input = document.getElementById('accountImportInput');
+    var code = (input.value || '').trim();
+    if(!code){ alert(T('accountImportNeed')); return; }
+    var payload;
+    try{
+      if(code.indexOf('EA1.') === 0){
+        payload = JSON.parse(decodeURIComponent(escape(atob(code.slice(4)))));
+      } else {
+        payload = JSON.parse(decodeURIComponent(escape(atob(code))));
+      }
+    }catch(e){
+      alert(T('accountImportFail'));
+      return;
+    }
+    if(!payload || !payload.n){ alert(T('accountImportFail')); return; }
+    var name = String(payload.n).slice(0,16);
+    var pass = String(payload.p || '');
+    var av = payload.a || defaultAvatar();
+    // 同名处理
+    for(var i = 0; i < A.list.length; i++){
+      if(A.list[i].name === name){
+        if(A.list[i].pass && A.list[i].pass !== pass){ alert(T('accountImportPassFail')); return; }
+        A.list[i].avatar = av;
+        if(pass) A.list[i].pass = pass;
+        A.cur = i;
+        save(); refresh();
+        alert(T('accountImported'));
+        return;
+      }
+    }
+    if(A.list.length >= MAX){ alert(T('accountSlotsFull')); return; }
+    A.list.push({ name: name, pass: pass, avatar: av });
+    A.cur = A.list.length - 1;
+    save(); refresh();
+    input.value = '';
+    alert(T('accountImported'));
+  }
+
+  function refresh(){
+    // 主菜单账号条
+    var bar = document.getElementById('accountBar');
+    var ac = current();
+    if(bar){
+      if(ac){
+        bar.style.display = 'flex';
+        var img = document.getElementById('accountBarAvatar');
+        var nm = document.getElementById('accountBarName');
+        if(img) img.src = ac.avatar;
+        if(nm) nm.textContent = ac.name;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+    // 面板
+    var panel = document.getElementById('accountPanel');
+    if(!panel || panel.style.display === 'none') return;
+    var cur = document.getElementById('accountCurrent');
+    var list = document.getElementById('accountList');
+    if(cur){
+      if(ac){
+        cur.innerHTML = '<div style="font-size:16px;color:#fff;margin-bottom:4px">' + avatarImg(ac.avatar) + ' ' + esc(ac.name) + (ac.pass ? ' 🔒' : '') + '</div><div style="color:#888;font-size:12px">' + T('accountCur') + (A.cur + 1) + '/' + MAX + '</div>';
+      } else {
+        cur.innerHTML = '<div style="color:#888;font-size:14px">' + T('accountNoAcct') + '</div>';
+      }
+    }
+    if(list){
+      var html = '';
+      for(var i = 0; i < A.list.length; i++){
+        var a = A.list[i];
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;margin-bottom:6px;background:' + (i === A.cur ? 'rgba(39,174,96,0.25)' : 'rgba(255,255,255,0.05)') + ';border:1px solid ' + (i === A.cur ? '#27ae60' : '#444') + ';border-radius:8px">' +
+          avatarImg(a.avatar) +
+          '<span style="color:#fff;font-size:14px;flex:1">' + esc(a.name) + (a.pass ? ' 🔒' : '') + (i === A.cur ? ' <span style="color:#2ecc71">●</span>' : '') + '</span>' +
+          '<button data-i="' + i + '" class="acc-switch" style="padding:5px 10px;background:#2980b9;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer">' + T('accountSwitch') + '</button>' +
+          '<button data-i="' + i + '" class="acc-del" style="padding:5px 8px;background:#c0392b;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer">✕</button>' +
+          '</div>';
+      }
+      list.innerHTML = html;
+      var sw = list.querySelectorAll('.acc-switch');
+      for(var j = 0; j < sw.length; j++){
+        sw[j].onclick = (function(idx){ return function(){ switchAccount(idx); }; })(parseInt(sw[j].getAttribute('data-i'), 10));
+      }
+      var dl = list.querySelectorAll('.acc-del');
+      for(var k = 0; k < dl.length; k++){
+        dl[k].onclick = (function(idx){ return function(){ removeAccount(idx); }; })(parseInt(dl[k].getAttribute('data-i'), 10));
+      }
+    }
+    // 静态文本
+    var els = {
+      accountTitle:'accountTitle', accountCreateTitle:'accountCreateTitle',
+      accountNameInput:'accountName', accountPassInput:'accountPass',
+      accountPickAvatar:'accountPickAvatar', accountCreateBtn:'accountCreateBtn',
+      accountTransferTitle:'accountTransferTitle', accountExportBtn:'accountExportBtn',
+      accountImportBtn:'accountImportBtn', accountCloseBtn:'accountCloseBtn', accountImportInput:'accountImportPh'
+    };
+    for(var key in els){
+      var el = document.getElementById(key);
+      if(!el) continue;
+      var tk = els[key];
+      if(key === 'accountNameInput' || key === 'accountPassInput' || key === 'accountImportInput') el.placeholder = T(tk);
+      else if(key === 'accountPickAvatar'){ if(el.getAttribute('data-keep') !== '1') el.textContent = '🖼 ' + T(tk); }
+      else if(key === 'accountTitle') el.textContent = '👤 ' + T(tk);
+      else if(key === 'accountCreateTitle') el.textContent = '🆕 ' + T(tk);
+      else if(key === 'accountTransferTitle') el.textContent = '🔁 ' + T(tk);
+      else if(key === 'accountCloseBtn') el.textContent = '✖ ' + T(tk);
+      else el.textContent = el.getAttribute('data-prefix') + T(tk);
+    }
+    document.getElementById('accountCreateBtn').textContent = '✅ ' + T('accountCreateBtn');
+    document.getElementById('accountExportBtn').textContent = '📤 ' + T('accountExportBtn');
+    document.getElementById('accountImportBtn').textContent = '📥 ' + T('accountImportBtn');
+  }
+
+  function openPanel(){
+    var panel = document.getElementById('accountPanel');
+    if(!panel) return;
+    panel.style.display = 'flex';
+    refresh();
+  }
+  function closePanel(){
+    var panel = document.getElementById('accountPanel');
+    if(panel) panel.style.display = 'none';
+  }
+
+  function init(){
+    var btn = document.getElementById('accountBtn');
+    if(btn) btn.onclick = function(){ openPanel(); playSound && playSound('click'); };
+    var close = document.getElementById('accountCloseBtn');
+    if(close) close.onclick = closePanel;
+    var pick = document.getElementById('accountPickAvatar');
+    if(pick) pick.onclick = function(){ document.getElementById('accountAvatarInput').click(); };
+    var file = document.getElementById('accountAvatarInput');
+    if(file) file.addEventListener('change', pickAvatar);
+    var create = document.getElementById('accountCreateBtn');
+    if(create) create.onclick = createAccount;
+    var exp = document.getElementById('accountExportBtn');
+    if(exp) exp.onclick = exportCode;
+    var imp = document.getElementById('accountImportBtn');
+    if(imp) imp.onclick = importCode;
+    refresh();
+  }
+  window.__accountRefresh = refresh;
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+  // 联机昵称使用当前账号名
+  G.accountName = function(){ var c = current(); return c ? c.name : '玩家'; };
+  if(G.syncP2P){ } // 原 syncP2P 里 nick 直接替换为 G.accountName()
+  var _origSync = G.syncP2P;
+  if(_origSync && typeof _origSync === 'function'){
+    G.syncP2P = function(){
+      if(!G.p2p || !G.p2p.connected || !G.p2p.conn || !G.player) return;
+      G.p2p.frame = (G.p2p.frame || 0) + 1;
+      if(G.p2p.frame % 3 !== 0) return;
+      try{ G.p2p.conn.send({ x:G.player.x, y:G.player.y, facing:G.player.facing||1, face:'😡', nick:(G.accountName ? G.accountName() : '玩家') }); }catch(e){}
+    };
   }
 })();
 
