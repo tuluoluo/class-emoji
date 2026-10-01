@@ -793,7 +793,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 
   <!-- 聊天大厅面板 -->
   <div id="hallPanel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:210;align-items:center;justify-content:center">
-    <div style="width:min(94%,430px);max-height:88%;background:#141418;border:2px solid #1abc9c;border-radius:12px;padding:12px;box-sizing:border-box;display:flex;flex-direction:column">
+    <div id="hallCard" style="width:min(94%,430px);max-height:88%;background:#141418;border:2px solid #1abc9c;border-radius:12px;padding:12px;box-sizing:border-box;display:flex;flex-direction:column">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span id="hallTitle" style="color:#1abc9c;font-weight:bold;font-size:15px">💬 聊天大厅</span>
         <span id="hallOnline" style="color:#888;font-size:11px"></span>
@@ -15446,32 +15446,39 @@ gameLoop();
     var inp = document.getElementById('hallInput');
     if(!inp) return;
     var panel = document.getElementById('hallPanel');
+    var card = document.getElementById('hallCard');
+    var msgs = document.getElementById('hallMsgs');
     function moveUp(){
       try{
-        if(window.visualViewport && panel){
-          var vh = window.visualViewport.height;
-          var vTop = window.visualViewport.offsetTop || 0;
-          var kb = window.innerHeight - vh; // 软键盘高度
-          if(kb > 80){
-            panel.style.top = '0px';
-            panel.style.height = vh + 'px';
-            panel.style.alignItems = 'flex-start';
-            panel.style.paddingTop = '6px';
-            panel.style.paddingBottom = '6px';
-          } else {
-            panel.style.top = '0px';
-            panel.style.height = '100%';
-            panel.style.alignItems = 'center';
-            panel.style.paddingTop = '0px';
-            panel.style.paddingBottom = '0px';
-          }
+        if(!window.visualViewport || !panel) return;
+        var vh = window.visualViewport.height;
+        var vTop = window.visualViewport.offsetTop || 0;
+        var kb = window.innerHeight - vh;
+        if(kb > 80){
+          // 软键盘弹出：面板锚定到可视区（键盘上方），消息区压缩，输入框紧贴键盘
+          panel.style.top = vTop + 'px';
+          panel.style.left = '0px';
+          panel.style.width = '100%';
+          panel.style.height = vh + 'px';
+          panel.style.alignItems = 'center';
+          panel.style.justifyContent = 'center';
+          panel.style.padding = '0px';
+          if(card){ card.style.maxHeight = (vh - 10) + 'px'; }
+          if(msgs){ msgs.style.minHeight = '40px'; msgs.style.maxHeight = (vh * 0.45) + 'px'; }
+        } else {
+          panel.style.top = '0px';
+          panel.style.left = '0px';
+          panel.style.width = '100%';
+          panel.style.height = '100%';
+          panel.style.alignItems = 'center';
+          panel.style.justifyContent = 'center';
+          panel.style.padding = '0px';
+          if(card){ card.style.maxHeight = '88%'; }
+          if(msgs){ msgs.style.minHeight = '260px'; msgs.style.maxHeight = '46vh'; }
         }
       }catch(e){}
     }
-    inp.addEventListener('focus', function(){
-      try{ setTimeout(function(){ try{ inp.scrollIntoView({block:'center'}); }catch(e){} }, 200); }catch(e){}
-      setTimeout(moveUp, 250);
-    });
+    inp.addEventListener('focus', function(){ setTimeout(moveUp, 250); });
     inp.addEventListener('blur', moveUp);
     inp.addEventListener('touchstart', function(e){ e.stopPropagation(); }, {passive:true});
     inp.addEventListener('mousedown', function(e){ e.stopPropagation(); });
@@ -15479,21 +15486,32 @@ gameLoop();
     // 回车发送后收起键盘
     inp.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ try{ inp.blur(); }catch(e){} } });
   }
+  function hallDedup(fn){
+    var last = 0;
+    return function(){
+      var now = Date.now();
+      if(last && now - last < 400) return; // 400ms 内去重，防 touchstart+click 双发
+      last = now;
+      fn();
+    };
+  }
   function initHall(){
     var hb = document.getElementById('hallBtn');
     if(hb) hb.onclick = hallOpen;
     var sd = document.getElementById('hallSendBtn');
     if(sd){
-      sd.onclick = hallSend;
-      // 移动端触摸即时响应（与游戏内按钮一致）
-      sd.addEventListener('touchstart', function(e){ e.preventDefault(); e.stopPropagation(); hallSend(); }, {passive:false});
+      var sendOnce = hallDedup(hallSend);
+      sd.onclick = sendOnce;
+      // 移动端触摸即时响应（touchstart 里 preventDefault 阻止合成 click，去重兜底）
+      sd.addEventListener('touchstart', function(e){ e.preventDefault(); e.stopPropagation(); sendOnce(); }, {passive:false});
     }
     var si = document.getElementById('hallInput');
     if(si) si.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ hallSend(); } });
     var rb2 = document.getElementById('hallRoomBtn');
     if(rb2){
-      rb2.onclick = hallSendRoom;
-      rb2.addEventListener('touchstart', function(e){ e.preventDefault(); e.stopPropagation(); hallSendRoom(); }, {passive:false});
+      var roomOnce = hallDedup(hallSendRoom);
+      rb2.onclick = roomOnce;
+      rb2.addEventListener('touchstart', function(e){ e.preventDefault(); e.stopPropagation(); roomOnce(); }, {passive:false});
     }
     var cc = document.getElementById('hallCloseBtn');
     if(cc){
