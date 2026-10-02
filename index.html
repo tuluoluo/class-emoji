@@ -11616,16 +11616,27 @@ function drawMinimap(){
   // 玩家
   ctx.fillStyle = '#00ff00';
   ctx.fillRect(mx + G.player.x*scaleX-2, my + G.player.y*scaleY-2, 4, 4);
-  // 远程玩家（P2P队友）：小地图显示头像emoji
+  // 远程玩家（P2P队友）：小地图优先显示上传头像，无头像回退表情
   var _rp2 = G.remotePlayers || {};
   for(var rk2 in _rp2){
     var rp2b = _rp2[rk2];
     if(!rp2b || rp2b.dead) continue;
     if(rp2b.map && rp2b.map !== (G.currentMap || 'grassland')) continue;
-    ctx.font = '16px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(rp2b.face || '😡', mx + rp2b.x*scaleX, my + rp2b.y*scaleY);
+    if(rp2b.avatarImg && rp2b.avatarImg.complete && rp2b.avatarImg.naturalWidth > 0){
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(mx + rp2b.x*scaleX, my + rp2b.y*scaleY, 7, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fill();
+      ctx.clip();
+      try{ ctx.drawImage(rp2b.avatarImg, mx + rp2b.x*scaleX - 7, my + rp2b.y*scaleY - 7, 14, 14); }catch(e){}
+      ctx.restore();
+    } else {
+      ctx.font = '16px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(rp2b.face || '😡', mx + rp2b.x*scaleX, my + rp2b.y*scaleY);
+    }
   }
   // 视野框
   ctx.strokeStyle = 'rgba(255,255,255,0.5)';
@@ -11674,16 +11685,27 @@ function drawCoopMinimap(mx, my, mw){
     ctx.fillStyle = '#44ffff';
     ctx.fillRect(mx + G.player2.x*scaleX - 2, my + G.player2.y*scaleY - 2, 4, 4);
   }
-  // 远程玩家（P2P队友）：小地图显示头像emoji
+  // 远程玩家（P2P队友）：小地图优先显示上传头像，无头像回退表情
   var _rp3 = G.remotePlayers || {};
   for(var rk3 in _rp3){
     var rp3b = _rp3[rk3];
     if(!rp3b || rp3b.dead) continue;
     if(rp3b.map && rp3b.map !== (G.currentMap || 'grassland')) continue;
-    ctx.font = '16px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(rp3b.face || '😡', mx + rp3b.x*scaleX, my + rp3b.y*scaleY);
+    if(rp3b.avatarImg && rp3b.avatarImg.complete && rp3b.avatarImg.naturalWidth > 0){
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(mx + rp3b.x*scaleX, my + rp3b.y*scaleY, 7, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fill();
+      ctx.clip();
+      try{ ctx.drawImage(rp3b.avatarImg, mx + rp3b.x*scaleX - 7, my + rp3b.y*scaleY - 7, 14, 14); }catch(e){}
+      ctx.restore();
+    } else {
+      ctx.font = '16px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(rp3b.face || '😡', mx + rp3b.x*scaleX, my + rp3b.y*scaleY);
+    }
   }
   ctx.restore();
 }
