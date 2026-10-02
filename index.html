@@ -10949,6 +10949,7 @@ ctx.globalAlpha = 1;
 
   // 玩家
   try { if(G.player) drawPlayer(); } catch(e) {}
+  try { if(G.drawRemotePlayer) G.drawRemotePlayer(); } catch(e) {}
   try { if(G.currentMap === 'city') drawCityElements(true); } catch(e) {}
   try { if(G.currentMap === 'city') drawPoliceCars(); } catch(e) {}
   try { if(G.currentMap === 'city') drawCityBoss(); } catch(e) {}
@@ -15532,9 +15533,9 @@ if(_vt){ try{ _vt.textContent = '🎮 ' + GAME_VERSION + ' · 更新于 ' + GAME
     d.textContent = txt;
     m.appendChild(d); m.scrollTop = m.scrollHeight;
   }
-    function hallMsg(name, avatar, text, mine, noSave){
+    function hallMsg(name, avatar, text, mine, noSave, uid){
     var m = document.getElementById('hallMsgs'); if(!m) return;
-    if(!noSave){ hallSaveHist({ name:name, avatar:avatar, text:text, mine:!!mine, ts:Date.now(), uid:uid }); }
+    if(!noSave){ hallSaveHist({ name:name, avatar:avatar, text:text, mine:!!mine, ts:Date.now(), uid: uid }); }
     var d = document.createElement('div');
     d.style.cssText = 'display:flex;margin:6px 0;justify-content:' + (mine ? 'flex-end' : 'flex-start') + ';width:100%';
     var bubble = document.createElement('div');
