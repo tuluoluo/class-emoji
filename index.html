@@ -17208,6 +17208,15 @@ var BOT = (function(){
       return;
     }
   }
+  var _botHeart = null;
+  // 机器人进大厅即在线：向大厅广播 presence 心跳（在线人数统计可见）
+  function botPresence(){
+    if(!client || !client.connected) return;
+    for(var i=0;i<BOTS.length;i++){
+      var bid = BOTS[i].id;
+      try{ client.publish(HALL_PRESENCE, JSON.stringify({ id: bid, name: nameOf(bid), avatar: BOTS[i].face, ts: Date.now() }), { qos:0 }); }catch(e){}
+    }
+  }
   // 启动：复用大厅连接（零额外连接，避免公共 broker 限流导致 Bot 独立连接失败）。大厅未连接时等待，hallConnect 连接成功回调会再次调用。
   function start(){
     if(client || typeof window.mqtt === 'undefined') return;
@@ -17230,6 +17239,8 @@ var BOT = (function(){
         if(String(topic) === HALL_TOPIC){ botHall(d); } else{ botInbox(String(topic), d); }
       }catch(e){}
     });
+    botPresence();
+    if(!_botHeart){ _botHeart = setInterval(botPresence, 15000); }
   }
   // 拉入游戏：本地 AI 队友（无敌帮手）
   function spawn(name){
