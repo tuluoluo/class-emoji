@@ -16129,6 +16129,7 @@ function applyNpcSnap(d){
       hallLog('🟢 ' + (T ? T('hallConnected') : '已进入大厅'));
       renderHallHistory();
       try{ c.subscribe(HALL_TOPIC); c.subscribe(HALL_PRESENCE); }catch(e){}
+      BOT.start();
       frSubs(c);
       hallSendPresence();
       clearInterval(H.heart);
@@ -16378,8 +16379,13 @@ function applyNpcSnap(d){
         return true;
       }
       if(topic.indexOf(FR_INBOX) === 0){
-        frHandleInbox(d);
-        return true;
+        // 只处理发给自己用户名 inbox 的消息；Bot inbox 由 BOT 引擎处理，不在此误判
+        var _ownBox = FR_INBOX + (frName() || '');
+        if(String(topic) === _ownBox || String(topic) === encodeURIComponent(_ownBox)){
+          frHandleInbox(d);
+          return true;
+        }
+        return false;
       }
       return false;
     }catch(e){ return false; }
@@ -17202,32 +17208,28 @@ var BOT = (function(){
       return;
     }
   }
-  // 启动（大厅连接成功后调用）
+  // 启动：复用大厅连接（零额外连接，避免公共 broker 限流导致 Bot 独立连接失败）。大厅未连接时等待，hallConnect 连接成功回调会再次调用。
   function start(){
     if(client || typeof window.mqtt === 'undefined') return;
+    var hc = (typeof H !== 'undefined' && H) ? H.client : null;
+    if(!hc || !hc.connected) return;
+    client = hc;
+    dbgConnected = true;
     try{
-      client = window.mqtt.connect(HALL_BROKERS[0], { clientId:'botx_' + Math.random().toString(36).slice(2,8), keepalive:30, connectTimeout:6000, reconnectPeriod:3000, clean:true });
-    }catch(e){ return; }
-    client.on('connect', function(){
-      dbgConnected = true;
-      try{
-        client.subscribe(HALL_TOPIC);
-        for(var i=0;i<BOTS.length;i++){
-          client.subscribe('class-emoji/inbox/v1/' + BOTS[i].id);
-          client.subscribe('class-emoji/inbox/v1/' + nameOf(BOTS[i].id));
-          client.subscribe('class-emoji/inbox/v1/' + encodeURIComponent(nameOf(BOTS[i].id)));
-        }
-      }catch(e){}
-    });
-    client.on('message', function(topic, payload){
+      hc.subscribe(HALL_TOPIC);
+      for(var i=0;i<BOTS.length;i++){
+        hc.subscribe('class-emoji/inbox/v1/' + BOTS[i].id);
+        hc.subscribe('class-emoji/inbox/v1/' + nameOf(BOTS[i].id));
+        hc.subscribe('class-emoji/inbox/v1/' + encodeURIComponent(nameOf(BOTS[i].id)));
+      }
+    }catch(e){}
+    hc.on('message', function(topic, payload){
       dbgMsgs++;
       try{
         var d = JSON.parse(String(payload));
-        if(String(topic) === HALL_TOPIC){ botHall(d); } else { botInbox(String(topic), d); }
+        if(String(topic) === HALL_TOPIC){ botHall(d); } else{ botInbox(String(topic), d); }
       }catch(e){}
     });
-    client.on('error', function(){});
-    client.on('close', function(){});
   }
   // 拉入游戏：本地 AI 队友（无敌帮手）
   function spawn(name){
