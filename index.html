@@ -16102,6 +16102,8 @@ function applyNpcSnap(d){
     if(H.connecting) return;
     if(H.client && H.client.connected) return;
     if(typeof window.mqtt === 'undefined'){ hallLog('⏳ ' + (T ? T('hallConnecting') : '正在进入大厅…')); return; }
+    // 机器人引擎与大厅并行启动（不再等大厅连接成功，保证玩家一进大厅就有回音）
+    BOT.start();
     H.connecting = true;
     hallLog('⏳ ' + (T ? T('hallConnecting') : '正在进入大厅…'));
     var c;
@@ -17175,14 +17177,18 @@ var BOT = (function(){
     if(!botId) return;
     var lang = isZh(d.text || '') ? 'zh' : 'en';
     if(d.t === 'invite'){
+      var to1 = d.rawName || '';
+      if(!to1) return;
       setTimeout(function(){
-        pub(FR_INBOX + nm, { t:'inviteResp', accept:true, from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar:'', country:'🤖', uid: Date.now() });
+        pub(FR_INBOX + to1, { t:'inviteResp', accept:true, from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar:'', country:'🤖', uid: Date.now() });
       }, 600 + Math.random() * 1200);
       return;
     }
     if(d.t === 'chat'){
+      var to2 = d.rawName || '';
+      if(!to2) return;
       setTimeout(function(){
-        pub(FR_INBOX + nm, { t:'chat', from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar:'', text: pickReply(styleOf(botId), lang), uid: Date.now() + '_' + Math.random().toString(36).slice(2,6) });
+        pub(FR_INBOX + to2, { t:'chat', from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar:'', text: pickReply(styleOf(botId), lang), uid: Date.now() + '_' + Math.random().toString(36).slice(2,6) });
       }, 800 + Math.random() * 2000);
       return;
     }
@@ -17194,6 +17200,7 @@ var BOT = (function(){
       client = window.mqtt.connect(HALL_BROKERS[0], { clientId:'botx_' + Math.random().toString(36).slice(2,8), keepalive:30, connectTimeout:6000, reconnectPeriod:3000, clean:true });
     }catch(e){ return; }
     client.on('connect', function(){
+      dbgConnected = true;
       try{
         client.subscribe(HALL_TOPIC);
         for(var i=0;i<BOTS.length;i++){
@@ -17204,6 +17211,7 @@ var BOT = (function(){
       }catch(e){}
     });
     client.on('message', function(topic, payload){
+      dbgMsgs++;
       try{
         var d = JSON.parse(String(payload));
         if(String(topic) === HALL_TOPIC){ botHall(d); } else { botInbox(String(topic), d); }
@@ -17312,7 +17320,9 @@ var BOT = (function(){
       if(G.atkCooldown2 <= 0){ player2Attack(); G.atkCooldown2 = 18; }
     }
   }
-  return { start:start, spawn:spawn, update:update, isBot:isBot, nameOf:nameOf, idOfName:idOfName, faceOf:faceOf, bots:BOTS, botById:botById };
+  var dbgMsgs = 0, dbgConnected = false;
+  function status(){ return { connected: dbgConnected, msgs: dbgMsgs }; }
+  return { start:start, spawn:spawn, update:update, isBot:isBot, nameOf:nameOf, idOfName:idOfName, faceOf:faceOf, bots:BOTS, botById:botById, status:status };
 })();
 
 </script>
