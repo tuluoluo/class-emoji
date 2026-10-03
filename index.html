@@ -5278,7 +5278,7 @@ function loadGame(slot){
     // Boss实体不入档：读档后强制按当前击杀数重新生成（否则存档标记true+Boss实体清空→120杀永不触发）
     G.miniBossSpawned = false; G.finalBossSpawned = false;
   // 读档Boss保险：击杀数已达标但Boss不在场时立即补召唤
-  if(G.currentMap === 'grassland' && G.killCount >= 120 && !G.bosses.some(b => b.type === 'finalBoss')){
+  if(!isNetClient() && G.currentMap === 'grassland' && G.killCount >= 120 && !G.bosses.some(b => b.type === 'finalBoss')){
     G.finalBossSpawned = true;
     G.bosses.push(createFinalBoss());
     playSound('boss');
@@ -5289,7 +5289,7 @@ function loadGame(slot){
     G.cityBoss = createCityBoss();
   }
     // 读档Boss保险：击杀数已达标但Boss不在场时立即补召唤（防止任何原因导致Boss丢失）
-    if(G.currentMap === 'grassland' && G.killCount >= 120 && !G.bosses.some(b => b.type === 'finalBoss')){
+    if(!isNetClient() && G.currentMap === 'grassland' && G.killCount >= 120 && !G.bosses.some(b => b.type === 'finalBoss')){
       G.finalBossSpawned = true;
       G.bosses.push(createFinalBoss());
       playSound('boss');
@@ -6504,8 +6504,10 @@ function updateCityBoss(){
       }
       // 缓慢游荡（速度只有追击的40%，像普通路人）
       const oldX = boss.x, oldY = boss.y;
-      boss.x += boss.lurkDir.x * boss.speed * 0.4;
-      boss.y += boss.lurkDir.y * boss.speed * 0.4;
+      if(!isNetClient()){
+        boss.x += boss.lurkDir.x * boss.speed * 0.4;
+        boss.y += boss.lurkDir.y * boss.speed * 0.4;
+      }
       boss.x = clamp(boss.x, 0, WORLD_W - boss.w);
       boss.y = clamp(boss.y, 0, WORLD_H - boss.h);
       // 撞到高楼就随机换方向
@@ -6578,8 +6580,10 @@ function updateCityBoss(){
     boss.weaveT = (boss.weaveT || 0) + 0.09;
     const weave = Math.sin(boss.weaveT) * 0.5;
     const px = -dy/len, py = dx/len; // 垂直方向的单位向量
-    boss.x += (dx/len + px*weave) * boss.speed;
-    boss.y += (dy/len + py*weave) * boss.speed;
+    if(!isNetClient()){
+      boss.x += (dx/len + px*weave) * boss.speed;
+      boss.y += (dy/len + py*weave) * boss.speed;
+    }
     handleBuildingCollision(boss, oldX, oldY);
   } else {
     // 到攻击范围了，攻击！秒杀！
@@ -9444,8 +9448,8 @@ function updateMobs(){
       m.slipTimer--;
       if(m.slipTimer <= 0) m.slipRotate = false;
     } else {
-    // 精英怪：躲避玩家攻击
-    if(m.isElite){
+    // 精英怪：躲避玩家攻击（加入者由房主快照驱动，本地不躲）
+    if(m.isElite && !isNetClient()){
       if(m.dodgeCd>0) m.dodgeCd--;
       if(m.dodgeCd<=0 && p.attackAnim>0){
         const mcx = m.x+m.w/2, mcy = m.y+m.h/2;
@@ -9501,14 +9505,16 @@ function updateMobs(){
     }
 
     if(m.ranged){
-      // 远程：保持距离
+      // 远程：保持距离（加入者由房主快照驱动，本地不动）
       const ad = Math.hypot(attractX-cx, attractY-cy);
-      if(ad < 180){
-        m.x -= (attractX-cx)/ad * m.speed * 0.7;
-        m.y -= (attractY-cy)/ad * m.speed * 0.7;
-      } else if(ad > 300){
-        m.x += (attractX-cx)/ad * m.speed;
-        m.y += (attractY-cy)/ad * m.speed;
+      if(!isNetClient()){
+        if(ad < 180){
+          m.x -= (attractX-cx)/ad * m.speed * 0.7;
+          m.y -= (attractY-cy)/ad * m.speed * 0.7;
+        } else if(ad > 300){
+          m.x += (attractX-cx)/ad * m.speed;
+          m.y += (attractY-cy)/ad * m.speed;
+        }
       }
       // 发射声波（只对玩家发射）
       if(m.atkCd<=0 && d < m.atkRange){
@@ -9519,11 +9525,13 @@ function updateMobs(){
         });
       }
     } else {
-      // 近战：冲向目标（玩家或音乐）
+      // 近战：冲向目标（玩家或音乐）（加入者由房主快照驱动，本地不动）
       const ad = Math.hypot(attractX-cx, attractY-cy);
-      if(ad > 5){
-        m.x += (attractX-cx)/ad * m.speed;
-        m.y += (attractY-cy)/ad * m.speed;
+      if(!isNetClient()){
+        if(ad > 5){
+          m.x += (attractX-cx)/ad * m.speed;
+          m.y += (attractY-cy)/ad * m.speed;
+        }
       }
       // 近战攻击（攻击最近的玩家）
       if(m.atkCd<=0 && d < m.atkRange){
@@ -9618,8 +9626,8 @@ function updateBosses(){
     if(b.atkCd>0) b.atkCd--;
     if(b.attackAnim>0) b.attackAnim--;
 
-    // 最终Boss阶段切换检测
-    if(b.type==='finalBoss' && G.bossStageTransition<=0){
+    // 最终Boss阶段切换检测（加入者由房主快照驱动 stage，本地不切）
+    if(b.type==='finalBoss' && G.bossStageTransition<=0 && !isNetClient()){
       if(G.bossStage===1 && b.hp<=35){
         // 切换到第二阶段
         G.bossStage = 2;
@@ -9688,8 +9696,7 @@ function updateBosses(){
       const dx = cx-px, dy = cy-py;
       const len = Math.hypot(dx,dy)||1;
       // 垂直方向躲避
-      b.x += -dy/len * 8;
-      b.y += dx/len * 8;
+      if(!isNetClient()){ b.x += -dy/len * 8; b.y += dx/len * 8; }
       b.dodgeCd = 40;
       spawnParticles(cx, cy, '#8888ff', 5);
     }
@@ -9698,8 +9705,7 @@ function updateBosses(){
     if(b.stage>=3 && b.dashCd>0) b.dashCd--;
     if(b.stage>=3 && b.isDashing){
       b.dashTimer--;
-      b.x += b.dashDir.x * 10;
-      b.y += b.dashDir.y * 10;
+      if(!isNetClient()){ b.x += b.dashDir.x * 10; b.y += b.dashDir.y * 10; }
       if(Math.random()<0.5) spawnParticles(b.x+b.w/2, b.y+b.h/2, '#ff4444', 2);
       if(b.dashTimer<=0) b.isDashing = false;
     } else if(b.stage>=3 && b.dashCd<=0){
@@ -9727,8 +9733,7 @@ function updateBosses(){
 
     // 普通移动（冲刺中不移动）
     if(!b.isDashing && d > b.atkRange*0.7){
-      b.x += (px-cx)/d * b.speed;
-      b.y += (py-cy)/d * b.speed;
+      if(!isNetClient()){ b.x += (px-cx)/d * b.speed; b.y += (py-cy)/d * b.speed; }
     }
     b.x = clamp(b.x, 0, WORLD_W-b.w);
     b.y = clamp(b.y, 0, WORLD_H-b.h);
@@ -10048,7 +10053,7 @@ function updateNPCs(){
     // 逃跑期间不追击，且远离最近玩家
     if(tr.fleeTimer>0){
       tr.chasing = false;
-      if(d>1){
+      if(d>1 && !isNetClient()){
         tr.x -= (px-cx)/d * tr.speed * 0.8;
         tr.y -= (py-cy)/d * tr.speed * 0.8;
       }
@@ -10062,7 +10067,7 @@ function updateNPCs(){
       }
 
       if(tr.chasing){
-        if(d>5){
+        if(d>5 && !isNetClient()){
           tr.x += (px-cx)/d * tr.speed;
           tr.y += (py-cy)/d * tr.speed;
         }
@@ -10084,8 +10089,10 @@ function updateNPCs(){
           tr.moveDir = {x:rand(-1,1), y:rand(-1,1)};
           tr.changeDirTimer = rand(60,150);
         }
-        tr.x += tr.moveDir.x * tr.speed * 0.5;
-        tr.y += tr.moveDir.y * tr.speed * 0.5;
+        if(!isNetClient()){
+          tr.x += tr.moveDir.x * tr.speed * 0.5;
+          tr.y += tr.moveDir.y * tr.speed * 0.5;
+        }
       }
     }
     tr.x = clamp(tr.x, 20, WORLD_W-tr.w-20);
@@ -10145,8 +10152,10 @@ function updateNPCs(){
       }
       let wSpeed = wn.speed;
       if(G.weather === 'hot') wSpeed *= 0.8;
-      wn.x += wn.moveDir.x * wSpeed;
-      wn.y += wn.moveDir.y * wSpeed;
+      if(!isNetClient()){
+        wn.x += wn.moveDir.x * wSpeed;
+        wn.y += wn.moveDir.y * wSpeed;
+      }
       wn.x = clamp(wn.x, 20, WORLD_W-wn.w-20);
       wn.y = clamp(wn.y, 20, WORLD_H-wn.h-20);
       // 下雨打滑
@@ -14582,7 +14591,7 @@ function startGame(){
   G.fireGrounds = [];
   G.miniBossSpawned = false; G.finalBossSpawned = false;
   // 读档Boss保险：击杀数已达标但Boss不在场时立即补召唤
-  if(G.currentMap === 'grassland' && G.killCount >= 120 && !G.bosses.some(b => b.type === 'finalBoss')){
+  if(!isNetClient() && G.currentMap === 'grassland' && G.killCount >= 120 && !G.bosses.some(b => b.type === 'finalBoss')){
     G.finalBossSpawned = true;
     G.bosses.push(createFinalBoss());
     playSound('boss');
@@ -14685,7 +14694,7 @@ function startCoopGame(){
   G.fireGrounds = [];
   G.miniBossSpawned = false; G.finalBossSpawned = false;
   // 读档Boss保险：击杀数已达标但Boss不在场时立即补召唤
-  if(G.currentMap === 'grassland' && G.killCount >= 120 && !G.bosses.some(b => b.type === 'finalBoss')){
+  if(!isNetClient() && G.currentMap === 'grassland' && G.killCount >= 120 && !G.bosses.some(b => b.type === 'finalBoss')){
     G.finalBossSpawned = true;
     G.bosses.push(createFinalBoss());
     playSound('boss');
