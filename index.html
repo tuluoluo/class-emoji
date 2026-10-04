@@ -16198,7 +16198,7 @@ function applyNpcSnap(d){
       return;
     }
     var meta = { nick: hallMyName(), avatar: hallMyAvatar() };
-    var msg = { t:'hall', type:'msg', uid: H.uid + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), name: meta.nick, avatar: meta.avatar, text: clean, ts: Date.now() };
+    var msg = { t:'hall', type:'msg', uid: H.uid + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), name: meta.nick, avatar: meta.avatar, text: clean, ts: Date.now(), country: (typeof frCountry === 'function') ? (frCountry() || '') : '' };
     if(msg.uid) H.seen[msg.uid] = 1; // 本地先显示，回传跳过
     try{ H.client.publish(HALL_TOPIC, JSON.stringify(msg), { qos:0 }); }catch(e){}
     hallMsg(meta.nick, meta.avatar, clean, true, false, msg.uid);
@@ -16487,7 +16487,7 @@ function applyNpcSnap(d){
     var ci = document.getElementById('chatInput');
     if(ci) ci.addEventListener('keydown', function(e){ if(e.key === 'Enter') frSendChatClick(); });
     var cc = document.getElementById('chatCloseBtn');
-    if(cc) cc.onclick;
+    if(cc) cc.onclick = function(){ var cp = document.getElementById('chatPanel'); if(cp) cp.style.display = 'none'; F.chatPeer = null; };
     document.addEventListener('visibilitychange', function(){
       if(!document.hidden){
         try{ if(F.chatPeer) frRenderChat(); frRenderList(); }catch(e){}
@@ -16686,7 +16686,7 @@ function applyNpcSnap(d){
     log.push({ from: frName(), text: text, time: Date.now(), uid: uid });
     try{ localStorage.setItem(frChatKey(), JSON.stringify(log)); }catch(e){}
     if(H.client && H.client.connected){
-      frPub(FR_INBOX + F.chatPeer, { t:'chat', from: frDisplay(), rawName: frName(), avatar: frAvatar(), text: text, uid: uid });
+      frPub(FR_INBOX + F.chatPeer, { t:'chat', from: frDisplay(), rawName: frName(), avatar: frAvatar(), country: frCountry(), text: text, uid: uid });
     }
     frRenderChat();
   }
@@ -16856,13 +16856,20 @@ function applyNpcSnap(d){
   var forceMode = false; // 新游客强制建号模式：无账号时弹出且不可关闭
   var A = { list: [], cur: 0 };
   try{ var saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if(saved && saved.list) A = saved; }catch(e){}
+  // 主 key 丢失/损坏 → 从备份恢复，防止账号数据凭空消失
+  if(!A.list || !A.list.length){
+    try{ var bak = JSON.parse(localStorage.getItem(KEY + '_bak') || 'null'); if(bak && bak.list && bak.list.length){ A = bak; try{ localStorage.setItem(KEY, JSON.stringify(A)); }catch(e){} } }catch(e){}
+  }
   if(typeof A.cur !== 'number') A.cur = 0;
   if(!A.list) A.list = [];
   // 立即暴露当前账号名给全局 accKey() 隔离层（游客=空）
   try{ window.__accCurrentName = A.list[A.cur] ? A.list[A.cur].name : ''; }catch(e){}
   try{ window.__accCurrentCountry = A.list[A.cur] ? (A.list[A.cur].country || '') : ''; }catch(e){}
 
-  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(A)); }catch(e){ alert('存储失败（空间不足？）'); } }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(A)); }catch(e){ alert('存储失败（空间不足？）'); }
+    try{ localStorage.setItem(KEY + '_bak', JSON.stringify(A)); }catch(e){}
+  }
   function current(){ return A.list[A.cur] || null; }
   // 游客数据合并给指定账号：只复制游客侧存在、账号侧还没有的数据（不清除游客数据）
   function mergeGuestTo(name){
@@ -17378,11 +17385,18 @@ var BOT = (function(){
   }
 function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
   function pub(topic, obj){ try{ client.publish(topic, JSON.stringify(obj), { qos:0 }); }catch(e){} }
+  // 回复语言：优先按玩家国籍（纯 emoji 消息无语言特征时不误判）
+  function botLangOf(d){
+    var c = d && d.country ? String(d.country) : '';
+    if(c.indexOf('🇨🇳') >= 0 || c.indexOf('中国') >= 0 || /CN|zh/i.test(c)) return 'zh';
+    if(c.indexOf('🇺🇸') >= 0 || c.indexOf('🇬🇧') >= 0 || c.indexOf('美国') >= 0 || c.indexOf('英国') >= 0 || /US|UK|en/i.test(c)) return 'en';
+    return isZh((d && d.text) || '') ? 'zh' : 'en';
+  }
   // 大厅消息 → 触发回复（玩家先发言，Bot 才回）
   function botHall(d){
     if(!client || !d || d.t !== 'hall' || d.type !== 'msg' || !d.text) return;
     if(!d.name || isBot(d.name)) return; // Bot 不回应 Bot
-    var lang = isZh(d.text) ? 'zh' : 'en';
+    var lang = botLangOf(d);
     // 随机挑 1 个 Bot（限速 30s）
     var candidates = [];
     for(var i=0;i<BOTS.length;i++){
@@ -17404,7 +17418,7 @@ function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
     try{ nm = decodeURIComponent(topic.slice((_bt_inbox).length)); }catch(e){ return; }
     var botId = botById(nm) || (BOTS.some(function(b){ return b.id === nm; }) ? nm : null);
     if(!botId) return;
-    var lang = isZh(d.text || '') ? 'zh' : 'en';
+    var lang = botLangOf(d);
     if(d.t === 'invite'){
       var to1 = d.rawName || '';
       if(!to1) return;
