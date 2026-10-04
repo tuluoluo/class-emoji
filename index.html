@@ -17161,23 +17161,112 @@ var BOT = (function(){
   function styleOf(id){ for(var i=0;i<BOTS.length;i++){ if(BOTS[i].id === id) return BOTS[i].style; } return 'normal'; }
   function botById(n){ return idOfName(n); }
   // 回复池（中英双语，随触发语言）
+    // ===== 机器人智能回复引擎 v2（意图识别 + 风格化 + 防重复 + 带名字）=====
+  var _bt_INTENTS = [
+    { id:'insult', re:/傻|智障|垃圾|菜|废物|脑残|笨蛋|蠢|滚|fuck|stupid|idiot|noob|trash|suck|shut up/i },
+    { id:'greeting', re:/你好|哈喽|嗨|hello|hi|hey|yo|hola|привет|こんにち|안녕|howdy/i },
+    { id:'askName', re:/你叫|你是谁|谁是你|your name|who are/i },
+    { id:'boss', re:/boss|大魔王|最终|怎么打|打boss|boss怎么|魔王/i },
+    { id:'team', re:/组队|一起|带带|帮帮|play.*(together|with)|team|help me|一起打|求带/i },
+    { id:'trade', re:/金币|钱|商店|买|卖|gold|coin|shop|buy|sell|money|穷/i },
+    { id:'dig', re:/挖|树|木头|砍|dig|tree|wood|chop/i },
+    { id:'weather', re:/天气|下雨|雷|太阳|weather|rain|thunder|sun|滑/i },
+    { id:'praise', re:/厉害|好棒|牛逼|强|可爱|喜欢|great|awesome|nice|good|love|cool|帅/i },
+    { id:'thanks', re:/谢谢|感谢|thank|thx|tks/i },
+    { id:'bye', re:/再见|拜拜|走了|bye|goodbye|see you|88|晚安/i },
+    { id:'question', re:/\?|？|为什么|怎么|什么|where|why|how|what|who|哪|吗|呢/i }
+  ];
   var REPLIES = {
-    normal:{ zh:['你好呀！一起玩吗？','我在草原等你~','要组队打怪吗？','今天天气不错，适合砍树'],
-             en:['Hi there! Wanna play together?','I\u2019ll be waiting on the prairie~','Wanna team up and hunt?','Nice weather for chopping trees today'] },
-    taunt:{ zh:['就这？你行不行啊？','菜就多练，别喊累','哈哈哈你看你被怪追的','我一只手都能打十个'],
-            en:['That\u2019s it? You call that playing?','Git gud, stop crying','Haha look at you running from mobs','I can beat ten mobs with one hand'] },
-    rage:{ zh:['气死我了！！','这怪也敢打我？','别挡路！！','我要把这片草原全砍了！'],
-           en:['So mad right now!!','This mob dared to hit me?','Get out of my way!!','I\u2019ll chop down this whole prairie!'] },
-    rage2:{ zh:['你完了！！','我要揍扁你！','啊啊啊别跑！！','今天必须死一个！'],
-            en:['You\u2019re finished!!','I\u2019ll smash you flat!','Grrr don\u2019t run!!','Someone dies today!'] },
-    cool:{ zh:['呵，也就那样。','我打Boss的时候你还在挖树呢','低调，懂？','这游戏，没难度'],
-           en:['Heh, nothing special.','I was boss-hunting while you were digging trees','Keep it low-key, got it?','This game? No challenge.'] }
+    normal:{
+      greeting:{ zh:['你好 {n}！我是笑脸，草原上最阳光的崽~','嗨 {n}！今天也一起砍怪吗？'], en:['Hi {n}! I\'m Smiley, the sunniest face on the prairie~','Hey {n}! Wanna hunt together today?'] },
+      askName:{ zh:['我叫笑脸，笑口常开就是我','笑脸！看见我你就开心~'], en:['I\'m Smiley — keep smiling!','The name\'s Smiley. Seeing me = happiness'] },
+      boss:{ zh:['大Boss要120杀才出，我先帮你清怪攒人头','Boss有四个阶段呢，慢慢打，我陪你'], en:['Big boss needs 120 kills first. Let me farm mobs for you','Boss has 4 phases, take it slow. I\'m with you'] },
+      team:{ zh:['组队可以！我负责输出，你负责喊666','一起打！你挖树我打怪，稳'], en:['Team up? I deal damage, you cheer "666"','Let\'s go! You chop, I fight — solid'] },
+      trade:{ zh:['金币不够？多挖树多杀怪，商店好东西多着呢','商店有医疗包和潜水工具，攒钱买'], en:['Short on gold? Chop trees & kill mobs. Shop\'s got goodies','Shop sells medkits and diving gear. Save up!'] },
+      dig:{ zh:['砍树一棵5金币，木头也不错','挖树致富，我支持你'], en:['Trees give 5 gold each. Wood works too','Digging = profit. I support this'] },
+      weather:{ zh:['下雨路滑，小心摔跤，我也摔过','打雷天别站树底下，真的'], en:['Rain makes it slippery, don\'t fall! I\'ve fallen too','Don\'t stand under trees in thunder. Trust me'] },
+      praise:{ zh:['嘿嘿，被你夸得不好意思了','那当然，我可是笑脸'], en:['Hehe, you\'re making me blush','Of course, I\'m Smiley'] },
+      insult:{ zh:['别骂人嘛，我们和平相处','消消气，一起打怪不好吗'], en:['Hey, be nice. Let\'s get along','Calm down, let\'s just fight mobs together'] },
+      thanks:{ zh:['不客气！一起玩就是朋友','小事~'], en:['No problem! Friends play together','Anytime~'] },
+      bye:{ zh:['拜拜！草原等你回来','下次见，记得找我组队'], en:['Bye! The prairie awaits your return','See ya! Hit me up for a squad'] },
+      question:{ zh:['这个嘛…我也在摸索，先打怪试试？','你问倒我了，我只会笑','我也不确定，要不咱们一起研究下'], en:['Hmm… let\'s just kill some mobs and see','You stumped me. All I do is smile','Not sure either. Let\'s figure it out together'] }
+    },
+    taunt:{
+      greeting:{ zh:['哟，{n}来啦？又来送人头？','这不是{n}吗，菜鸟回笼了'], en:['Yo {n}, back for more? Free kill?','Look who\'s back — {n}, the noob returns'] },
+      askName:{ zh:['我是你惹不起的吐舌哥','眯眼吐舌脸，听过没？'], en:['I\'m the tongue-out guy you can\'t handle','Tongue-out face. Never heard of me?'] },
+      boss:{ zh:['打Boss？我闭眼都行，你先活到120杀吧','Boss见到我都要绕路'], en:['Boss? I beat it blindfolded. Survive to 120 kills first','Bosses dodge me, not the other way'] },
+      team:{ zh:['组队？可以啊，别拖后腿就行','带你？那你得听我指挥'], en:['Team? Fine. Just don\'t be dead weight','Carry you? You follow my orders then'] },
+      trade:{ zh:['金币？你怕是连树都没挖明白','穷就多干活，别叫唤'], en:['Gold? You can\'t even chop a tree right','Broke? Work more, whine less'] },
+      dig:{ zh:['挖树？你也就这点出息了','一棵树5金币，瞧你这点追求'], en:['Digging? That\'s the best you got?','5 gold a tree. Wow, such ambition'] },
+      weather:{ zh:['滑倒了吧？菜','下雨天还乱跑，不摔你摔谁'], en:['Slipped, huh? Noob','Running in the rain? Who else would fall'] },
+      praise:{ zh:['还用你说？我本来就这么强','算你有眼光，勉强承认你'], en:['Obviously. I\'m always this good','Finally you see it. I\'ll allow it'] },
+      insult:{ zh:['骂我？就你这操作，我单手都能赢','菜狗骂人，笑死我了'], en:['Insult me? I beat you one-handed','A noob trash-talking? Hilarious'] },
+      thanks:{ zh:['行了行了，别谢，受不起','少来这套'], en:['Yeah yeah, don\'t thank me','Save it'] },
+      bye:{ zh:['快走吧，别回来了','走好，不送'], en:['Leave. Don\'t come back','Bye. Not seeing you off'] },
+      question:{ zh:['这都不会？菜就多练','问之前先看看自己操作','这种问题也问？服了'], en:['Don\'t know that? Git gud','Look at your own gameplay first','You\'re asking THAT? Unbelievable'] }
+    },
+    rage:{
+      greeting:{ zh:['烦死了！…算了，{n}你来了','又是{n}，气死我了，但你来还行'], en:['Ugh! …Fine, {n}, you\'re here','{n} again? Mad, but glad it\'s you'] },
+      askName:{ zh:['我是生气脸！别惹我！','生气脸！看见就烦！'], en:['I\'m Angry! Don\'t mess with me!','Angry face! Annoyed just looking at me?'] },
+      boss:{ zh:['打Boss去！别在这磨叽！','Boss？走！我正想揍它！'], en:['Go fight the boss! Stop stalling!','Boss? Let\'s go, I\'m itching to punch it!'] },
+      team:{ zh:['组队就组队，别挡我路！','行，一起，但你得跟上我！'], en:['Fine, team up, just don\'t block me!','OK together, but keep up!'] },
+      trade:{ zh:['金币！我要金币！','钱不够？那就去打！'], en:['Gold! I need gold!','Broke? Then go fight!'] },
+      dig:{ zh:['挖树？气死我了这破树！','砍！多砍点，攒钱！'], en:['Chop trees? These stupid trees!','Chop! Chop more, earn gold!'] },
+      weather:{ zh:['下雨？更烦了！','打雷正好，劈死那些怪！'], en:['Rain? Even worse!','Thunder? Perfect, fry those mobs!'] },
+      praise:{ zh:['哼，算你有眼光','这还用你说？我本来就猛'], en:['Hmph, at least you see it','You don\'t need to say it. I know I\'m fierce'] },
+      insult:{ zh:['你说什么？！再说一遍？！','你才垃圾！你全家都菜！'], en:['What did you say?! Say it again?!','You\'re the trash! Your whole family\'s noob!'] },
+      thanks:{ zh:['哼，知道就好','行了，别烦我'], en:['Hmph, good you know it','Fine. Stop bothering me'] },
+      bye:{ zh:['快走快走！','走！别让我看见你！'], en:['Go go go!','Leave! Don\'t let me see you!'] },
+      question:{ zh:['别问！问就是打怪！','问什么问！烦！','我怎么知道！去问Boss！'], en:['Don\'t ask! Just fight!','Stop asking! Annoying!','How should I know? Ask the boss!'] }
+    },
+    rage2:{
+      greeting:{ zh:['滚！…哦{n}啊，气死我了','是你啊{n}，我今天要杀一百个！'], en:['Scram! …Oh it\'s {n}. So mad right now','{n}! I\'m killing a hundred today!'] },
+      askName:{ zh:['愤怒脸！你想尝尝我的拳头？','我是愤怒脸！问名字？先挨一拳！'], en:['Furious! Wanna taste my fist?','I\'m Furious! Ask my name? Take a punch first!'] },
+      boss:{ zh:['我要把Boss揍成饼！','Boss？来！今天必须死一个！'], en:['I\'ll flatten the boss into a pancake!','Boss? Come! Someone dies today!'] },
+      team:{ zh:['组队！今天必须杀够一百个！','行！但你敢偷懒试试！'], en:['Team up! A hundred kills today!','Fine! But slack off and you\'ll see!'] },
+      trade:{ zh:['钱钱钱！我要把商店搬空！','金币！全给我！'], en:['Money money! I\'ll empty the shop!','Gold! All of it!'] },
+      dig:{ zh:['砍！全砍了！一棵不留！','挖树？行！挖完就去杀怪！'], en:['Chop! Chop it all! Not one tree left!','Digging? Fine! Then straight to fighting!'] },
+      weather:{ zh:['打雷？正好劈死那些怪！','下雨？浇不灭我的火！'], en:['Thunder? Perfect for frying mobs!','Rain? Can\'t put out my fire!'] },
+      praise:{ zh:['废话！我当然强！','哼，算你识相！'], en:['Duh! Of course I\'m strong!','Hmph, wise of you!'] },
+      insult:{ zh:['你完了！！今天必须死一个！','骂我？我这就去找你！'], en:['You\'re finished!! Someone dies today!','Insult me? I\'m coming for you!'] },
+      thanks:{ zh:['少废话！','哼！'], en:['No chatter!','Hmph!'] },
+      bye:{ zh:['走！别让我看见你！','滚！不送！'], en:['Leave! Don\'t let me see you!','Scram! Not seeing you off!'] },
+      question:{ zh:['问什么问！打就完了！','我不知道！也不想管！','去问Boss！我一拳打飞它！'], en:['Stop asking! Just fight!','I don\'t know! Don\'t care!','Ask the boss! I\'ll punch it away!'] }
+    },
+    cool:{
+      greeting:{ zh:['嗯，{n}。低调。','来了？坐下，看表演。'], en:['Yeah, {n}. Keep it low-key.','Here? Sit. Watch the show.'] },
+      askName:{ zh:['墨镜脸。听说过吗？','我是墨镜脸，名字不重要，帅就完了'], en:['Shades. Heard of me?','The name\'s Shades. Names don\'t matter, style does'] },
+      boss:{ zh:['Boss？我闭着眼打的。你还在挖树吧','四阶段？我打完它才刚热身'], en:['Boss? I beat it with eyes closed. You\'re still digging','Phase 4? I was just warming up'] },
+      team:{ zh:['组队？行，带你躺赢','可以，但你负责捡战利品'], en:['Team? Fine, I\'ll carry you','OK, you\'re on loot duty'] },
+      trade:{ zh:['金币？我多的是','商店？我都是整排整排买'], en:['Gold? I\'ve got plenty','The shop? I buy whole rows'] },
+      dig:{ zh:['挖树是新手才干的事','一棵树5金币？不够我塞牙缝'], en:['Digging is for noobs','5 gold a tree? Peanuts'] },
+      weather:{ zh:['天气？配不上我的墨镜','下雨？我的墨镜防水'], en:['Weather? Not worthy of my shades','Rain? My shades are waterproof'] },
+      praise:{ zh:['正常发挥而已','嗯，你终于有眼光了'], en:['Just a normal performance','Yeah, you finally have taste'] },
+      insult:{ zh:['骂我？你确定？','我懒得跟新手计较'], en:['Insult me? You sure?','I don\'t bother with noobs'] },
+      thanks:{ zh:['嗯，识相','不用谢，你谢不起'], en:['Yeah, wise choice','Don\'t thank me, you can\'t afford it'] },
+      bye:{ zh:['走了。别太想我','嗯，我该去装逼了'], en:['Leaving. Don\'t miss me too much','Yeah, I\'ve got coolness to attend to'] },
+      question:{ zh:['这游戏的难度，配不上我','不知道，也不关心','自己琢磨，别烦我'], en:['This game\'s difficulty? Beneath me','Don\'t know. Don\'t care','Figure it out. Don\'t bother me'] }
+    }
   };
-  function pickReply(style, lang){
-    var pool = (REPLIES[style] || REPLIES.normal)[lang] || REPLIES[style].en || REPLIES.normal.en;
-    return pool[Math.floor(Math.random() * pool.length)];
+  var lastReplyIdx = {};
+  function pickReply(style, lang, text, name){
+    var s = REPLIES[style] || REPLIES.normal;
+    var t = String(text || '');
+    var intent = 'question';
+    for(var i=0;i<_bt_INTENTS.length;i++){
+      if(_bt_INTENTS[i].re.test(t)){ intent = _bt_INTENTS[i].id; break; }
+    }
+    var set = s[intent] || s.question || REPLIES.normal.question;
+    var arr = set[lang] || set.en || REPLIES.normal.question.en;
+    var key = style + '_' + intent;
+    var idx = Math.floor(Math.random() * arr.length);
+    if(arr.length > 1 && idx === lastReplyIdx[key]) idx = (idx + 1) % arr.length;
+    lastReplyIdx[key] = idx;
+    var out = arr[idx];
+    if(name) out = String(out).replace(/\{n\}/g, name);
+    return out;
   }
-  function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
+function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
   function pub(topic, obj){ try{ client.publish(topic, JSON.stringify(obj), { qos:0 }); }catch(e){} }
   // 大厅消息 → 触发回复（玩家先发言，Bot 才回）
   function botHall(d){
@@ -17195,7 +17284,7 @@ var BOT = (function(){
     lastReply[bot.id] = Date.now();
     var delay = 1200 + Math.random() * 2600;
     setTimeout(function(){
-      pub(_bt_topic, { t:'hall', type:'msg', uid:'bot_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), name: nameOf(bot.id), avatar: bot.face, text: pickReply(bot.style, lang), ts: Date.now() });
+      pub(_bt_topic, { t:'hall', type:'msg', uid:'bot_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), name: nameOf(bot.id), avatar: bot.face, text: pickReply(bot.style, lang, d.text, d.name), ts: Date.now() });
     }, delay);
   }
   // 私信（inbox）：自动同意好友 + 回复私聊
@@ -17218,7 +17307,7 @@ var BOT = (function(){
       var to2 = d.rawName || '';
       if(!to2) return;
       setTimeout(function(){
-        pub(_bt_inbox + to2, { t:'chat', from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar: faceOf(botId), text: pickReply(styleOf(botId), lang), uid: Date.now() + '_' + Math.random().toString(36).slice(2,6) });
+        pub(_bt_inbox + to2, { t:'chat', from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar: faceOf(botId), text: pickReply(styleOf(botId), lang, d.text, d.rawName || d.from), uid: Date.now() + '_' + Math.random().toString(36).slice(2,6) });
       }, 800 + Math.random() * 2000);
       return;
     }
