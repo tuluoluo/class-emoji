@@ -16306,7 +16306,7 @@ function applyNpcSnap(d){
   var FR_INBOX = 'class-emoji/inbox/v1/';
   var FR_FIND = 'class-emoji/find/v1/';
   var FR_PRESENCE = 'class-emoji/presence/v1/';
-  var F = { list: [], registry: {}, presences: {}, requests: {}, chatPeer: null, _searching: false, _searchResult: {}, _pendingInvite: null, _pendingRoomInvite: null };
+  var F = { list: [], registry: {}, presences: {}, requests: {}, chatPeer: null, unread: {}, _searching: false, _searchResult: {}, _pendingInvite: null, _pendingRoomInvite: null };
   function frName(){ try{ return (G.accountName ? G.accountName() : '') || ''; }catch(e){ return ''; } }
   function frAvatar(){ try{ return (G.accountAvatar ? G.accountAvatar() : '') || ''; }catch(e){ return ''; } }
   function frCountry(){ try{ return window.__accCurrentCountry || ''; }catch(e){ return ''; } }
@@ -16451,7 +16451,12 @@ function applyNpcSnap(d){
     var ci = document.getElementById('chatInput');
     if(ci) ci.addEventListener('keydown', function(e){ if(e.key === 'Enter') frSendChatClick(); });
     var cc = document.getElementById('chatCloseBtn');
-    if(cc) cc.onclick = function(){ var p = document.getElementById('chatPanel'); if(p) p.style.display = 'none'; };
+    if(cc) cc.onclick;
+    document.addEventListener('visibilitychange', function(){
+      if(!document.hidden){
+        try{ if(F.chatPeer) frRenderChat(); frRenderList(); }catch(e){}
+      }
+    }) = function(){ var p = document.getElementById('chatPanel'); if(p) p.style.display = 'none'; };
     var ia = document.getElementById('inviteAcceptBtn');
     if(ia) ia.onclick = function(){ frRespInvite(true); };
     var ir = document.getElementById('inviteRejectBtn');
@@ -16601,6 +16606,7 @@ function applyNpcSnap(d){
       html += '<div style="display:flex;align-items:center;padding:6px;border-bottom:1px solid #333">'
         + frAvatarHtml(f.avatar, f.country, 28)
         + '<span style="flex:1;font-size:13px">' + frEsc(f.country || '') + frEsc(f.name) + '</span>'
+        + (F.unread && F.unread[f.name] ? '<span style="background:#e74c3c;color:#fff;border-radius:50%;font-size:10px;padding:1px 5px;margin-right:4px;min-width:14px;text-align:center;display:inline-block">' + F.unread[f.name] + '</span>' : '')
         + '<span style="color:' + (online ? '#2ecc71' : '#888') + ';font-size:11px;margin-right:6px">' + (online ? (T ? T('frOnline') : '在线') : (T ? T('frOffline') : '离线')) + '</span>'
         + '<button onclick="window.frOpenChat(\'' + frEscAttr(f.name) + '\')" style="padding:3px 8px;background:#3498db;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;margin-right:4px">💬</button>'
         + '<button onclick="window.frInviteRoom(\'' + frEscAttr(f.name) + '\')" style="padding:3px 8px;background:#16a085;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer">📣</button>'
@@ -16611,6 +16617,9 @@ function applyNpcSnap(d){
   // ===== 私聊 =====
   function frOpenChat(name){
     F.chatPeer = name;
+    if(!F.unread) F.unread = {};
+    F.unread[name] = 0;
+    try{ frRenderList(); }catch(e){}
     var cp = document.getElementById('chatPanel');
     var title = document.getElementById('chatTitle');
     if(title) title.textContent = '💬 ' + (T ? T('frChat') : '私聊') + ' · ' + frEsc(name);
@@ -16657,7 +16666,12 @@ function applyNpcSnap(d){
     log.push({ from: b, text: d.text || '', time: Date.now(), uid: d.uid });
     try{ localStorage.setItem(key, JSON.stringify(log)); }catch(e){}
     if(F.chatPeer === b){ frRenderChat(); }
-    else { showToast('💬 ' + frEsc(d.from || b) + ': ' + frEsc(String(d.text || '').slice(0, 20))); }
+    else {
+      if(!F.unread) F.unread = {};
+      F.unread[b] = (F.unread[b] || 0) + 1;
+      try{ frRenderList(); }catch(e){}
+      showToast('💬 ' + frEsc(d.from || b) + ': ' + frEsc(String(d.text || '').slice(0, 20)));
+    }
   }
   function frRenderChat(){
     var box = document.getElementById('chatMsgs');
