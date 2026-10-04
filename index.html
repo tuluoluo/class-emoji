@@ -16063,8 +16063,12 @@ function applyNpcSnap(d){
     var bubble = document.createElement('div');
     bubble.style.cssText = 'max-width:78%;padding:6px 10px;border-radius:12px;box-sizing:border-box;' + (mine ? 'background:rgba(26,188,156,0.30);border-top-right-radius:2px' : 'background:rgba(255,255,255,0.09);border-top-left-radius:2px');
     var head = '';
-    if(!mine && avatar && String(avatar).indexOf('data:') === 0){
-      head = '<img src="' + avatar + '" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:5px">';
+    if(!mine && avatar){
+      if(String(avatar).indexOf('data:') === 0){
+        head = '<img src="' + avatar + '" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:5px">';
+      } else if(String(avatar).length <= 8){
+        head = '<span style="font-size:18px;vertical-align:middle;margin-right:5px">' + avatar + '</span>';
+      }
     }
     bubble.innerHTML = head + '<span style="color:#1abc9c;font-size:11px;font-weight:bold">' + hallEsc(name) + '</span><div style="color:#eee;font-size:14px;word-break:break-word">' + hallEsc(text) + '</div>';
     d.appendChild(bubble);
@@ -16319,7 +16323,8 @@ function applyNpcSnap(d){
   function frEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function frEscAttr(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
   function frAvatarHtml(av, country, size){
-    if(av) return '<img src="' + frEsc(av) + '" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;margin-right:8px;vertical-align:middle">';
+    if(av && String(av).indexOf('data:') === 0) return '<img src="' + frEsc(av) + '" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;margin-right:8px;vertical-align:middle">';
+    if(av && String(av).length <= 8) return '<span style="font-size:' + (size+4) + 'px;margin-right:8px;vertical-align:middle">' + av + '</span>';
     return '<span style="font-size:' + (size+4) + 'px;margin-right:8px;vertical-align:middle">' + frEsc(country || '👤') + '</span>';
   }
   // MQTT 订阅扩展：名字库/收件箱/搜索/在线心跳
@@ -17205,7 +17210,7 @@ var BOT = (function(){
       var to1 = d.rawName || '';
       if(!to1) return;
       setTimeout(function(){
-        pub(_bt_inbox + to1, { t:'inviteResp', accept:true, from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar:'', country:'🤖', uid: Date.now() });
+        pub(_bt_inbox + to1, { t:'inviteResp', accept:true, from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar: faceOf(botId), country:'🤖', uid: Date.now() });
       }, 600 + Math.random() * 1200);
       return;
     }
@@ -17213,7 +17218,7 @@ var BOT = (function(){
       var to2 = d.rawName || '';
       if(!to2) return;
       setTimeout(function(){
-        pub(_bt_inbox + to2, { t:'chat', from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar:'', text: pickReply(styleOf(botId), lang), uid: Date.now() + '_' + Math.random().toString(36).slice(2,6) });
+        pub(_bt_inbox + to2, { t:'chat', from: faceOf(botId) + ' ' + nameOf(botId), rawName: nameOf(botId), avatar: faceOf(botId), text: pickReply(styleOf(botId), lang), uid: Date.now() + '_' + Math.random().toString(36).slice(2,6) });
       }, 800 + Math.random() * 2000);
       return;
     }
