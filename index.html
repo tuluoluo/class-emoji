@@ -17448,7 +17448,10 @@ var BOT = (function(){
           if(kb.length > 1 && idx2 === lastReplyIdx[key2]) idx2 = (idx2 + 1) % kb.length;
           lastReplyIdx[key2] = idx2;
           var out2 = kb[idx2];
-          if(name) out2 = String(out2).replace(/\{n\}/g, name);
+          if(name){
+            out2 = String(out2).replace(/\{n\}/g, name);
+            if(out2.indexOf(name) < 0) out2 = name + ((lang === 'zh' || lang === 'hant' || lang === 'wenyan') ? '，' : ', ') + out2;
+          }
           return out2;
         }
       }
@@ -17464,7 +17467,10 @@ var BOT = (function(){
     if(arr.length > 1 && idx === lastReplyIdx[key]) idx = (idx + 1) % arr.length;
     lastReplyIdx[key] = idx;
     var out = arr[idx];
-    if(name) out = String(out).replace(/\{n\}/g, name);
+    if(name){
+      out = String(out).replace(/\{n\}/g, name);
+      if(out.indexOf(name) < 0) out = name + ((lang === 'zh' || lang === 'hant' || lang === 'wenyan') ? '，' : ', ') + out;
+    }
     return out;
   }
 function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
