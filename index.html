@@ -14573,11 +14573,12 @@ function startGame(){
           if(_Sp.bots.length > 1){
             try{
               G.botSquad = [];
+              var _botStyles = { bot_smiley:'normal', bot_tongue:'taunt', bot_angry:'rage', bot_furious:'rage2', bot_cool:'cool' };
               for(var qi=1; qi<_Sp.bots.length; qi++){
                 G.botSquad.push({
                   id: _Sp.bots[qi], x: G.player.x + 90 + qi*46, y: G.player.y - 40 + qi*18,
                   face: BOT.faceOf(_Sp.bots[qi]), name: BOT.nameOf(_Sp.bots[qi]),
-                  style: BOT.styleOf(_Sp.bots[qi]), w: 44, h: 44, hp: 15, dead: false
+                  style: _botStyles[_Sp.bots[qi]] || 'normal', w: 44, h: 44, hp: 15, dead: false
                 });
               }
             }catch(e){}
