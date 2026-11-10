@@ -9376,7 +9376,7 @@ function handlePlayerDeath(player, isP2){
     if(!G.isCoop && G.p2p && G.p2p.connected){
       var _nm5 = '';
       try{ _nm5 = (G.accountName ? G.accountName() : '') || ''; }catch(e){}
-      _netSend({ t:'died', from: _p2pId(), by: G.deathCause || '', x: player.x, y: player.y, face: player.face, nick: _nm5, isP2: !!isP2 });
+      _netSend({ t:'died', from: _p2pId(), by: G.deathCause || '', killedBy: player.lastHitBy || '', x: player.x, y: player.y, face: player.face, nick: _nm5, isP2: !!isP2 });
     }
   }catch(e){}
   // 无尽模式：按到达波数发黄脸币（每局上限 100）
@@ -17039,7 +17039,7 @@ function applyNpcSnap(d){
             }
           }
         }catch(e){}
-        if(G.gunfight && G.state === 'playing'){
+        if(G.gunfight && G.state === 'playing' && S.role === 'host' && d.killedBy && G.gunfightTeams && G.gunfightTeams.A.indexOf(d.killedBy) >= 0){
           G.gunfightKills = (G.gunfightKills || 0) + 1;
           if(typeof showToast === 'function') showToast('🎯 ' + G.gunfightKills + '/5', 2000);
           if(G.gunfightKills >= 5){
@@ -17168,6 +17168,7 @@ function applyNpcSnap(d){
     function applyP2PHurt(dmg, from){
       var p = G.player;
       if(!p || p.dead || p.invincible > 0) return;
+      p.lastHitBy = from || '';
       p.hp -= dmg;
       p.invincible = 12;
       try{ playSound('hurt'); }catch(e){}
@@ -19395,7 +19396,7 @@ function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
       if(!G.botTracers) G.botTracers = [];
       G.botTracers.push({ x1:sq.x + 22, y1:sq.y + 22, x2:(best.o.x || 0) + 22, y2:(best.o.y || 0) + 22, t:8 });
       if(best.local){
-        try{ damagePlayer(3); }catch(e){}
+        try{ if(G.player) G.player.lastHitBy = 'gunfightBot'; damagePlayer(3); }catch(e){}
       } else {
         try{
           var _conn = G.p2p && G.p2p.conns ? G.p2p.conns[best.id] : null;
