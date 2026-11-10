@@ -16262,7 +16262,7 @@ function startCoopGame(){
 
 function exitToMenu(){
   G.state = 'menu';
-  G.gunfight = false; G.scopeActive = false; G.endless = false; G.endlessPaused = false;
+  G.gunfight = false; G.scopeActive = false; G.endless = false; G.endlessPaused = false; G.p2pMode = null;
   var _eu = document.getElementById('endlessUpgrade'); if(_eu) _eu.remove();
   try{ TaskSys.renderDock(); }catch(e){}
   G.isCoop = false;
@@ -16358,8 +16358,10 @@ function updateMapLockState(){
 document.getElementById('endlessBtn').addEventListener('click', ()=>{ initAudio(); playSound('click'); startEndlessMode(); });
 document.getElementById('gunfightBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click');
-  try{ frOpen(); }catch(e){}
+  const box = document.getElementById('p2pBox');
+  if(box && box.scrollIntoView) box.scrollIntoView({behavior:'smooth', block:'center'});
   setTimeout(()=>{ const b=document.getElementById('btnModePvp'); if(b) b.click(); }, 120);
+  if(typeof showToast==='function') showToast('先建房或加入房间，模式已切到 ⚔️ 对战', 2600);
 });
 document.getElementById('playBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click');
