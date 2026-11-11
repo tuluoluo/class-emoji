@@ -16031,7 +16031,8 @@ function startGame(){
       for(var _gsi=0; _gsi<_gfBots; _gsi++){
         if((_gSides[_gsi] || 'B') === 'A') _gA++; else _gB++;
       }
-      if(_gA > _gHalf || _gB > _gHalf) _gfBad = '某一队机器人超过每队 ' + _gHalf + ' 人，无法平均分队';
+      if(_gfTotal === 2 && _gA > 0) _gfBad = '1v1 只有两个位置，机器人只能当对手；要队友请凑 4 人';
+      else if(_gA > _gHalf || _gB > _gHalf) _gfBad = '某一队机器人超过每队 ' + _gHalf + ' 人，无法平均分队';
     }
     if(_gfBad){ showToast('🔫 ' + _gfBad, 3400); return; }
   }
@@ -17570,7 +17571,8 @@ function applyNpcSnap(d){
       else {
         var sides = S.botSides || [], half = total/2, aB = 0, bB = 0;
         for(var bi=0; bi<bots; bi++){ if((sides[bi] || 'B') === 'A') aB++; else bB++; }
-        if(aB > half || bB > half) bad = '某一队机器人超过每队 ' + half + ' 人，无法平均分队';
+        if(total === 2 && aB > 0) bad = '1v1 只有两个位置，机器人只能当对手；要队友请凑 4 人';
+        else if(aB > half || bB > half) bad = '某一队机器人超过每队 ' + half + ' 人，无法平均分队';
       }
       return { humans:humans, bots:bots, total:total, bad:bad };
     }
