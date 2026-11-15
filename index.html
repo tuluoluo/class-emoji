@@ -1090,7 +1090,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.8.4';
+var GAME_VERSION = 'v4.8.5';
 var GAME_DATE = '2026-11-15';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -9045,6 +9045,7 @@ function playerAttack(){
   }
   
   playSound('attack');
+  if(G.gunfight && p.weapon === 'fist'){ p.weapon = 'knife'; p.currentWeapon = 'knife'; }
   const w = p.weapon;
   p.attackAnim = 12;
 
@@ -9056,11 +9057,12 @@ function playerAttack(){
     const ay = p.y - 5;
     const hitBox = {x:ax, y:ay, w:range, h:p.h+10};
     hitAllMobs(hitBox, dmg);
+    if(G.gunfight) hitGunfightMeleeTargets(hitBox, dmg, p);
     // PvP：通知对方本次近战攻击范围（由对方本地判定是否命中）
     if(G.p2pMode === 'pvp' && S.connected){
       try{ sendMsgTo({ t:'atk', kind:'melee', mode:(S.mode || 'coop'), bx:ax, by:ay, bw:range, bh:p.h+10, dmg:dmg, from:p2pSelfId() }); }catch(e){}
     }
-    G.atkCooldown = w==='knife'?20:25;
+    G.atkCooldown = w==='knife'?32:25;
   }
   else if(w==='fire'||w==='chargeFire'||w==='gun'||w==='rifle'){
     const dmg = calcPlayerDmg(w==='rifle'?4:(w==='chargeFire'?8:(w==='fire'?6:5)));
@@ -9938,6 +9940,7 @@ function update(){
     if(len>0 && !isNaN(len)){
       dx/=len; dy/=len;
       let spd = p.speed;
+      if(G.gunfight) spd *= gunfightWeaponSpeedMult(p.weapon);
       if(cheatOn('alaskey')) spd *= 0.7;
       if(G.endless) spd *= (G.endlessSpeedMult || 1);
       // 大太阳：速度降低20%
@@ -13564,6 +13567,16 @@ function drawPlayer2(){
   ctx.fillText(p.face, 0, 0);
   // 狙击枪：自绘枪身模型（枪托/机匣/长枪管/瞄准镜）
   if(p.weapon==='sniper') drawSniperModel(p);
+  // 刀：常驻显示刀身，避免看起来像空手/拳头
+  if(p.weapon==='knife'){
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.font = (p.w*0.7)+'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🔪', p.w*0.55, 0);
+    ctx.restore();
+  }
 
   // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转（枪和火焰弹，光线不需要）
   if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'){
@@ -14133,6 +14146,7 @@ var TaskSys = (function(){
 // ==================== UI更新 ====================
 function updateUI(){
   const p = G.player;
+  if(G.gunfight && p && p.weapon === 'fist'){ p.weapon = 'knife'; p.currentWeapon = 'knife'; }
   document.getElementById('hpBar').style.width = Math.max(0,p.hp/p.maxHp*100)+'%';
   document.getElementById('hpText').textContent = t('hp')+' '+Math.max(0,p.hp)+'/'+p.maxHp;
   document.getElementById('killText').textContent = t('kills')+':'+G.killCount;
@@ -14985,12 +14999,81 @@ document.getElementById('enterBtn2').addEventListener('click', ()=>handleEKey(2)
 document.getElementById('nitroBtn').addEventListener('click', ()=>activateCarNitro(1));
 document.getElementById('nitroBtn2').addEventListener('click', ()=>activateCarNitro(2));
 
+// 枪战固定武器：刀 / 手枪 / 步枪 / 狙击；拳头一律转成刀
+function gunfightLoadout(){
+  return ['gun','rifle','sniper','knife'];
+}
+function ensureGunfightLoadout(p){
+  if(!G.gunfight || !p) return;
+  var list = gunfightLoadout();
+  p.weapons = list.slice();
+  G.weapons = list.slice();
+  if(p.weapon === 'fist') p.weapon = 'knife';
+  else if(list.indexOf(p.weapon) < 0) p.weapon = 'gun';
+  p.currentWeapon = p.weapon;
+}
+// 枪战移速：狙击最慢，手枪略慢，步枪更慢一点，刀正常
+function gunfightWeaponSpeedMult(w){
+  if(w === 'sniper') return 0.5;
+  if(w === 'gun') return 0.9;
+  if(w === 'rifle') return 0.82;
+  return 1;
+}
+// 枪战近战（刀）：机器人对手 + 远程真人；队友不误伤
+function hitGunfightMeleeTargets(hitBox, dmg, p){
+  if(!G.gunfight) return;
+  var myTeam = G.gunfightTeam || 'A';
+  // 房主本地的机器人
+  if(G.botSquad){
+    for(var i=0;i<G.botSquad.length;i++){
+      var b = G.botSquad[i];
+      if(!b || b.dead) continue;
+      if((b.team || 'B') === myTeam) continue;
+      if(rectOverlap(hitBox, {x:b.x, y:b.y, w:b.w||44, h:b.h||44})){
+        try{ spawnParticles(b.x+22, b.y+22, '#ff6666', 10); }catch(e){}
+        if(isNetClient()){
+          try{ sendMsgTo({ t:'hurtBot', botIndex:b.botIndex, dmg:dmg, from:p2pSelfId() }); }catch(e){}
+        } else {
+          b.hp -= dmg; b.hurtFlash = 8;
+          if(b.hp <= 0){ b.hp = 0; b.dead = true; G.gunfightAddScore(myTeam); }
+        }
+        break;
+      }
+    }
+  }
+  // 远程真人 / 远端机器人
+  if(G.remotePlayers){
+    for(var rk in G.remotePlayers){
+      var rp = G.remotePlayers[rk];
+      if(!rp || rp.dead) continue;
+      if(rp.map && rp.map !== (G.currentMap || 'grassland')) continue;
+      var rt = rp.team || '';
+      if(!rt && G.gunfightTeams){
+        if(G.gunfightTeams.A && G.gunfightTeams.A.indexOf(rk) >= 0) rt = 'A';
+        else if(G.gunfightTeams.B && G.gunfightTeams.B.indexOf(rk) >= 0) rt = 'B';
+      }
+      if(rt && rt === myTeam) continue;
+      if(rectOverlap(hitBox, {x:rp.x, y:rp.y, w:rp.w||44, h:rp.h||44})){
+        try{ spawnParticles(rp.x+rp.w/2, rp.y+rp.h/2, '#ff6666', 10); }catch(e){}
+        try{
+          if(rp.isBot) sendMsgTo({ t:'hurtBot', botIndex:rp.botIndex, dmg:dmg, from:p2pSelfId() });
+          else sendMsgTo({ t:'hurt', dmg:dmg, to:rk, from:p2pSelfId() });
+        }catch(e){}
+        break;
+      }
+    }
+  }
+}
+
 // 武器切换
 function switchWeapon(){
+  if(G.gunfight) ensureGunfightLoadout(G.player);
   const list = G.weapons;
   let idx = list.indexOf(G.player.weapon);
+  if(idx < 0) idx = 0;
   idx = (idx+1) % list.length;
   G.player.weapon = list[idx];
+  G.player.currentWeapon = list[idx];
   // 切换武器时取消正在发射的光线
   G.player.laserActive = false;
   G.player.laserTimer = 0;
@@ -16821,11 +16904,11 @@ function startGame(){
     const _isHost = !(G.p2p && G.p2p.role === 'client') && !G._p2pAutoStart;
     G.player.x = _isHost ? _ar.x + 90 : _ar.x + _ar.w - 160;
     G.player.y = _ar.y + _ar.h/2 - G.player.h/2;
-    // 枪战默认三把：手枪 / 步枪 / 狙击枪（狙击必须带）
-    G.player.weapons = ['gun','rifle','sniper'];
+    // 枪战固定四件：手枪 / 步枪 / 狙击枪 / 刀（狙击必须带，拳头不再出现）
+    G.player.weapons = gunfightLoadout();
     G.player.weapon = 'gun';
     G.player.currentWeapon = 'gun';
-    G.weapons = ['gun','rifle','sniper'];
+    G.weapons = gunfightLoadout();
     G.player.hp = 15; G.player.maxHp = 15;
     G.player.invincible = 60;
     G.player.bleeding = false; G.player.bleedTimer = 0; G.player.hotTimer = 0;
