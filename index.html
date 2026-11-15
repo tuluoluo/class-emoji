@@ -1090,7 +1090,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.8.5';
+var GAME_VERSION = 'v4.8.6';
 var GAME_DATE = '2026-11-15';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -4910,7 +4910,108 @@ const EXTRA_LANGS = {
     taskAllBonus:'Все задания выполнены! Бонус +20 😊',
   },
 };
+const MODE_LANGS = {
+  en:{
+    modeEndless:'♾️ Endless', modeEndlessCoop:'♾️ Co-op Endless', modeGunfight:'🔫 Gunfight',
+    modeCoop:'👥 Co-op', modeContinue:'📂 Continue', modeNewGame:'▶ New Game',
+    gfHint:'Create or join a room first; mode switched to 🔫 Gunfight',
+    gfVictory:'🔫 Gunfight Victory', gfDefeat:'🔫 Gunfight Defeat',
+    gfYourTeam:'Your team: {team}', gfFirstTo5:'First to 5 kills wins',
+    gfOurKills:'🎯 Team kills', gfDeaths:'😵 Deaths', gfDuration:'⏱ Match time',
+    gfReviewWin:'Keep the pressure up; do not let kills stall.',
+    gfReviewLose:'Clear the flanks first; do not rush alone. Check teammate positions before respawn.',
+    gfBackLobby:'🔫 Back to Lobby',
+    gfNeed2:'Gunfight needs at least 2 players', gfMax4:'Gunfight supports at most 4 players',
+    gfOdd:'Currently {n} players; an odd count cannot be split evenly',
+    gf1v1:'1v1 has only two slots; bots can only be opponents. Add more players for teammates',
+    gfTeamOver:'One team has more bots than the per-team limit of {n}',
+    gfDeathRespawn:'😵 Death {n} · respawn in 3s',
+    gfHud:'🔫 A {a}/5  🟥 B {b}/5  😵 {d}  {team}', gfTeamA:'🔵 Team A', gfTeamB:'🔴 Team B',
+    endlessWave:'♾️ Wave {n}', endlessWaveClear:'♾️ Wave {n} cleared',
+    endlessChoose:'Choose one upgrade; this run only', endlessReward:'♾️ Wave {n} · +{c} Eurjuju',
+    endlessHp:'❤️ Max HP +2', endlessHpDesc:'Heal to full and raise the cap',
+    endlessDmg:'⚔️ Damage +15%', endlessDmgDesc:'All weapons deal more damage this run',
+    endlessSpeed:'💨 Move speed +10%', endlessSpeedDesc:'Move faster this run',
+    endlessBoss:'😈 BOSS', endlessElite:'👑 Elite',
+    lobbyBotGunTitle:'Add bot (teammate / opponent)', lobbyBotTitle:'Add bot (teammate)',
+    lobbyBotHostOnly:'Only the host can add bots', lobbyBotLimit:'Max 3 bots',
+    lobbyBotAlready:'Already in the lobby', lobbyBotAdded:'{name} joined {side}',
+    lobbyBotRemoved:'{name} removed', lobbyBotTeam:'🤝 Teammate', lobbyBotEnemy:'🔴 Opponent',
+    lobbyDiff:'Difficulty', lobbyDiffEasy:'Easy', lobbyDiffNormal:'Normal', lobbyDiffHard:'Hard',
+    lobbyDiffToast:'Gunfight bot difficulty: {d}'
+  },
+  zh:{
+    modeEndless:'♾️ 无尽', modeEndlessCoop:'♾️ 双人无尽', modeGunfight:'🔫 枪战',
+    modeCoop:'👥 双人模式', modeContinue:'📂 继续游戏', modeNewGame:'▶ 开始新游戏',
+    gfHint:'先建房或加入房间，模式已切到 🔫 枪战',
+    gfVictory:'🔫 枪战胜利', gfDefeat:'🔫 枪战失败',
+    gfYourTeam:'你的队伍：{team}', gfFirstTo5:'先到 5 杀获胜',
+    gfOurKills:'🎯 我方击杀', gfDeaths:'😵 阵亡', gfDuration:'⏱ 本局用时',
+    gfReviewWin:'保持队伍火力，别让击杀断档。',
+    gfReviewLose:'先清侧翼，别单独冲点；阵亡后看队友位置再复活。',
+    gfBackLobby:'🔫 返回大厅',
+    gfNeed2:'枪战至少 2 人才能开', gfMax4:'枪战最多 4 人',
+    gfOdd:'当前 {n} 人，奇数无法平均分队，匹配不了',
+    gf1v1:'1v1 只有两个位置，机器人只能当对手；要队友请凑 4 人',
+    gfTeamOver:'某一队机器人超过每队 {n} 人，无法平均分队',
+    gfDeathRespawn:'😵 {n} 次阵亡，3秒后复活',
+    gfHud:'🔫 A {a}/5  🟥 B {b}/5  😵 {d}  {team}', gfTeamA:'🔵 A队', gfTeamB:'🔴 B队',
+    endlessWave:'♾️ 第 {n} 波', endlessWaveClear:'♾️ 第 {n} 波通过',
+    endlessChoose:'选一个强化，只在本局生效', endlessReward:'♾️ 第 {n} 波 · +{c} 黄脸币',
+    endlessHp:'❤️ 最大生命 +2', endlessHpDesc:'立刻回满并提高上限',
+    endlessDmg:'⚔️ 伤害 +15%', endlessDmgDesc:'本局所有武器伤害提升',
+    endlessSpeed:'💨 移速 +10%', endlessSpeedDesc:'本局移动速度提升',
+    endlessBoss:'😈 BOSS', endlessElite:'👑 精英',
+    lobbyBotGunTitle:'添加机器人（队友/对手）', lobbyBotTitle:'添加机器人（队友）',
+    lobbyBotHostOnly:'只有房主可以添加机器人', lobbyBotLimit:'最多 3 个机器人',
+    lobbyBotAlready:'已在队伍里', lobbyBotAdded:'{name} 已加入{side}',
+    lobbyBotRemoved:'{name} 已移除', lobbyBotTeam:'🤝 队友', lobbyBotEnemy:'🔴 对手',
+    lobbyDiff:'难度', lobbyDiffEasy:'简单', lobbyDiffNormal:'普通', lobbyDiffHard:'困难',
+    lobbyDiffToast:'枪战机器人难度：{d}'
+  },
+  hant:{
+    modeEndless:'♾️ 無盡', modeEndlessCoop:'♾️ 雙人無盡', modeGunfight:'🔫 槍戰',
+    modeCoop:'👥 雙人模式', modeContinue:'📂 繼續遊戲', modeNewGame:'▶ 開始新遊戲',
+    gfHint:'先建房或加入房間，模式已切到 🔫 槍戰',
+    gfVictory:'🔫 槍戰勝利', gfDefeat:'🔫 槍戰失敗',
+    gfYourTeam:'你的隊伍：{team}', gfFirstTo5:'先到 5 殺獲勝',
+    gfOurKills:'🎯 我方擊殺', gfDeaths:'😵 陣亡', gfDuration:'⏱ 本局用時',
+    gfReviewWin:'保持隊伍火力，別讓擊殺斷檔。',
+    gfReviewLose:'先清側翼，別單獨衝點；陣亡後看隊友位置再復活。',
+    gfBackLobby:'🔫 返回大廳',
+    gfNeed2:'槍戰至少 2 人才能開', gfMax4:'槍戰最多 4 人',
+    gfOdd:'目前 {n} 人，奇數無法平均分隊，匹配不了',
+    gf1v1:'1v1 只有兩個位置，機器人只能當對手；要隊友請湊 4 人',
+    gfTeamOver:'某一隊機器人超過每隊 {n} 人，無法平均分隊',
+    gfDeathRespawn:'😵 {n} 次陣亡，3秒後復活',
+    gfHud:'🔫 A {a}/5  🟥 B {b}/5  😵 {d}  {team}', gfTeamA:'🔵 A隊', gfTeamB:'🔴 B隊',
+    endlessWave:'♾️ 第 {n} 波', endlessWaveClear:'♾️ 第 {n} 波通過',
+    endlessChoose:'選一個強化，只在本局生效', endlessReward:'♾️ 第 {n} 波 · +{c} 黃臉幣',
+    endlessHp:'❤️ 最大生命 +2', endlessHpDesc:'立刻回滿並提高上限',
+    endlessDmg:'⚔️ 傷害 +15%', endlessDmgDesc:'本局所有武器傷害提升',
+    endlessSpeed:'💨 移速 +10%', endlessSpeedDesc:'本局移動速度提升',
+    endlessBoss:'😈 BOSS', endlessElite:'👑 精英',
+    lobbyBotGunTitle:'新增機器人（隊友/對手）', lobbyBotTitle:'新增機器人（隊友）',
+    lobbyBotHostOnly:'只有房主可以新增機器人', lobbyBotLimit:'最多 3 個機器人',
+    lobbyBotAlready:'已在隊伍裡', lobbyBotAdded:'{name} 已加入{side}',
+    lobbyBotRemoved:'{name} 已移除', lobbyBotTeam:'🤝 隊友', lobbyBotEnemy:'🔴 對手',
+    lobbyDiff:'難度', lobbyDiffEasy:'簡單', lobbyDiffNormal:'普通', lobbyDiffHard:'困難',
+    lobbyDiffToast:'槍戰機器人難度：{d}'
+  },
+  chinglish:{
+    modeEndless:'♾️ Endless 啦', modeEndlessCoop:'♾️ Co-op Endless 啦', modeGunfight:'🔫 Gunfight 啦',
+    modeCoop:'👥 Co-op 啦', modeContinue:'📂 Continue 啦', modeNewGame:'▶ New Game 啦'
+  }
+};
+MODE_LANGS.en.gfMatchOk = '✅ {n} players → 2 teams, {h} each';
+MODE_LANGS.zh.gfMatchOk = '✅ {n} 人 → 平均 2 队，每队 {h} 人';
+MODE_LANGS.hant.gfMatchOk = '✅ {n} 人 → 平均 2 隊，每隊 {h} 人';
+MODE_LANGS.chinglish.gfMatchOk = '✅ {n} players → 2 teams, {h} each 啦';
+
 function t(key){
+  const m = MODE_LANGS[G.language];
+  if(m && m[key] !== undefined) return m[key];
+  if(MODE_LANGS.en[key] !== undefined) return MODE_LANGS.en[key];
   const x = EXTRA_LANGS[G.language];
   if(x && x[key] !== undefined) return x[key];
   const lang = LANGS[G.language] || LANGS.en;
@@ -5176,6 +5277,21 @@ function applyLanguage(){
   const menuBtn = document.getElementById('menuBtn');
   if(menuBtn) menuBtn.textContent = t('menu');
   if(window.__accountRefresh) window.__accountRefresh();
+  try{ refreshModeI18n(); }catch(e){}
+}
+function refreshModeI18n(){
+  var _set = function(id, key){ var el = document.getElementById(id); if(el) el.textContent = t(key); };
+  _set('playBtn','modeNewGame');
+  _set('endlessBtn','modeEndless');
+  _set('endlessCoopBtn','modeEndlessCoop');
+  _set('gunfightBtn','modeGunfight');
+  _set('coopBtn','modeCoop');
+  _set('continueBtn','modeContinue');
+  var _lb = document.getElementById('btnLobbyBot');
+  if(_lb){
+    var _st = (G.p2p && G.p2p.mode) || 'coop';
+    _lb.textContent = '🤖 ' + (_st === 'gunfight' ? t('lobbyBotGunTitle') : t('lobbyBotTitle'));
+  }
 }
 function buildRulesContent(){
   const c = document.getElementById('rulesContent');
@@ -9555,7 +9671,7 @@ function handlePlayerDeath(player, isP2){
     G.endlessRewardGiven = true;
     const _rw = Math.min(G.endlessRewardCap || 100, Math.max(3, (G.endlessWave || 1) * 3));
     try{ ShopSys.addCoins(_rw); }catch(e){}
-    if(typeof showToast === 'function') showToast('♾️ 第 ' + (G.endlessWave||1) + ' 波，获得 ' + _rw + ' 黄脸币', 4200);
+    if(typeof showToast === 'function') showToast(t('endlessReward').replace('{n}', (G.endlessWave||1)).replace('{c}', _rw), 4200);
   }
   // 枪战：自己死亡不结束整局，计死亡数并 3 秒后固定点复活
   if(G.gunfight && !isP2 && !G.isCoop){
@@ -9577,7 +9693,7 @@ function handlePlayerDeath(player, isP2){
     updateUI();
     // 枪战死亡只计数并复活，不用“死亡 5 次”提前结束整局；胜负只由击杀数决定
     G.gunfightRespawn = 180;
-    showToast('😵 ' + G.gunfightDeaths + ' 次阵亡，3秒后复活', 2500);
+    showToast(t('gfDeathRespawn').replace('{n}', G.gunfightDeaths), 2500);
     G.deathCause = '';
     return;
   }
@@ -12469,14 +12585,14 @@ ctx.globalAlpha = 1;
   if(G.gunfight){
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.62)';
-    ctx.fillRect(W/2-142, 8, 284, 32);
+    ctx.fillRect(W/2-200, 8, 400, 34);
     ctx.strokeStyle = 'rgba(255,255,255,0.55)';
     ctx.lineWidth = 2;
-    ctx.strokeRect(W/2-142, 8, 284, 32);
+    ctx.strokeRect(W/2-200, 8, 400, 34);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 16px monospace';
+    ctx.font = 'bold 14px monospace';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('🟦 A ' + ((G.gunfightScores||{}).A||0) + '/5   🟥 B ' + ((G.gunfightScores||{}).B||0) + '/5   😵 ' + (G.gunfightDeaths||0) + ' 次   ' + (G.gunfightTeam === 'B' ? '🔴 B队' : '🔵 A队'), W/2, 24);
+    ctx.fillText(t('gfHud').replace('{a}',((G.gunfightScores||{}).A||0)).replace('{b}',((G.gunfightScores||{}).B||0)).replace('{d}',(G.gunfightDeaths||0)).replace('{team}',(G.gunfightTeam === 'B' ? t('gfTeamB') : t('gfTeamA'))), W/2, 24);
     ctx.restore();
   }
 
@@ -12488,7 +12604,7 @@ ctx.globalAlpha = 1;
     ctx.fillStyle = '#ffd700';
     ctx.font = 'bold 15px monospace';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('♾️ 第 ' + (G.endlessWave||0) + ' 波', W/2, 23);
+    ctx.fillText(t('endlessWave').replace('{n}',(G.endlessWave||0)), W/2, 23);
     ctx.restore();
   }
 
@@ -13529,6 +13645,79 @@ function drawSniperModel(p){
   ctx.restore();
 }
 
+function drawRifleModel(p){
+  if(!p) return;
+  const aimX = (p.aimX === undefined || p.aimX === 0) ? (p.facing || 1) : p.aimX;
+  const aimY = p.aimY || 0;
+  const angle = Math.atan2(aimY, aimX);
+  const w = p.w, h = p.h;
+  ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.translate(w*0.14, h*0.20);
+  ctx.scale(1.10, 1.10);
+  ctx.rotate(angle);
+  ctx.fillStyle = '#6d4c41'; ctx.strokeStyle = '#24170f'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-w*0.94, -h*0.10); ctx.lineTo(-w*0.30, -h*0.10);
+  ctx.lineTo(-w*0.30, h*0.17); ctx.lineTo(-w*0.76, h*0.23);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#455a64'; ctx.fillRect(-w*0.32, -h*0.13, w*0.62, h*0.26);
+  ctx.strokeStyle = '#1c262b'; ctx.strokeRect(-w*0.32, -h*0.13, w*0.62, h*0.26);
+  ctx.fillStyle = '#546e7a'; ctx.fillRect(w*0.30, -h*0.075, w*0.40, h*0.15);
+  ctx.strokeStyle = '#1c262b'; ctx.strokeRect(w*0.30, -h*0.075, w*0.40, h*0.15);
+  ctx.fillStyle = '#90a4ae'; ctx.fillRect(w*0.70, -h*0.045, w*0.48, h*0.09);
+  ctx.strokeStyle = '#263238'; ctx.strokeRect(w*0.70, -h*0.045, w*0.48, h*0.09);
+  ctx.fillStyle = '#cfd8dc'; ctx.fillRect(w*1.02, -h*0.10, w*0.055, h*0.20);
+  ctx.strokeStyle = '#263238'; ctx.strokeRect(w*1.02, -h*0.10, w*0.055, h*0.20);
+  ctx.fillStyle = '#37474f';
+  ctx.beginPath();
+  ctx.moveTo(w*0.00, h*0.10); ctx.lineTo(w*0.22, h*0.10);
+  ctx.lineTo(w*0.17, h*0.34); ctx.lineTo(-w*0.02, h*0.30);
+  ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#263238'; ctx.stroke();
+  ctx.fillStyle = '#3e2723'; ctx.fillRect(-w*0.17, h*0.11, w*0.13, h*0.22);
+  ctx.strokeStyle = '#1b0f0b'; ctx.strokeRect(-w*0.17, h*0.11, w*0.13, h*0.22);
+  ctx.fillStyle = '#eceff1'; ctx.fillRect(-w*0.22, -h*0.24, w*0.08, h*0.12);
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(-w*0.26, -h*0.105, w*0.42, h*0.035);
+  if(p.attackAnim > 0){
+    ctx.fillStyle = 'rgba(255,215,90,.95)';
+    ctx.beginPath(); ctx.arc(w*1.10, 0, h*0.15, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,120,40,.85)';
+    ctx.beginPath(); ctx.arc(w*1.14, 0, h*0.08, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawKnifeModel(p){
+  if(!p) return;
+  const aimX = (p.aimX === undefined || p.aimX === 0) ? (p.facing || 1) : p.aimX;
+  const aimY = p.aimY || 0;
+  const angle = Math.atan2(aimY, aimX);
+  const w = p.w, h = p.h;
+  ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.translate(w*0.20, h*0.18);
+  ctx.rotate(angle);
+  if(p.attackAnim > 0) ctx.translate(w*0.20, 0);
+  ctx.fillStyle = '#4e342e'; ctx.fillRect(-w*0.12, -h*0.07, w*0.27, h*0.14);
+  ctx.strokeStyle = '#1b0f0b'; ctx.lineWidth = 1.5; ctx.strokeRect(-w*0.12, -h*0.07, w*0.27, h*0.14);
+  ctx.fillStyle = '#9e9e9e'; ctx.fillRect(w*0.13, -h*0.12, w*0.05, h*0.24);
+  ctx.strokeStyle = '#263238'; ctx.strokeRect(w*0.13, -h*0.12, w*0.05, h*0.24);
+  ctx.fillStyle = '#cfd8dc'; ctx.strokeStyle = '#37474f';
+  ctx.beginPath();
+  ctx.moveTo(w*0.17, -h*0.075); ctx.lineTo(w*0.68, -h*0.095);
+  ctx.lineTo(w*0.88, 0); ctx.lineTo(w*0.68, h*0.075);
+  ctx.lineTo(w*0.17, h*0.055); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(w*0.22, -h*0.06); ctx.lineTo(w*0.67, -h*0.075); ctx.lineTo(w*0.82, -h*0.01);
+  ctx.stroke();
+  if(p.attackAnim > 0){
+    ctx.strokeStyle = 'rgba(230,245,255,.9)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(w*0.02, 0, w*0.82, -0.55, 0.55); ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawPlayer2(){
   const p = G.player2;
   if(!p) return;
@@ -13567,16 +13756,9 @@ function drawPlayer2(){
   ctx.fillText(p.face, 0, 0);
   // 狙击枪：自绘枪身模型（枪托/机匣/长枪管/瞄准镜）
   if(p.weapon==='sniper') drawSniperModel(p);
-  // 刀：常驻显示刀身，避免看起来像空手/拳头
-  if(p.weapon==='knife'){
-    ctx.save();
-    ctx.globalAlpha = 1;
-    ctx.font = (p.w*0.7)+'px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🔪', p.w*0.55, 0);
-    ctx.restore();
-  }
+  if(p.weapon==='rifle') drawRifleModel(p);
+  // 刀：常驻绘制真实刀身模型，不再只在攻击瞬间闪一下
+  if(p.weapon==='knife') drawKnifeModel(p);
 
   // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转（枪和火焰弹，光线不需要）
   if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'){
@@ -13617,7 +13799,7 @@ function drawPlayer2(){
     ctx.restore();
   }
 
-  if(p.attackAnim>0 && (p.weapon==='fist'||p.weapon==='knife')){
+  if(p.attackAnim>0 && p.weapon==='fist'){
     ctx.save();
     ctx.translate(p.facing*p.w*0.7, 0);
     if(p.facing < 0) ctx.scale(-1, 1);
@@ -13674,6 +13856,9 @@ function drawPlayer(){
   ctx.fillText(p.face, 0, 0);
   // 狙击枪：自绘枪身模型（枪托/机匣/长枪管/瞄准镜）
   if(p.weapon==='sniper') drawSniperModel(p);
+  if(p.weapon==='rifle') drawRifleModel(p);
+  // 刀：常驻绘制真实刀身模型，不再只在攻击瞬间闪一下
+  if(p.weapon==='knife') drawKnifeModel(p);
 
   // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转（枪和火焰弹，光线不需要）
   if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'){
@@ -13715,7 +13900,7 @@ function drawPlayer(){
   }
 
   // 攻击特效
-  if(p.attackAnim>0 && (p.weapon==='fist'||p.weapon==='knife')){
+  if(p.attackAnim>0 && p.weapon==='fist'){
     ctx.save();
     ctx.translate(p.facing*p.w*0.7, 0);
     if(p.facing < 0) ctx.scale(-1, 1);
@@ -14389,22 +14574,23 @@ function gameOver(win, winMsgKey){
     var _gTitle = document.getElementById('endTitle');
     var _gStats = document.getElementById('endStats');
     var _gPanel = document.getElementById('endPanel');
-    if(_gTitle) _gTitle.textContent = win ? '🔫 枪战胜利' : '🔫 枪战失败';
+    if(_gTitle) _gTitle.textContent = win ? t('gfVictory') : t('gfDefeat');
     if(_gStats){
       var _gKills = (G.gunfightScores||{})[_gTeam] || 0;
       var _gDeaths = G.gunfightDeaths || 0;
       var _gKD = _gDeaths ? (_gKills/_gDeaths).toFixed(2) : String(_gKills);
       var _gElapsed = G.gunfightStartedAt ? Math.max(0, Math.floor((Date.now() - G.gunfightStartedAt)/1000)) : 0;
       var _gTime = ('0'+Math.floor(_gElapsed/60)).slice(-2) + ':' + ('0'+(_gElapsed%60)).slice(-2);
-      _gStats.innerHTML = '<div style="font-size:22px;margin:8px 0"><span style="color:#5dade2">🟦 A队 ' + (_gsc.A||0) + '</span> : <span style="color:#ec7063">' + (_gsc.B||0) + ' 🟥 B队</span></div>' +
-        '<div style="font-size:13px;color:#bbb;margin:6px 0">你的队伍：' + (_gTeam === 'A' ? '🟦 A队' : '🟥 B队') + ' · 先到 5 杀获胜</div>' +
-        '<div>🎯 我方击杀 ' + _gKills + ' / 5</div>' +
-        '<div>😵 阵亡 ' + _gDeaths + ' 次 · K/D ' + _gKD + '</div>' +
-        '<div>⏱ 本局用时 ' + _gTime + '</div>' +
-        '<div style="font-size:12px;color:#999;margin-top:6px">复盘：' + (win ? '保持队伍火力，别让击杀断档。' : '先清侧翼，别单独冲点；阵亡后看队友位置再复活。') + '</div>';
+      var _gTeamLabel = _gTeam === 'A' ? t('gfTeamA') : t('gfTeamB');
+      _gStats.innerHTML = '<div style="font-size:22px;margin:8px 0"><span style="color:#5dade2">' + t('gfTeamA') + ' ' + (_gsc.A||0) + '</span> : <span style="color:#ec7063">' + (_gsc.B||0) + ' ' + t('gfTeamB') + '</span></div>' +
+        '<div style="font-size:13px;color:#bbb;margin:6px 0">' + t('gfYourTeam').replace('{team}', _gTeamLabel) + ' · ' + t('gfFirstTo5') + '</div>' +
+        '<div>' + t('gfOurKills') + ' ' + _gKills + ' / 5</div>' +
+        '<div>' + t('gfDeaths') + ' ' + _gDeaths + ' · K/D ' + _gKD + '</div>' +
+        '<div>' + t('gfDuration') + ' ' + _gTime + '</div>' +
+        '<div style="font-size:12px;color:#999;margin-top:6px">' + (win ? t('gfReviewWin') : t('gfReviewLose')) + '</div>';
     }
     var _gRb = document.getElementById('restartBtn');
-    if(_gRb) _gRb.textContent = '🔫 返回大厅';
+    if(_gRb) _gRb.textContent = t('gfBackLobby');
     if(_gPanel) _gPanel.style.display = 'block';
     return;
   }
@@ -15108,7 +15294,7 @@ function updateAimJoystick(){
   // 1P瞄准轮盘：枪/火焰弹/蓄力火焰弹/光线/散射光线时显示
   const aim = document.getElementById('aimJoystick');
   if(aim){
-    if(G.player && (G.player.weapon === 'gun' || G.player.weapon === 'sniper' || G.player.weapon === 'fire' || G.player.weapon === 'chargeFire' || G.player.weapon === 'laser' || G.player.weapon === 'spreadLaser')){
+    if(G.player && (G.player.weapon === 'gun' || G.player.weapon === 'rifle' || G.player.weapon === 'sniper' || G.player.weapon === 'fire' || G.player.weapon === 'chargeFire' || G.player.weapon === 'laser' || G.player.weapon === 'spreadLaser')){
       aim.style.setProperty('display', 'block', 'important');
       aim.style.setProperty('z-index', '60', 'important');
     } else {
@@ -15119,7 +15305,7 @@ function updateAimJoystick(){
   const aim2 = document.getElementById('aimJoystick2');
   if(aim2 && G.isCoop && G.player2){
     const w2 = G.player2.weapon;
-    if(w2 === 'gun' || w2 === 'sniper' || w2 === 'fire' || w2 === 'chargeFire' || w2 === 'laser' || w2 === 'spreadLaser'){
+    if(w2 === 'gun' || w2 === 'rifle' || w2 === 'sniper' || w2 === 'fire' || w2 === 'chargeFire' || w2 === 'laser' || w2 === 'spreadLaser'){
       aim2.style.setProperty('display', 'block', 'important');
       aim2.style.setProperty('z-index', '60', 'important');
     } else {
@@ -16665,7 +16851,7 @@ function nextEndlessWave(){
     G.bosses.push(b);
   }
   try{ playSound('unlock'); }catch(e){}
-  showToast('♾️ 第 ' + G.endlessWave + ' 波' + (G.endlessWave % 10 === 0 ? '  😈 BOSS' : (elite ? '  👑 精英' : '')), 2600);
+  showToast(t('endlessWave').replace('{n}', G.endlessWave) + (G.endlessWave % 10 === 0 ? '  ' + t('endlessBoss') : (elite ? '  ' + t('endlessElite') : '')), 2600);
 }
 
 function showEndlessUpgrade(){
@@ -16678,12 +16864,12 @@ function showEndlessUpgrade(){
   div.id = 'endlessUpgrade';
   div.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,92%);background:rgba(0,0,0,.92);border:4px solid #ffd700;border-radius:14px;padding:18px;z-index:96;color:#fff;text-align:center;box-sizing:border-box';
   const opts = [
-    { key:'hp', title:'❤️ 最大生命 +2', desc:'立刻回满并提高上限', apply:()=>{ G.player.maxHp += 2; G.player.hp = G.player.maxHp; } },
-    { key:'dmg', title:'⚔️ 伤害 +15%', desc:'本局所有武器伤害提升', apply:()=>{ G.endlessDmgMult = (G.endlessDmgMult||1) * 1.15; } },
-    { key:'speed', title:'💨 移速 +10%', desc:'本局移动速度提升', apply:()=>{ G.endlessSpeedMult = (G.endlessSpeedMult||1) * 1.10; } },
+    { key:'hp', title:t('endlessHp'), desc:t('endlessHpDesc'), apply:()=>{ G.player.maxHp += 2; G.player.hp = G.player.maxHp; } },
+    { key:'dmg', title:t('endlessDmg'), desc:t('endlessDmgDesc'), apply:()=>{ G.endlessDmgMult = (G.endlessDmgMult||1) * 1.15; } },
+    { key:'speed', title:t('endlessSpeed'), desc:t('endlessSpeedDesc'), apply:()=>{ G.endlessSpeedMult = (G.endlessSpeedMult||1) * 1.10; } },
   ];
-  div.innerHTML = '<div style="font-size:22px;font-weight:bold;color:#ffd700;margin-bottom:6px">♾️ 第 '+G.endlessWave+' 波通过</div>'
-    + '<div style="font-size:13px;color:#bbb;margin-bottom:14px">选一个强化，只在本局生效</div>'
+  div.innerHTML = '<div style="font-size:22px;font-weight:bold;color:#ffd700;margin-bottom:6px">'+t('endlessWaveClear').replace('{n}',G.endlessWave)+'</div>'
+    + '<div style="font-size:13px;color:#bbb;margin-bottom:14px">'+t('endlessChoose')+'</div>'
     + opts.map((o,i)=>'<button data-endless="'+i+'" style="display:block;width:100%;margin:8px 0;padding:12px;border-radius:10px;border:2px solid #666;background:#222;color:#fff;font-size:16px;cursor:pointer"><b>'+o.title+'</b><br><span style="font-size:12px;color:#bbb">'+o.desc+'</span></button>').join('');
   wrapEl.appendChild(div);
   div.querySelectorAll('[data-endless]').forEach(btn=>{
@@ -16719,17 +16905,17 @@ function startGame(){
     var _gfBots = (G.p2p.bots || []).length;
     var _gfTotal = _gfHumans + _gfBots;
     var _gfBad = '';
-    if(_gfTotal < 2) _gfBad = '枪战至少 2 人才能开';
-    else if(_gfTotal > 4) _gfBad = '枪战最多 4 人';
-    else if(_gfTotal % 2 !== 0) _gfBad = '当前 ' + _gfTotal + ' 人，奇数无法平均分队，匹配不了';
+    if(_gfTotal < 2) _gfBad = t('gfNeed2');
+    else if(_gfTotal > 4) _gfBad = t('gfMax4');
+    else if(_gfTotal % 2 !== 0) _gfBad = t('gfOdd').replace('{n}', _gfTotal);
     else {
       var _gSides = G.p2p.botSides || [];
       var _gHalf = _gfTotal / 2, _gA = 0, _gB = 0;
       for(var _gsi=0; _gsi<_gfBots; _gsi++){
         if((_gSides[_gsi] || 'B') === 'A') _gA++; else _gB++;
       }
-      if(_gfTotal === 2 && _gA > 0) _gfBad = '1v1 只有两个位置，机器人只能当对手；要队友请凑 4 人';
-      else if(_gA > _gHalf || _gB > _gHalf) _gfBad = '某一队机器人超过每队 ' + _gHalf + ' 人，无法平均分队';
+      if(_gfTotal === 2 && _gA > 0) _gfBad = t('gf1v1');
+      else if(_gA > _gHalf || _gB > _gHalf) _gfBad = t('gfTeamOver').replace('{n}', _gHalf);
     }
     if(_gfBad){ showToast('🔫 ' + _gfBad, 3400); return; }
   }
@@ -16745,6 +16931,8 @@ function startGame(){
   G.coopP1Dead = false; G.coopP2Dead = false; G.player2 = null; G.botCompanion = null;
   // 联机房间添加了机器人 → 开局后拉进游戏当队友（本地 AI，P2P 同步）
   var _Sp = G.p2p || {};
+  // 清空必须发生在生成之前；生成后再清会把机器人整队吞掉
+  G.botSquad = []; G.botCompanion = null;
   if(_Sp && _Sp.role === 'host' && _Sp.bots && _Sp.bots.length){
     try{
       (function tryBotSpawn(tries){
@@ -16958,9 +17146,12 @@ function startGame(){
   } else if(G.currentMap === 'arena'){
     G.currentMap = G.selectedMap || 'grassland';
   }
-  if(!G.isCoop && G.p2pMode!=='pvp' && !(G.p2p && (G.p2p.role==='host'||G.p2p.role==='client'))){ try{ G.player.face = getSelectedFace(); syncFaceSkills(G.player); }catch(e){} }
+  if(G.gunfight && G.player){
+    // 枪战必须继承主页选中的 😠/😡；枪战武器已固定，不调用 syncFaceSkills 改武器
+    try{ G.player.face = getSelectedFace(); }catch(e){}
+  } else if(!G.isCoop && G.p2pMode!=='pvp' && !(G.p2p && (G.p2p.role==='host'||G.p2p.role==='client'))){ try{ G.player.face = getSelectedFace(); syncFaceSkills(G.player); }catch(e){} }
   G._awaitRescue=false; G._rescuing=false; G._rescueTimer=0; G.player.dead=false;
-  G.botCompanion=null; G.botSquad=[]; G.remotePlayers={}; G.corpses=[];
+  G.botCompanion=null; G.remotePlayers={}; G.corpses=[];
   if(!G.gunfight){
     createNPCs();
     createWoods();
@@ -17163,15 +17354,15 @@ function exitToMenu(){
       G.p2p.role = null;
       G.p2p.roomId = '';
       G.p2p.status = 'idle';
-      G.p2p.bots = [];
-      G.p2p.botSides = [];
-      G.p2p.botSide = 'A';
+      // 机器人选择属于大厅配置，退出对局不清空；下一局仍按原配置生成
+      if(!Array.isArray(G.p2p.bots)) G.p2p.bots = [];
+      if(!Array.isArray(G.p2p.botSides)) G.p2p.botSides = [];
       G.p2p.conns = {};
     }
     if(typeof G.p2pCleanup === 'function') G.p2pCleanup();
   }catch(e){}
-  // 清掉机器人陪玩面板和槽位残留，下一局必须重新选；即使 p2pCleanup 报错也要执行
-  try{ if(typeof window.__resetBotPickUI === 'function') window.__resetBotPickUI(true); }catch(e){}
+  // 只关机器人面板，保留大厅已选机器人；下次开房/开第二局继续生效
+  try{ if(typeof window.__resetBotPickUI === 'function') window.__resetBotPickUI(false); }catch(e){}
   G._p2pAutoStart = false;
   G._gunfightEnded = false;
   G.gunfightScores = { A:0, B:0 };
@@ -17280,7 +17471,7 @@ document.getElementById('gunfightBtn').addEventListener('click', ()=>{
   const box = document.getElementById('p2pBox');
   if(box && box.scrollIntoView) box.scrollIntoView({behavior:'smooth', block:'center'});
   setTimeout(()=>{ const b=document.getElementById('btnModeGunfight'); if(b) b.click(); }, 120);
-  if(typeof showToast==='function') showToast('先建房或加入房间，模式已切到 🔫 枪战', 2600);
+  if(typeof showToast==='function') showToast(t('gfHint'), 2600);
 });
 document.getElementById('playBtn').addEventListener('click', ()=>{
   initAudio(); playSound('click');
@@ -17708,13 +17899,13 @@ function applyNpcSnap(d){
       if(mPb){ mPb.textContent = '⚔️ ' + lobbyT('p2pModePvp', '对战'); mPb.style.background = (S.mode === 'pvp') ? '#e74c3c' : 'rgba(231,76,60,0.15)'; }
       if(mGb){ mGb.textContent = '🔫 ' + lobbyT('p2pModeGunfight', '枪战'); mGb.style.background = (S.mode === 'gunfight') ? '#9b59b6' : 'rgba(155,89,182,0.15)'; }
       var lbBot2 = document.getElementById('btnLobbyBot');
-      if(lbBot2 && lbBot2.textContent) lbBot2.textContent = '🤖 ' + (S.mode === 'gunfight' ? '机器人(队友/对手)' : lobbyT('lobbyAddBot', '机器人陪玩'));
+      if(lbBot2 && lbBot2.textContent) lbBot2.textContent = '🤖 ' + (S.mode === 'gunfight' ? t('lobbyBotGunTitle') : t('lobbyBotTitle'));
       var gmi = document.getElementById('gfMatchInfo');
       if(gmi){
         if(S.mode === 'gunfight'){
           var _gmi = gunfightMatchInfo();
           gmi.style.display = 'block';
-          gmi.textContent = _gmi.bad ? ('⚠️ ' + _gmi.bad) : ('✅ ' + _gmi.total + ' 人 → 平均 2 队，每队 ' + (_gmi.total/2) + ' 人');
+          gmi.textContent = _gmi.bad ? ('⚠️ ' + _gmi.bad) : ('✅ ' + t('gfMatchOk').replace('{n}', _gmi.total).replace('{h}', (_gmi.total/2)));
           gmi.style.color = _gmi.bad ? '#ff9b9b' : '#d8c4ff';
         } else { gmi.style.display = 'none'; }
       }
@@ -17724,15 +17915,16 @@ function applyNpcSnap(d){
           var tg2 = document.getElementById('slot' + (bi2+1) + 'Tag');
           var _sd2 = (S.botSides && S.botSides[bi2-1]) || 'B';
           if(tg2){
-            tg2.textContent = S.mode === 'gunfight' ? (_sd2 === 'B' ? '🔴 对手' : '🤝 队友') : '🤖 陪玩';
+            tg2.textContent = S.mode === 'gunfight' ? (_sd2 === 'B' ? t('lobbyBotEnemy') : t('lobbyBotTeam')) : '🤖 ' + t('lobbyBotTitle');
             tg2.style.color = S.mode === 'gunfight' ? (_sd2 === 'B' ? '#e74c3c' : '#2ecc71') : '#2ecc71';
           }
         }
       }
+      try{ paintBotSlots(); }catch(e){}
     }
-    if(mCb) mCb.onclick = function(){ S.mode = 'coop'; resetBotPickUI(true); paintMode(); };
-    if(mPb) mPb.onclick = function(){ S.mode = 'pvp'; resetBotPickUI(true); paintMode(); };
-    if(mGb) mGb.onclick = function(){ S.mode = 'gunfight'; resetBotPickUI(true); paintMode(); };
+    if(mCb) mCb.onclick = function(){ S.mode = 'coop'; resetBotPickUI(false); paintMode(); };
+    if(mPb) mPb.onclick = function(){ S.mode = 'pvp'; resetBotPickUI(false); paintMode(); };
+    if(mGb) mGb.onclick = function(){ S.mode = 'gunfight'; resetBotPickUI(false); paintMode(); };
     // 加固二：多 STUN ICE 配置，提高 NAT 打洞成功率（房主与加入者统一使用）
     var ICE = { iceServers: [
       { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
@@ -18238,6 +18430,32 @@ function applyNpcSnap(d){
     function setSlot2Connected(meta){ setSlotConnected(2, meta); }
     function setSlot3Connected(meta){ setSlotConnected(3, meta); }
     function setSlot4Connected(meta){ setSlotConnected(4, meta); }
+    // 把大厅里的机器人选择重绘到槽位；第二局不再出现“选择还在、槽位空了”
+    function paintBotSlots(){
+      try{
+        var list = S.bots || [];
+        var hc = S.conns ? Object.keys(S.conns).length : 0;
+        for(var _pi=0; _pi<3; _pi++){
+          var _pn = _pi + 2;
+          var _bid = list[_pi];
+          if(_bid){
+            var _bn = '笑脸', _bf = '🤖';
+            try{ if(typeof BOT !== 'undefined'){ _bn = BOT.nameOf(_bid) || _bn; _bf = BOT.faceOf(_bid) || _bf; } }catch(e){}
+            var _side = S.mode === 'gunfight' ? ((S.botSides && S.botSides[_pi]) || 'B') : 'A';
+            var _tag = S.mode === 'gunfight' ? (_side === 'B' ? t('lobbyBotEnemy') : t('lobbyBotTeam')) : '🤖 ' + t('lobbyBotTitle');
+            setSlotConnected(_pn, { nick:_bn, avatar:_bf, tag:_tag });
+            var _tg = document.getElementById('slot' + _pn + 'Tag');
+            if(_tg){ _tg.textContent = _tag; _tg.style.color = S.mode === 'gunfight' ? (_side === 'B' ? '#e74c3c' : '#2ecc71') : '#2ecc71'; }
+          } else if(hc === 0){
+            setSlotWaiting(_pn);
+          }
+        }
+      }catch(e){}
+    }
+    function botPanelTitleText(){
+      var _base = S.mode === 'gunfight' ? t('lobbyBotGunTitle') : t('lobbyBotTitle');
+      return '🤖 ' + _base + ' (' + ((S.bots && S.bots.length) || 0) + '/3)';
+    }
     function hideLobby(){
       var lb = document.getElementById('roomLobby'); if(lb) lb.style.display = 'none';
       var mr = document.getElementById('p2pModeRow'); if(mr) mr.style.display = 'none';
@@ -18247,16 +18465,18 @@ function applyNpcSnap(d){
       try{
         var _bp = document.getElementById('botPickPanel');
         if(_bp && _bp.parentNode) _bp.parentNode.removeChild(_bp);
-        if(clear !== false){ S.bots = []; S.botSides = []; S.botSide = 'A'; }
-        // 只有没有真人连接时才清槽位，避免误伤已经连进来的玩家
-        if(!S.conns || !Object.keys(S.conns).length){
-          for(var _si=2; _si<=4; _si++){
-            var _av = document.getElementById('slot'+_si+'Avatar');
-            var _nm = document.getElementById('slot'+_si+'Name');
-            var _tg = document.getElementById('slot'+_si+'Tag');
-            if(_av){ _av.textContent = '👤'; _av.style.opacity = '0.4'; }
-            if(_nm){ _nm.textContent = ''; _nm.style.color = '#aaa'; }
-            if(_tg){ _tg.textContent = ''; _tg.style.color = '#888'; }
+        // 关键：只有明确 clear=true 才清空大厅配置；退出/切模式只关面板，保留机器人
+        if(clear === true){
+          S.bots = []; S.botSides = []; S.botSide = 'A';
+          if(!S.conns || !Object.keys(S.conns).length){
+            for(var _si=2; _si<=4; _si++){
+              var _av = document.getElementById('slot'+_si+'Avatar');
+              var _nm = document.getElementById('slot'+_si+'Name');
+              var _tg = document.getElementById('slot'+_si+'Tag');
+              if(_av){ _av.textContent = '👤'; _av.style.opacity = '0.4'; }
+              if(_nm){ _nm.textContent = ''; _nm.style.color = '#aaa'; }
+              if(_tg){ _tg.textContent = ''; _tg.style.color = '#888'; }
+            }
           }
         }
       }catch(e){}
@@ -18264,9 +18484,9 @@ function applyNpcSnap(d){
     try{ window.__resetBotPickUI = resetBotPickUI; }catch(e){}
     var lbBot = document.getElementById('btnLobbyBot');
     if(lbBot){
-      lbBot.textContent = '🤖 ' + (S.mode === 'gunfight' ? '机器人(队友/对手)' : (T ? T('lobbyAddBot') : '机器人陪玩'));
+      lbBot.textContent = '🤖 ' + (S.mode === 'gunfight' ? t('lobbyBotGunTitle') : t('lobbyBotTitle'));
       lbBot.onclick = function(){
-        if(S.role !== 'host'){ showToast('只有房主可以添加机器人'); return; }
+        if(S.role !== 'host'){ showToast(t('lobbyBotHostOnly')); return; }
         if(!S.bots) S.bots = [];
         var panel = document.getElementById('botPickPanel');
         // 每次都重建，避免上一局的 ✅ 残留到新面板
@@ -18279,7 +18499,7 @@ function applyNpcSnap(d){
         var tt = document.createElement('div');
         tt.id = 'botPickTitle';
         tt.style.cssText = 'color:#7fffd4;font-weight:bold;font-size:13px;flex:1;text-align:left';
-        tt.textContent = '🤖 ' + (S.mode === 'gunfight' ? '添加机器人（队友/对手）' : (T ? T('lobbyAddBot') : '选择机器人队友')) + ' (' + S.bots.length + '/3)';
+        tt.textContent = botPanelTitleText();
         var close = document.createElement('button');
         close.style.cssText = 'flex-shrink:0;width:36px;height:36px;border-radius:50%;border:none;background:#e74c3c;color:#fff;font-size:18px;font-weight:bold;cursor:pointer;line-height:36px;padding:0';
         close.textContent = '✖';
@@ -18290,7 +18510,7 @@ function applyNpcSnap(d){
         if(S.mode === 'gunfight'){
           var sideRow = document.createElement('div');
           sideRow.style.cssText = 'display:flex;gap:6px;flex-shrink:0;margin:2px 0 4px';
-          [['A','🤝 加为队友','#2ecc71'],['B','🔴 加为对手','#e74c3c']].forEach(function(pair){
+          [['A',t('lobbyBotTeam'),'#2ecc71'],['B',t('lobbyBotEnemy'),'#e74c3c']].forEach(function(pair){
             var sb = document.createElement('button');
             sb.style.cssText = 'flex:1;padding:8px;border-radius:6px;border:2px solid ' + pair[2] + ';background:' + (S.botSide === pair[0] ? pair[2] : 'rgba(0,0,0,0.25)') + ';color:#fff;font-size:12px;font-weight:bold;cursor:pointer';
             sb.textContent = pair[1];
@@ -18312,10 +18532,10 @@ function applyNpcSnap(d){
           var diffRow = document.createElement('div');
           diffRow.style.cssText = 'display:flex;gap:6px;flex-shrink:0;margin:2px 0 6px';
           var diffLabel = document.createElement('span');
-          diffLabel.textContent = '难度';
+          diffLabel.textContent = t('lobbyDiff');
           diffLabel.style.cssText = 'color:#aaa;font-size:11px;line-height:30px;flex-shrink:0';
           diffRow.appendChild(diffLabel);
-          [['easy','简单','#2ecc71'],['normal','普通','#f39c12'],['hard','困难','#e74c3c']].forEach(function(pair){
+          [['easy',t('lobbyDiffEasy'),'#2ecc71'],['normal',t('lobbyDiffNormal'),'#f39c12'],['hard',t('lobbyDiffHard'),'#e74c3c']].forEach(function(pair){
             var db = document.createElement('button');
             db.style.cssText = 'flex:1;padding:6px 4px;border-radius:6px;border:1px solid ' + pair[2] + ';background:' + ((S.botDiff || 'normal') === pair[0] ? pair[2] : 'rgba(0,0,0,0.35)') + ';color:#fff;font-size:11px;font-weight:bold;cursor:pointer';
             db.textContent = pair[1];
@@ -18328,7 +18548,7 @@ function applyNpcSnap(d){
                   _dbs[_di].style.background = (_dv && S.botDiff === _dv[0]) ? _dv[1] : 'rgba(0,0,0,0.35)';
                 }
               }catch(e){}
-              try{ showToast('枪战机器人难度：' + pair[1]); }catch(e){}
+              try{ showToast(t('lobbyDiffToast').replace('{d}', pair[1])); }catch(e){}
             };
             diffRow.appendChild(db);
           });
@@ -18344,24 +18564,30 @@ function applyNpcSnap(d){
           else { b.textContent = bf + '  ' + bn; }
           b.onclick = function(){
             if(!S.bots) S.bots = [];
-            if(S.bots.indexOf(bid) >= 0){ showToast(bf + ' ' + bn + ' 已在队里'); return; }
-            if(S.bots.length >= 3){ showToast('最多 3 个机器人队友'); return; }
+            var _idx = S.bots.indexOf(bid);
+            // 同一个按钮就是开关：已选 → 单独移除；未选 → 加入
+            if(_idx >= 0){
+              S.bots.splice(_idx, 1);
+              if(S.botSides) S.botSides.splice(_idx, 1);
+              try{ paintBotSlots(); }catch(e){}
+              try{ showToast('🤖 ' + bn + ' ' + t('lobbyBotRemoved'), 2200); }catch(e){}
+              try{ panel.style.display = 'none'; }catch(e){}
+              try{ lbBot.onclick(); }catch(e){}
+              return;
+            }
+            if(S.bots.length >= 3){ showToast(t('lobbyBotLimit')); return; }
             var _side = S.mode === 'gunfight' ? (S.botSide || 'A') : 'A';
             S.bots.push(bid);
             if(!S.botSides) S.botSides = [];
             S.botSides.push(_side);
-            var n = S.bots.length;
-            var _btag = S.mode === 'gunfight' ? (_side === 'B' ? '🔴 对手' : '🤝 队友') : '🤖 陪玩';
-            var _bcol = S.mode === 'gunfight' ? (_side === 'B' ? '#e74c3c' : '#2ecc71') : '#2ecc71';
-            if(n === 1){ setSlot2Connected({ nick: bn, avatar: bf, tag:_btag }); }
-            else if(n === 2){ try{ setSlot3Connected({ nick: bn, avatar: bf, tag:_btag }); }catch(e){} }
-            else { try{ setSlot4Connected({ nick: bn, avatar: bf, tag:_btag }); }catch(e){} }
-            try{ var _stg = document.getElementById('slot' + (n+1) + 'Tag'); if(_stg){ _stg.textContent = _btag; _stg.style.color = _bcol; } }catch(e){}
-            showToast('🤖 ' + bn + ' 已加入' + (S.mode === 'gunfight' ? (_side === 'B' ? '对手队' : '队友队') : '') + '！点击开始游戏', 3000);
-            var tt2 = document.getElementById('botPickTitle');
-            if(tt2) tt2.textContent = '🤖 ' + (S.mode === 'gunfight' ? '添加机器人（队友/对手）' : (T ? T('lobbyAddBot') : '选择机器人队友')) + ' (' + S.bots.length + '/3)';
+            var _btag = S.mode === 'gunfight' ? (_side === 'B' ? t('lobbyBotEnemy') : t('lobbyBotTeam')) : '🤖 ' + t('lobbyBotTitle');
+            var _sideTxt = S.mode === 'gunfight' ? (_side === 'B' ? t('lobbyBotEnemy') : t('lobbyBotTeam')) : '';
+            try{ paintBotSlots(); }catch(e){}
+            showToast('🤖 ' + t('lobbyBotAdded').replace('{name}', bn).replace('{side}', _sideTxt), 3000);
             b.style.borderColor = '#16a085';
             b.textContent = bf + '  ' + bn + '  ✅';
+            var tt2 = document.getElementById('botPickTitle');
+            if(tt2) tt2.textContent = botPanelTitleText();
           };
           panel.appendChild(b);
         });
@@ -18373,14 +18599,14 @@ function applyNpcSnap(d){
       var bots = (S.bots || []).length;
       var total = humans + bots;
       var bad = '';
-      if(total < 2) bad = '枪战至少 2 人才能开';
-      else if(total > 4) bad = '枪战最多 4 人';
-      else if(total % 2 !== 0) bad = '当前 ' + total + ' 人，奇数无法平均分队，匹配不了';
+      if(total < 2) bad = t('gfNeed2');
+      else if(total > 4) bad = t('gfMax4');
+      else if(total % 2 !== 0) bad = t('gfOdd').replace('{n}', total);
       else {
         var sides = S.botSides || [], half = total/2, aB = 0, bB = 0;
         for(var bi=0; bi<bots; bi++){ if((sides[bi] || 'B') === 'A') aB++; else bB++; }
-        if(total === 2 && aB > 0) bad = '1v1 只有两个位置，机器人只能当对手；要队友请凑 4 人';
-        else if(aB > half || bB > half) bad = '某一队机器人超过每队 ' + half + ' 人，无法平均分队';
+        if(total === 2 && aB > 0) bad = t('gf1v1');
+        else if(aB > half || bB > half) bad = t('gfTeamOver').replace('{n}', half);
       }
       return { humans:humans, bots:bots, total:total, bad:bad };
     }
