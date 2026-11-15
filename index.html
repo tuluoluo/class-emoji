@@ -1087,7 +1087,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.8.1';
+var GAME_VERSION = 'v4.8.2';
 var GAME_DATE = '2026-11-15';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -8859,8 +8859,20 @@ function fireSniperScoped(p, isP2){
   }
   G.sniperTracer = {x1:p.x+p.w/2, y1:p.y+p.h/2, x2:wx, y2:wy, t:10};
   try{ playSound('attack'); }catch(e){}
-  if(isP2) G.atkCooldown2 = 80;
-  else G.atkCooldown = 80;
+  if(isP2) G.atkCooldown2 = 55;
+  else G.atkCooldown = 55;
+}
+
+function syncSniperAimFromScope(){
+  const p = G.player;
+  if(!p) return;
+  const wx = camera.x + (G.scopeX || W/2);
+  const wy = camera.y + (G.scopeY || H/2);
+  const dx = wx - (p.x + p.w/2);
+  const dy = wy - (p.y + p.h/2);
+  const len = Math.hypot(dx, dy) || 1;
+  p.aimX = dx / len;
+  p.aimY = dy / len;
 }
 
 function setScope(on){
@@ -8868,10 +8880,20 @@ function setScope(on){
   if(!p || p.weapon !== 'sniper' || G.isCoop) return;
   G.scopeActive = !!on;
   if(on){
-    if(typeof G.scopeX !== 'number' || isNaN(G.scopeX)) G.scopeX = W/2;
-    if(typeof G.scopeY !== 'number' || isNaN(G.scopeY)) G.scopeY = H/2;
-    G._scopeMouseAt = 0;
+    // 每次开镜都从屏幕正中心开始，不再沿用上一次的镜孔位置
+    G.scopeX = W/2;
+    G.scopeY = H/2;
+    G._scopeMouseAt = Date.now();
+    G._scopeMouseIgnore = true;
+    G._scopeMouseOrigin = null;
+    G._scopeDrag = null;
     try{ playSound('gun'); }catch(e){}
+  } else {
+    // 松镜后把狙击冷却压到很短，保证马上按攻击能打出普通弹
+    if(G.atkCooldown > 20) G.atkCooldown = 20;
+    G._scopeDrag = null;
+    G._scopeMouseIgnore = false;
+    G._scopeMouseOrigin = null;
   }
 }
 
@@ -8881,8 +8903,12 @@ function updateScopeAim(){
   if(!G.scopeActive) return;
   const r = Math.min(W, H) * 0.27;
   if(aimJoy && aimJoy.active){
-    G.scopeX += (p.aimX || 0) * 8;
-    G.scopeY += (p.aimY || 0) * 8;
+    // 按摇杆偏移量给速度，不再满速漂移；小幅推动只微调
+    const mag = Math.max(0, Math.min(1, p.aimSpread || 0));
+    const rate = 3.5 + mag * 9.5;
+    G.scopeX += (p.aimX || 0) * rate;
+    G.scopeY += (p.aimY || 0) * rate;
+    syncSniperAimFromScope();
   }
   G.scopeX = clamp(G.scopeX, r, W-r);
   G.scopeY = clamp(G.scopeY, r, H-r);
@@ -9012,11 +9038,14 @@ function playerAttack(){
     } else {
       const angle = Math.atan2(p.aimY || 0, (p.aimX || p.facing)) + (Math.random()-0.5)*0.18;
       const spd = 12;
-      spawnProjectile(p.x+p.w/2, p.y+p.h/2, Math.cos(angle)*spd, Math.sin(angle)*spd, {
+      const _sx = p.x+p.w/2, _sy = p.y+p.h/2;
+      spawnProjectile(_sx, _sy, Math.cos(angle)*spd, Math.sin(angle)*spd, {
         dmg: calcPlayerDmg(12), face:'•', fromPlayer:true, speed:spd, life:100,
         w:18, h:18,
       });
-      G.atkCooldown = 50;
+      // 普通狙击也给一条可见曳光，避免玩家以为没开火
+      G.sniperTracer = {x1:_sx, y1:_sy, x2:_sx+Math.cos(angle)*170, y2:_sy+Math.sin(angle)*170, t:8};
+      G.atkCooldown = 32;
     }
   }
   else if(w==='laser'){
@@ -13382,6 +13411,78 @@ function initGunCalib(){
   drawGunCalib();
 }
 
+function drawSniperModel(p){
+  if(!p) return;
+  const aimX = p.aimX || p.facing || 1;
+  const aimY = p.aimY || 0;
+  const angle = Math.atan2(aimY, aimX);
+  const w = p.w, h = p.h;
+  ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.translate(w*0.16, h*0.20);
+  ctx.scale(1.12, 1.12);
+  ctx.rotate(angle);
+  // 枪托
+  ctx.fillStyle = '#8a5a2b';
+  ctx.strokeStyle = '#2a1b0e';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-w*0.98, -h*0.15);
+  ctx.lineTo(-w*0.36, -h*0.10);
+  ctx.lineTo(-w*0.36, h*0.16);
+  ctx.lineTo(-w*0.82, h*0.21);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  // 机匣
+  ctx.fillStyle = '#607d8b';
+  ctx.fillRect(-w*0.38, -h*0.14, w*0.60, h*0.28);
+  ctx.strokeStyle = '#263238';
+  ctx.strokeRect(-w*0.38, -h*0.14, w*0.60, h*0.28);
+  // 长枪管
+  ctx.fillStyle = '#b0bec5';
+  ctx.fillRect(w*0.18, -h*0.055, w*1.02, h*0.11);
+  ctx.strokeStyle = '#263238';
+  ctx.strokeRect(w*0.18, -h*0.055, w*1.02, h*0.11);
+  // 枪口
+  ctx.fillStyle = '#eceff1';
+  ctx.fillRect(w*1.14, -h*0.085, w*0.14, h*0.17);
+  ctx.strokeStyle = '#263238';
+  ctx.strokeRect(w*1.14, -h*0.085, w*0.14, h*0.17);
+  // 瞄准镜
+  ctx.fillStyle = '#37474f';
+  ctx.fillRect(-w*0.25, -h*0.44, w*0.44, h*0.15);
+  ctx.strokeStyle = '#eceff1';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-w*0.25, -h*0.44, w*0.44, h*0.15);
+  ctx.fillStyle = 'rgba(120,220,255,.95)';
+  ctx.beginPath();
+  ctx.arc(-w*0.03, -h*0.36, w*0.075, 0, Math.PI*2);
+  ctx.fill();
+  // 弹匣
+  ctx.fillStyle = '#455a64';
+  ctx.fillRect(-w*0.05, h*0.10, w*0.20, h*0.20);
+  ctx.strokeStyle = '#263238';
+  ctx.strokeRect(-w*0.05, h*0.10, w*0.20, h*0.20);
+  // 支架
+  ctx.strokeStyle = '#37474f';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(w*0.55, h*0.04); ctx.lineTo(w*0.45, h*0.30);
+  ctx.moveTo(w*0.55, h*0.04); ctx.lineTo(w*0.70, h*0.30);
+  ctx.stroke();
+  // 高光
+  ctx.fillStyle = 'rgba(255,255,255,.35)';
+  ctx.fillRect(-w*0.30, -h*0.12, w*0.42, h*0.04);
+  // 枪口焰
+  if(p.attackAnim > 0){
+    ctx.fillStyle = 'rgba(255,215,90,.95)';
+    ctx.beginPath();
+    ctx.arc(w*1.20, 0, h*0.16, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 function drawPlayer2(){
   const p = G.player2;
   if(!p) return;
@@ -13418,6 +13519,8 @@ function drawPlayer2(){
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(p.face, 0, 0);
+  // 狙击枪：自绘枪身模型（枪托/机匣/长枪管/瞄准镜）
+  if(p.weapon==='sniper') drawSniperModel(p);
 
   // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转（枪和火焰弹，光线不需要）
   if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'){
@@ -13513,6 +13616,8 @@ function drawPlayer(){
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(p.face, 0, 0);
+  // 狙击枪：自绘枪身模型（枪托/机匣/长枪管/瞄准镜）
+  if(p.weapon==='sniper') drawSniperModel(p);
 
   // 远程武器：一直显示武器emoji，根据瞄准轮盘方向旋转（枪和火焰弹，光线不需要）
   if(p.weapon==='gun'||p.weapon==='fire'||p.weapon==='chargeFire'){
@@ -14705,6 +14810,12 @@ document.getElementById('atkBtn').addEventListener('mouseleave', ()=>clearInterv
   }
   window.addEventListener('mousemove', function(e){
     if(!G.scopeActive || !G.player || G.player.weapon!=='sniper' || G.isCoop) return;
+    // 刚开镜时鼠标可能停在屏幕边缘：先吃掉第一下位移，避免镜孔一开就跳到鼠标处
+    if(G._scopeMouseIgnore){
+      if(!G._scopeMouseOrigin){ G._scopeMouseOrigin = {x:e.clientX, y:e.clientY}; return; }
+      if(Math.hypot(e.clientX-G._scopeMouseOrigin.x, e.clientY-G._scopeMouseOrigin.y) < 10) return;
+      G._scopeMouseIgnore = false;
+    }
     const rect = wrap.getBoundingClientRect();
     if(!rect.width || !rect.height) return;
     G.scopeX = (e.clientX - rect.left) * (W / rect.width);
@@ -14723,6 +14834,55 @@ document.getElementById('atkBtn').addEventListener('mouseleave', ()=>clearInterv
     if(G.player && G.player.weapon==='sniper' && G.state==='playing') e.preventDefault();
   });
 })();
+
+// 狙击镜：拖动画面直接移动准星（1:1，不依赖瞄准轮盘；轮盘仍可微调）
+(function(){
+  let scopeDrag = null;
+  canvas.style.touchAction = 'none';
+  function scopePoint(t){
+    const rect = transformRect(wrap.getBoundingClientRect());
+    const tp = transformTouchPoint(t.clientX, t.clientY);
+    return {
+      x: (tp.x - rect.left) * (W / (rect.width || 1)),
+      y: (tp.y - rect.top) * (H / (rect.height || 1))
+    };
+  }
+  function scopeDragStart(e){
+    if(!G.scopeActive || !G.player || G.player.weapon !== 'sniper' || G.isCoop) return;
+    const t = e.changedTouches && e.changedTouches[0];
+    if(!t) return;
+    const pt = scopePoint(t);
+    scopeDrag = {id:t.identifier, x:pt.x, y:pt.y};
+    e.preventDefault();
+  }
+  function scopeDragMove(e){
+    if(!scopeDrag || !G.scopeActive || !G.player || G.player.weapon !== 'sniper') return;
+    const list = e.changedTouches || [];
+    let t = null;
+    for(let i=0;i<list.length;i++){ if(list[i].identifier === scopeDrag.id){ t = list[i]; break; } }
+    if(!t) return;
+    const pt = scopePoint(t);
+    const r = Math.min(W,H)*0.27;
+    G.scopeX = clamp(G.scopeX + (pt.x - scopeDrag.x), r, W-r);
+    G.scopeY = clamp(G.scopeY + (pt.y - scopeDrag.y), r, H-r);
+    scopeDrag.x = pt.x; scopeDrag.y = pt.y;
+    syncSniperAimFromScope();
+    e.preventDefault();
+  }
+  function scopeDragEnd(e){
+    if(!scopeDrag) return;
+    const list = e.changedTouches || [];
+    for(let i=0;i<list.length;i++){
+      if(list[i].identifier === scopeDrag.id){ scopeDrag = null; break; }
+    }
+    if(!e.touches || e.touches.length === 0) scopeDrag = null;
+  }
+  canvas.addEventListener('touchstart', scopeDragStart, {passive:false});
+  canvas.addEventListener('touchmove', scopeDragMove, {passive:false});
+  canvas.addEventListener('touchend', scopeDragEnd);
+  canvas.addEventListener('touchcancel', scopeDragEnd);
+})();
+
 document.getElementById('digBtn').addEventListener('click', playerDig);
 document.getElementById('grenadeBtn').addEventListener('click', throwGrenade);
 document.getElementById('dashBtn').addEventListener('click', playerDash);
