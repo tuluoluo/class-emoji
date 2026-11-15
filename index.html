@@ -1087,7 +1087,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.8.2';
+var GAME_VERSION = 'v4.8.3';
 var GAME_DATE = '2026-11-15';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -8887,6 +8887,7 @@ function setScope(on){
     G._scopeMouseIgnore = true;
     G._scopeMouseOrigin = null;
     G._scopeDrag = null;
+    G._scopeAimMoved = false;
     try{ playSound('gun'); }catch(e){}
   } else {
     // 松镜后把狙击冷却压到很短，保证马上按攻击能打出普通弹
@@ -8894,6 +8895,7 @@ function setScope(on){
     G._scopeDrag = null;
     G._scopeMouseIgnore = false;
     G._scopeMouseOrigin = null;
+    G._scopeAimMoved = false;
   }
 }
 
@@ -8905,7 +8907,7 @@ function updateScopeAim(){
   if(aimJoy && aimJoy.active){
     // 按摇杆偏移量给速度，不再满速漂移；小幅推动只微调
     const mag = Math.max(0, Math.min(1, p.aimSpread || 0));
-    const rate = 3.5 + mag * 9.5;
+    const rate = 5.5 + mag * 12.5;
     G.scopeX += (p.aimX || 0) * rate;
     G.scopeY += (p.aimY || 0) * rate;
     syncSniperAimFromScope();
@@ -14569,15 +14571,40 @@ document.addEventListener('mousemove', e=>{if(joy2.active)handleJoy2Move(e)});
 document.addEventListener('mouseup', function(e){ if(joy2.active) handleJoy2End(e); });
 
 // 瞄准轮盘（枪专用）
-const aimJoy = {active:false, dx:0, dy:0, centerX:0, centerY:0};
+const aimJoy = {active:false, dx:0, dy:0, centerX:0, centerY:0, touchId:null};
 const aimJoyEl = document.getElementById('aimJoystick');
 const aimJoyInner = document.getElementById('aimInner');
+
+// 开镜时瞄准轮盘松手 = 开火；只有真的拖动过才触发，避免误触走火
+function tryFireSniperOnRelease(){
+  const p = G.player;
+  if(!G.scopeActive || !p || p.weapon !== 'sniper' || G.isCoop) return false;
+  if(p.dead || p.stunTimer > 0 || G.atkCooldown > 0) return false;
+  if(!G._scopeAimMoved) return false;
+  G._scopeAimMoved = false;
+  fireSniperScoped(p, false);
+  return true;
+}
+
+function aimTouch(e){
+  const list = e.changedTouches;
+  if(list && list.length){
+    for(let i=0;i<list.length;i++){
+      if(aimJoy.touchId == null || list[i].identifier === aimJoy.touchId) return list[i];
+    }
+    return null;
+  }
+  return e.touches ? e.touches[0] : e;
+}
 function handleAimStart(e){
   e.preventDefault();
-  const touch = e.touches ? e.touches[0] : e;
+  const list = e.changedTouches;
+  const touch = list && list.length ? list[0] : (e.touches ? e.touches[0] : e);
   if(!touch || isNaN(touch.clientX)) return;
+  aimJoy.touchId = (touch.identifier != null) ? touch.identifier : null;
   const rect = transformRect(aimJoyEl.getBoundingClientRect());
   aimJoy.active = true;
+  G._scopeAimMoved = false;
   aimJoy.centerX = rect.left + rect.width/2;
   aimJoy.centerY = rect.top + rect.height/2;
   handleAimMove(e);
@@ -14585,7 +14612,7 @@ function handleAimStart(e){
 function handleAimMove(e){
   if(!aimJoy.active) return;
   e.preventDefault();
-  const touch = e.touches ? e.touches[0] : e;
+  const touch = aimTouch(e);
   if(!touch || isNaN(touch.clientX) || isNaN(touch.clientY)) return;
   const tp = transformTouchPoint(touch.clientX, touch.clientY);
   let dx = tp.x - aimJoy.centerX;
@@ -14598,14 +14625,25 @@ function handleAimMove(e){
   if(len > 5){
     G.player.aimX = dx/maxR;
     G.player.aimY = dy/maxR;
+    if(G.scopeActive) G._scopeAimMoved = true;
   }
   G.player.aimSpread = Math.min(1, len/maxR);
   aimJoyInner.style.left = (30+dx)+'px';
   aimJoyInner.style.top = (30+dy)+'px';
 }
 function handleAimEnd(e){
+  if(!aimJoy.active) return;
+  if(e && e.changedTouches && aimJoy.touchId != null){
+    let matched = false;
+    for(let i=0;i<e.changedTouches.length;i++){
+      if(e.changedTouches[i].identifier === aimJoy.touchId){ matched = true; break; }
+    }
+    if(!matched) return;
+  }
   aimJoy.active = false;
+  aimJoy.touchId = null;
   aimJoyInner.style.left = '30px'; aimJoyInner.style.top = '30px';
+  tryFireSniperOnRelease();
 }
 aimJoyEl.addEventListener('touchstart', handleAimStart, {passive:false});
 aimJoyEl.addEventListener('touchmove', handleAimMove, {passive:false});
@@ -14853,6 +14891,7 @@ document.getElementById('atkBtn').addEventListener('mouseleave', ()=>clearInterv
     if(!t) return;
     const pt = scopePoint(t);
     scopeDrag = {id:t.identifier, x:pt.x, y:pt.y};
+    G._scopeAimMoved = false;
     e.preventDefault();
   }
   function scopeDragMove(e){
@@ -14863,8 +14902,11 @@ document.getElementById('atkBtn').addEventListener('mouseleave', ()=>clearInterv
     if(!t) return;
     const pt = scopePoint(t);
     const r = Math.min(W,H)*0.27;
-    G.scopeX = clamp(G.scopeX + (pt.x - scopeDrag.x), r, W-r);
-    G.scopeY = clamp(G.scopeY + (pt.y - scopeDrag.y), r, H-r);
+    const ddx = pt.x - scopeDrag.x;
+    const ddy = pt.y - scopeDrag.y;
+    G.scopeX = clamp(G.scopeX + ddx, r, W-r);
+    G.scopeY = clamp(G.scopeY + ddy, r, H-r);
+    if(Math.abs(ddx) + Math.abs(ddy) > 3) G._scopeAimMoved = true;
     scopeDrag.x = pt.x; scopeDrag.y = pt.y;
     syncSniperAimFromScope();
     e.preventDefault();
@@ -14872,10 +14914,14 @@ document.getElementById('atkBtn').addEventListener('mouseleave', ()=>clearInterv
   function scopeDragEnd(e){
     if(!scopeDrag) return;
     const list = e.changedTouches || [];
+    let matched = false;
     for(let i=0;i<list.length;i++){
-      if(list[i].identifier === scopeDrag.id){ scopeDrag = null; break; }
+      if(list[i].identifier === scopeDrag.id){ matched = true; break; }
     }
-    if(!e.touches || e.touches.length === 0) scopeDrag = null;
+    if(!matched) return;
+    scopeDrag = null;
+    // 拖动镜子瞄准后松手 = 开火
+    tryFireSniperOnRelease();
   }
   canvas.addEventListener('touchstart', scopeDragStart, {passive:false});
   canvas.addEventListener('touchmove', scopeDragMove, {passive:false});
