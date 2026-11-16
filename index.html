@@ -1093,7 +1093,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.8.7';
+var GAME_VERSION = 'v4.8.8';
 var GAME_DATE = '2026-11-16';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -12453,10 +12453,12 @@ ctx.globalAlpha = 1;
         var _bsd = G.botSquad[_bsdi];
         if(!_bsd || _bsd.dead) continue;
         drawEntity(_bsd, true);
+        try{ drawGunfightBotWeapon(_bsd); }catch(e){}
         var _bl = G.gunfight ? (( _bsd.team || 'B') === 'A' ? '🤝 ' : '🔴 ') : '🤖 ';
+        var _bwIcon = G.gunfight ? ((_bsd.botWeapon === 'sniper') ? '🎯' : '🔫') : '';
         ctx.fillStyle = G.gunfight ? (( _bsd.team || 'B') === 'A' ? '#66ff99' : '#ff6666') : 'rgba(0,0,0,0.55)';
         ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(_bl + (_bsd.name || '机器人'), _bsd.x + (_bsd.w||44)/2, _bsd.y - 8);
+        ctx.fillText(_bl + (_bsd.name || '机器人') + (_bwIcon ? ' ' + _bwIcon : ''), _bsd.x + (_bsd.w||44)/2, _bsd.y - 8);
       }
     }
     if(G.botTracers){
@@ -13435,6 +13437,39 @@ function drawEntity(e, showHp){
   }
 }
 
+
+function drawGunfightBotWeapon(e){
+  if(!G.gunfight || !e) return;
+  var kind = e.botWeapon || 'rifle';
+  var dir = (e.facing || 1) > 0 ? 1 : -1;
+  var cx = e.x + (e.w || 44)/2 + dir * 26;
+  var cy = e.y + (e.h || 44)/2 + 10;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(dir, 1);
+  // 深色场地里，机器人武器必须发光描边，否则和集装箱/地面糊成一团
+  ctx.shadowColor = 'rgba(255,215,70,0.95)';
+  ctx.shadowBlur = 9;
+  if(kind === 'sniper'){
+    ctx.fillStyle = '#e6e6e6'; ctx.fillRect(-2, -3, 26, 6);
+    ctx.fillStyle = '#5a5a5a'; ctx.fillRect(8, -2, 20, 3);
+    ctx.fillStyle = '#111'; ctx.fillRect(22, -2, 18, 3);
+    ctx.fillStyle = '#ffd700'; ctx.fillRect(11, -6, 7, 2);
+    ctx.fillStyle = '#00e5ff'; ctx.fillRect(17, -5, 2, 2);
+  } else if(kind === 'gun'){
+    ctx.fillStyle = '#dcdcdc'; ctx.fillRect(-1, -3, 13, 6);
+    ctx.fillStyle = '#6b6b6b'; ctx.fillRect(10, -2, 11, 3);
+    ctx.fillStyle = '#111'; ctx.fillRect(19, -2, 8, 3);
+    ctx.fillStyle = '#ffd700'; ctx.fillRect(7, -6, 4, 2);
+  } else {
+    ctx.fillStyle = '#e6e6e6'; ctx.fillRect(-2, -3, 24, 6);
+    ctx.fillStyle = '#6b6b6b'; ctx.fillRect(8, -2, 13, 3);
+    ctx.fillStyle = '#111'; ctx.fillRect(20, -2, 12, 3);
+    ctx.fillStyle = '#ffd700'; ctx.fillRect(11, -6, 5, 2);
+    ctx.fillStyle = '#ff8c00'; ctx.fillRect(30, -2, 3, 3);
+  }
+  ctx.restore();
+}
 function drawBoss(b){
   ctx.save();
   if(b.hurtFlash>0){
@@ -17187,9 +17222,9 @@ function startGame(){
               // 枪战难度：简单/普通/困难；同队队友强化、对手削弱（困难反向）
               var _gDiff = _Sp.botDiff || 'normal';
               var _gTuneAll = {
-                easy:   { mateHp:85, mateDmg:3, mateCdMin:55, mateCdMax:75, mateSpd:2.4, enemyHp:45, enemyDmg:2, enemyCdMin:105, enemyCdMax:135, enemySpd:1.7 },
-                normal: { mateHp:75, mateDmg:3, mateCdMin:65, mateCdMax:85, mateSpd:2.3, enemyHp:55, enemyDmg:2, enemyCdMin:90,  enemyCdMax:120, enemySpd:2.0 },
-                hard:   { mateHp:65, mateDmg:2, mateCdMin:85, mateCdMax:110, mateSpd:2.1, enemyHp:65, enemyDmg:3, enemyCdMin:70,  enemyCdMax:95,  enemySpd:2.3 }
+                easy:   { mateHp:70, mateDmg:2, mateCdMin:105, mateCdMax:135, mateSpd:2.2, mateMiss:0.20, enemyHp:40, enemyDmg:1, enemyCdMin:170, enemyCdMax:210, enemySpd:1.6, enemyMiss:0.50 },
+                normal: { mateHp:65, mateDmg:2, mateCdMin:90,  mateCdMax:120, mateSpd:2.1, mateMiss:0.16, enemyHp:45, enemyDmg:1, enemyCdMin:145, enemyCdMax:185, enemySpd:1.9, enemyMiss:0.42 },
+                hard:   { mateHp:60, mateDmg:2, mateCdMin:80,  mateCdMax:105, mateSpd:2.0, mateMiss:0.12, enemyHp:50, enemyDmg:2, enemyCdMin:120, enemyCdMax:150, enemySpd:2.1, enemyMiss:0.30 }
               };
               var _gTune = _gTuneAll[_gDiff] || _gTuneAll.normal;
               for(var _gbi=0; _gbi<_Sp.bots.length && _gbi<3; _gbi++){
@@ -17214,6 +17249,8 @@ function startGame(){
                   name:(typeof BOT.nameOf === 'function' ? BOT.nameOf(_gbid) : '机器人'),
                   style:'gunfight', isSquad:true, isEnemyBot:(_gSide === 'B'), team:_gSide,
                   isGunfightMate:(_gSide === 'A'),
+                  botWeapon:(_gSide === 'A' ? 'rifle' : (_gDiff === 'hard' ? 'sniper' : 'rifle')),
+                  botMiss:(_gSide === 'A' ? _gTune.mateMiss : _gTune.enemyMiss),
                   botDmg:(_gSide === 'A' ? _gTune.mateDmg : _gTune.enemyDmg),
                   botShootMin:(_gSide === 'A' ? _gTune.mateCdMin : _gTune.enemyCdMin),
                   botShootMax:(_gSide === 'A' ? _gTune.mateCdMax : _gTune.enemyCdMax),
@@ -18332,7 +18369,7 @@ function applyNpcSnap(d){
         G.remotePlayers[bk].lastSeen = Date.now();
         G.remotePlayers[bk].dead = false;
         if(d.p2.dead){ G.remotePlayers[bk].dead = true; }
-        if(d.p2.isBot){ G.remotePlayers[bk].isBot = true; G.remotePlayers[bk].botIndex = d.p2.botIndex; G.remotePlayers[bk].team = d.p2.team || 'B'; }
+        if(d.p2.isBot){ G.remotePlayers[bk].isBot = true; G.remotePlayers[bk].botIndex = d.p2.botIndex; G.remotePlayers[bk].team = d.p2.team || 'B'; G.remotePlayers[bk].botWeapon = d.p2.botWeapon || 'rifle'; G.remotePlayers[bk].facing = d.p2.facing || 1; G.remotePlayers[bk].w = d.p2.w || 44; G.remotePlayers[bk].h = d.p2.h || 44; }
       }
       if(d.p3){
         var bk3 = from + '::bot2';
@@ -19043,7 +19080,7 @@ function applyNpcSnap(d){
           for(var qiG=0; qiG<G.botSquad.length && qiG<3; qiG++){
             var sqG = G.botSquad[qiG];
             if(!sqG) continue;
-            msg['p' + (qiG + 2)] = { x:sqG.x, y:sqG.y, facing:1, face:sqG.face, nick:sqG.name||'机器人', map:(G.currentMap || 'grassland'), isBot:true, botIndex:qiG, team:(sqG.team || 'B'), dead:!!sqG.dead, hp:sqG.hp };
+            msg['p' + (qiG + 2)] = { x:sqG.x, y:sqG.y, facing:(sqG.facing||1), face:sqG.face, nick:sqG.name||'机器人', map:(G.currentMap || 'grassland'), isBot:true, botIndex:qiG, team:(sqG.team || 'B'), w:44, h:44, botWeapon:(sqG.botWeapon || 'rifle'), dead:!!sqG.dead, hp:sqG.hp };
           }
         } else {
           if(G.player2 && !G.player2.dead){
@@ -19142,6 +19179,7 @@ function applyNpcSnap(d){
         ctx.textBaseline = 'middle';
         ctx.fillText(r.face, 0, 0);
         ctx.restore();
+        if(G.gunfight && r.isBot){ try{ drawGunfightBotWeapon(r); }catch(e){} }
         ctx.fillStyle = 'rgba(0,0,0,0.55)';
         ctx.font = '12px sans-serif';
         ctx.textAlign = 'center';
@@ -19177,28 +19215,6 @@ function applyNpcSnap(d){
           ctx.textAlign = 'center';
           ctx.fillText(_same ? '🟦 队友' : '🟥 敌人', r.x + r.w/2, r.y - 24);
           ctx.restore();
-        }
-      }
-      // 联机房间的第2/3个机器人（房主本地渲染）
-      if(G.botSquad){
-        for(var sqi=0; sqi<G.botSquad.length; sqi++){
-          var sqb = G.botSquad[sqi];
-          if(!sqb || sqb.dead) continue;
-          if(sqb.map && sqb.map !== curMap) continue;
-          ctx.save();
-          ctx.globalAlpha = 1;
-          ctx.fillStyle = '#000000';
-          ctx.translate(sqb.x + sqb.w/2, sqb.y + sqb.h/2);
-          if(!sqb.face) { ctx.restore(); continue; }
-          ctx.font = (sqb.w || 44) + 'px serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(sqb.face, 0, 0);
-          ctx.restore();
-          ctx.fillStyle = 'rgba(0,0,0,0.55)';
-          ctx.font = '12px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('🤖 ' + (sqb.name || '机器人'), sqb.x + sqb.w/2, sqb.y - 8);
         }
       }
     };
@@ -21007,10 +21023,13 @@ function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
       var _bd = sq.botDmg || 3;
       var _bmin = sq.botShootMin || 78, _bmax = sq.botShootMax || 106;
       sq.shootCd = _bmin + Math.floor(Math.random()*((_bmax - _bmin) + 1));
+      var _hit = Math.random() >= (typeof sq.botMiss === 'number' ? sq.botMiss : 0.25);
+      var _tx = (best.o.x || 0) + 22, _ty = (best.o.y || 0) + 22;
+      if(!_hit){ _tx += (Math.random() - 0.5) * 110; _ty += (Math.random() - 0.5) * 80; }
       if(!G.botTracers) G.botTracers = [];
-      G.botTracers.push({ x1:sq.x + 22, y1:sq.y + 22, x2:(best.o.x || 0) + 22, y2:(best.o.y || 0) + 22, t:8 });
+      G.botTracers.push({ x1:sq.x + 22, y1:sq.y + 22, x2:_tx, y2:_ty, t:8 });
       var fromId = myTeam === 'A' ? ('bot' + (sq.botIndex || 0)) : 'gunfightBot';
-      if(best.local){
+      if(_hit && best.local){
         try{
           if(best.kind === 'human'){
             if(G.player) G.player.lastHitBy = fromId;
@@ -21025,7 +21044,7 @@ function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
             }
           }
         }catch(e){}
-      } else {
+      } else if(_hit){
         try{
           var _conn = G.p2p && G.p2p.conns ? G.p2p.conns[best.id] : null;
           if(_conn){
