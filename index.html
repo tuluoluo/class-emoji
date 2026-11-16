@@ -1056,6 +1056,15 @@ input:checked + .slider:before{transform:translateX(24px)}
           <option value="wenyan">文言文</option>
         </select>
       </div>
+      <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:4px;border-top:1px dashed #ddd;padding-top:8px">
+        <span>🤖 大厅 AI Key（可选）</span>
+        <span style="font-size:11px;color:#888;line-height:1.4">免费接口每 IP 45 秒只有 1 条，AI 可能要 10–20 秒；填入 Pollinations Pollen Key 可解除限制，让机器人稳定用真 AI。</span>
+        <div style="display:flex;gap:6px;width:100%">
+          <input id="botAIKeyInput" type="password" placeholder="pk_...（留空仅用免费额度）" style="flex:1;min-width:0;padding:7px 8px;border:2px solid #333;border-radius:6px;font-size:12px">
+          <button id="botAIKeySave" class="settings-small-btn" style="flex-shrink:0">保存</button>
+        </div>
+        <span id="botAIKeyState" style="font-size:11px;color:#888"></span>
+      </div>
       <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:4px">
         <span id="authorEmailLabel">📧 作者邮箱</span>
         <a href="mailto:tll151120@qq.com" style="color:#3498db;font-size:13px;text-decoration:underline;word-break:break-all">tll151120@qq.com</a>
@@ -1093,7 +1102,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.8.8';
+var GAME_VERSION = 'v4.8.9';
 var GAME_DATE = '2026-11-16';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -12755,9 +12764,10 @@ function resolveArenaCollision(p, oldX, oldY){
       p.x = oldX; p.y = oldY;
       p.x = clamp(p.x, a.x+24, a.x+a.w-p.w-24);
       p.y = clamp(p.y, a.y+24, a.y+a.h-p.h-24);
-      return;
+      return true;
     }
   }
+  return false;
 }
 
 function drawBackground(){
@@ -17905,6 +17915,25 @@ document.getElementById('settingsBtn').addEventListener('click', ()=>{
   // 延迟重绘确保布局稳定后画面出现（主页/局内都可靠）
   requestAnimationFrame(()=>requestAnimationFrame(()=>drawGunCalib()));
 });
+
+// 大厅 AI Key（可选）：填 Pollinations Pollen Key 后解除 45 秒/条免费限制
+(function(){
+  var input = document.getElementById('botAIKeyInput');
+  var state = document.getElementById('botAIKeyState');
+  var saved = '';
+  try{ saved = localStorage.getItem('pixelBotPollenKey') || ''; }catch(e){}
+  if(input) input.value = saved;
+  if(state) state.textContent = saved ? '✅ 已保存 Key，真 AI 不受免费额度限制' : '免费额度：每 IP 45 秒 1 条，超出会走本地动态兜底';
+  var btn = document.getElementById('botAIKeySave');
+  if(btn) btn.addEventListener('click', function(){
+    var v = input ? String(input.value || '').trim() : '';
+    try{ if(v) localStorage.setItem('pixelBotPollenKey', v); else localStorage.removeItem('pixelBotPollenKey'); }catch(e){}
+    try{ window.__botPollenKey = v; }catch(e){}
+    if(state) state.textContent = v ? '✅ 已保存 Key，真 AI 不受免费额度限制' : '免费额度：每 IP 45 秒 1 条，超出会走本地动态兜底';
+    try{ showToast(v ? '🤖 已保存 AI Key' : '🤖 已清空 AI Key', 1800); }catch(e){}
+    playSound('click');
+  });
+})();
 // 关闭设置
 document.getElementById('closeSettingsBtn').addEventListener('click', ()=>{
   playSound('click');
@@ -20669,8 +20698,16 @@ var BOT = (function(){
     return out;
   }
 // ===== 机器人生成式对话引擎 v3（在线大模型 + 本地生成兜底，不再从固定整句池抽签） =====
-  var BOT_AI_ENDPOINT = 'https://text.pollinations.ai/openai';
+  // Pollinations 的匿名请求需要带 referrer，否则会自动排队几十秒，6.5s 超时永远走本地兜底
+  var BOT_AI_ENDPOINT = 'https://text.pollinations.ai/openai?referrer=class-emoji';
+  var BOT_AI_MODEL = 'openai';
+  var BOT_AI_TIMEOUT = 22000;
+  var BOT_AI_KEY = '';
+  try{ BOT_AI_KEY = localStorage.getItem('pixelBotPollenKey') || ''; }catch(e){}
+  try{ window.__botPollenKey = window.__botPollenKey || BOT_AI_KEY; }catch(e){}
   var _botAIBusy = {};
+  var _botAIAnyBusy = false;
+  var _botAIQueued = {};
   function botAIContext(){
     try{
       var p = (typeof G !== 'undefined' && G.player) ? G.player : {};
@@ -20707,6 +20744,41 @@ var BOT = (function(){
     cool:{open:['Mm','Sure','Fine'],react:{greeting:['sit, watch','you are late'],praise:['normal performance','finally, taste'],insult:['you sure?','not worth it'],question:['figure it out','beneath me'],boss:['eyes closed','still warming up'],team:['I carry','you take loot'],trade:['I buy whole rows','money is not a problem'],dig:['digging is for rookies'],weather:['my shades are waterproof'],thanks:['wise','do not mention it'],bye:['leaving, do not miss me'],default:['go on','and?']},advice:{greeting:'watch and learn.',praise:'acceptable.',insult:'do not embarrass yourself.',question:'play a round.',boss:'let me handle it.',team:'you loot.',trade:'buy the row.',dig:'stop digging.',weather:'shades on.',thanks:'noted.',bye:'no escort.',default:'the point.'}}
   };
   function _pickOne(arr, name){ if(!arr || !arr.length) return ''; var v = arr[Math.floor(Math.random() * arr.length)]; return String(v).replace(/\{n\}/g, name || ''); }
+  var _btLocalLast = {};
+  function _btTopicLine(text, lang, style){
+    var t = String(text || '');
+    var low = t.toLowerCase();
+    var zh = (lang === 'zh' || lang === 'hant' || lang === 'wenyan');
+    var table = zh ? [
+      [/狙击|sniper/, '狙击枪开镜只认镜孔中心，移动会让准星飘。'],
+      [/皮肤|skin/, '皮肤定价归商城，我只负责站柜台。'],
+      [/任务|task/, '任务奖励现在挂商城币，领了别忘花。'],
+      [/boss|首领/, 'Boss阶段别站桩，先清小怪再贴脸。'],
+      [/卡|延迟|lag|掉帧/, '卡的话先看网络和帧数，别把锅全扣我头上。'],
+      [/机器人|ai|复读|话术/, '我这张脸是像素，脑子在接口；免费额度紧的时候我也会嘴瓢。'],
+      [/枪|武器|gun|步枪|手枪/, '枪战先看弹匣和换弹，空仓别硬冲。'],
+      [/币|商城|shop|money|金币/, '黄脸币攒着，皮肤和狙击都吃币。'],
+      [/你好|hi|hello|在吗/, '来了就坐，今天想打哪张图？'],
+      [/谢谢|thanks|感谢/, '别客气，记得下次还来找我。']
+    ] : [
+      [/sniper/, 'the sniper only counts what is inside the scope center; moving makes it drift.'],
+      [/skin/, 'skin prices belong to the shop; I just stand here and look pretty.'],
+      [/task/, 'task rewards now pay in shop coins; spend them before they rust.'],
+      [/boss/, 'do not stand still during a boss phase; clear the small ones first.'],
+      [/lag|fps|frame/, 'check your ping and frames before blaming my face.'],
+      [/bot|ai|repeat|script/, 'my face is pixels, my brain is an endpoint; free quota makes me stumble.'],
+      [/gun|weapon|rifle|pistol/, 'watch your magazine and reload; do not push on an empty chamber.'],
+      [/coin|shop|money/, 'save the yellow-face coins; skins and the sniper both eat them.'],
+      [/hi|hello|hey/, 'take a seat; which map are we running today?'],
+      [/thanks|thank/, 'anytime; just come back with a better score.']
+    ];
+    for(var i=0;i<table.length;i++){ if(table[i][0].test(low)) return table[i][1]; }
+    var q = t.replace(/\s+/g,'').slice(0, 14);
+    if(q && q.length >= 3){
+      return zh ? ('你说的「' + q + '」我记下了。') : ('I heard you on "' + q + '".');
+    }
+    return '';
+  }
   function botGenLocal(style, lang, text, name){
     var t = String(text || '');
     var intent = 'default';
@@ -20714,6 +20786,8 @@ var BOT = (function(){
     var gen = (lang === 'zh' || lang === 'hant' || lang === 'wenyan') ? (_GEN_ZH[style] || _GEN_ZH.normal) : (_GEN_EN[style] || _GEN_EN.normal);
     var react = (gen.react && (gen.react[intent] || gen.react.default)) || ['...'];
     var advice = (gen.advice && (gen.advice[intent] || gen.advice.default)) || '';
+    var topicLine = _btTopicLine(t, lang, style);
+    if(topicLine) advice = topicLine;
     var ctx = botAIContext();
     var fact = '';
     var _lowHp = false;
@@ -20736,7 +20810,13 @@ var BOT = (function(){
     var pat = patterns[Math.floor(Math.random() * patterns.length)];
     var rtxt = _pickOne(react, nm);
     if(lang !== 'en' && rtxt && !/[，。！？；]$/.test(rtxt)) rtxt += '，';
-    return pat.replace(/\{o\}/g, _pickOne(gen.open, nm)).replace(/\{r\}/g, rtxt).replace(/\{f\}/g, fact).replace(/\{a\}/g, advice).replace(/\{n\}/g, nm).replace(/\s+/g, ' ').trim();
+    var out = pat.replace(/\{o\}/g, _pickOne(gen.open, nm)).replace(/\{r\}/g, rtxt).replace(/\{f\}/g, fact).replace(/\{a\}/g, advice).replace(/\{n\}/g, nm).replace(/\s+/g, ' ').trim();
+    if(_btLocalLast[style] === out){
+      out = out.replace(/[。！？.]$/, '') + (lang === 'en' ? ' Anyway.' : '，这次换个说法。');
+    }
+    _btLocalLast[style] = out;
+    try{ out = (window.__gameCensor ? window.__gameCensor(out) : out); }catch(e){}
+    return out;
   }
   function botCleanAI(t){
     var out = String(t == null ? '' : t).replace(/```[^`]*```/g, '').replace(/[*_#>`]/g, '').replace(/^[\s"'“”‘’「」]+|[\s"'“”‘’「」]+$/g, '').replace(/\s*\n+\s*/g, ' ').trim();
@@ -20748,32 +20828,56 @@ var BOT = (function(){
   }
   function botAIReply(style, lang, text, name, cb){
     var fallback = botGenLocal(style, lang, text, name);
+    // 同一时间只打一个 AI 请求：免费接口 45 秒才 1 条，别让多个机器人把额度撞成 402
+    // 其他机器人立刻用本地动态兜底，不再排队等 20 秒
+    if(_botAIBusy[style] || _botAIAnyBusy){
+      setTimeout(function(){ try{ cb(fallback); }catch(e){} }, 250);
+      return;
+    }
+    _botAIBusy[style] = true;
+    _botAIAnyBusy = true;
+    var aiKey = '';
+    try{ aiKey = window.__botPollenKey || BOT_AI_KEY || ''; }catch(e){}
     var done = false;
+    var timer = null;
     function finish(t){
       if(done) return; done = true;
       try{ clearTimeout(timer); }catch(e){}
       _botAIBusy[style] = false;
-      cb(t || fallback);
+      _botAIAnyBusy = false;
+      try{ cb(t || fallback); }catch(e){}
     }
-    if(_botAIBusy[style]){ setTimeout(function(){ finish(fallback); }, 250); return; }
-    _botAIBusy[style] = true;
-    var timer = setTimeout(function(){ finish(fallback); }, 6500);
+    timer = setTimeout(function(){ finish(fallback); }, aiKey ? 22000 : BOT_AI_TIMEOUT);
     try{
       var persona = ({normal:'笑脸，草原上最阳光、爱笑、会照顾人的机器人',taunt:'吐舌脸，嘴臭爱嘲讽但没恶意',rage:'生气脸，一点就炸、说话冲',rage2:'愤怒脸，暴躁、动不动就要杀一百个',cool:'墨镜脸，装酷、话少、自信'})[style] || '笑脸机器人';
       var langName = (lang === 'zh' || lang === 'hant' || lang === 'wenyan') ? '简体中文' : 'English';
       var sys = '你正在扮演像素游戏《像素草原战斗》大厅里的机器人角色：' + persona + '。你只输出角色台词，1 到 2 句，不超过 60 个汉字或 140 个英文字符，语言用' + langName + '。不要提自己是 AI、模型或助手，不要复读玩家整句，不要写解释、括号旁白或列表。只依据下面给出的游戏事实接话，不要编造规则：' + botAIContext() + '。不要输出辱骂、色情、政治或违法内容。';
       var user = '玩家 ' + String(name || '玩家').slice(0, 24) + ' 对你说：' + String(text || '').slice(0, 120) + '。自然地接一句。';
+      var aiHeaders = {'Content-Type':'application/json'};
+      if(aiKey) aiHeaders['Authorization'] = 'Bearer ' + aiKey;
       fetch(BOT_AI_ENDPOINT, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ model:'openai', messages:[{role:'system',content:sys},{role:'user',content:user}], temperature:0.9, max_tokens:90 })
-      }).then(function(r){ return r.json(); }).then(function(j){
+        headers:aiHeaders,
+        body:JSON.stringify({
+          model:BOT_AI_MODEL,
+          referrer:'class-emoji',
+          messages:[{role:'system',content:sys},{role:'user',content:user}],
+          temperature:0.9,
+          reasoning_effort:'low',
+          max_tokens:70
+        })
+      }).then(function(r){
+        if(!r.ok) throw new Error('ai_http_' + r.status);
+        return r.json();
+      }).then(function(j){
         var c = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
-        finish(botCleanAI(c) || fallback);
+        var cleaned = botCleanAI(c);
+        if(cleaned) finish(cleaned);
+        else finish(fallback);
       }).catch(function(){ finish(fallback); });
     }catch(e){ finish(fallback); }
   }
-function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
+  function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
   function pub(topic, obj){ try{ client.publish(topic, JSON.stringify(obj), { qos:0 }); }catch(e){} }
   // 回复语言：优先按玩家国籍（纯 emoji 消息无语言特征时不误判）
   function botLangOf(d){
@@ -20946,6 +21050,185 @@ function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
   G.gunfightTeamOfId = gunfightTeamOfId;
   G.gunfightAddScore = gunfightAddScore;
 // 枪战机器人：按队伍找敌人；A=队友会跟人/打B，B=对手会打A
+  
+  // ===== 枪战机器人寻路（A* 网格 + 绕墙包抄 + 卡住自救） =====
+  var GF_NAV_CELL = 46;
+  var GF_NAV_PAD = 24;      // 机器人半宽 22 + 2 余量
+  var GF_NAV_INSET = 30;
+  var _gfNavGrid = null;
+  function gfNavGrid(){
+    if(_gfNavGrid) return _gfNavGrid;
+    var a = getArena();
+    var cols = Math.max(1, Math.floor((a.w - GF_NAV_INSET * 2) / GF_NAV_CELL));
+    var rows = Math.max(1, Math.floor((a.h - GF_NAV_INSET * 2) / GF_NAV_CELL));
+    var g = { a:a, cols:cols, rows:rows, ox:a.x + GF_NAV_INSET, oy:a.y + GF_NAV_INSET, blocked:new Uint8Array(cols*rows) };
+    var walls = getArenaWalls();
+    for(var r=0;r<rows;r++){
+      for(var c=0;c<cols;c++){
+        var x = g.ox + c * GF_NAV_CELL + GF_NAV_CELL / 2;
+        var y = g.oy + r * GF_NAV_CELL + GF_NAV_CELL / 2;
+        var hit = (x < a.x + GF_NAV_INSET || x > a.x + a.w - GF_NAV_INSET || y < a.y + GF_NAV_INSET || y > a.y + a.h - GF_NAV_INSET);
+        if(!hit){
+          for(var wi=0; wi<walls.length; wi++){
+            var w = walls[wi];
+            if(x > w.x - GF_NAV_PAD && x < w.x + w.w + GF_NAV_PAD && y > w.y - GF_NAV_PAD && y < w.y + w.h + GF_NAV_PAD){ hit = true; break; }
+          }
+        }
+        g.blocked[r*cols+c] = hit ? 1 : 0;
+      }
+    }
+    _gfNavGrid = g;
+    return g;
+  }
+  function gfNavCellOf(x,y){
+    var g = gfNavGrid();
+    return { c:Math.max(0, Math.min(g.cols-1, Math.floor((x - g.ox) / GF_NAV_CELL))), r:Math.max(0, Math.min(g.rows-1, Math.floor((y - g.oy) / GF_NAV_CELL))) };
+  }
+  function gfNavCenter(g,c,r){ return { x:g.ox + c * GF_NAV_CELL + GF_NAV_CELL / 2, y:g.oy + r * GF_NAV_CELL + GF_NAV_CELL / 2 }; }
+  function gfNavBlocked(g,c,r){ return (c < 0 || r < 0 || c >= g.cols || r >= g.rows) ? true : !!g.blocked[r*g.cols+c]; }
+  function gfNavNearestFree(g,c,r){
+    if(!gfNavBlocked(g,c,r)) return { c:c, r:r };
+    for(var rad=1; rad<=10; rad++){
+      var best=null, bd=1e9;
+      for(var rr=Math.max(0,r-rad); rr<=Math.min(g.rows-1,r+rad); rr++){
+        for(var cc=Math.max(0,c-rad); cc<=Math.min(g.cols-1,c+rad); cc++){
+          if(gfNavBlocked(g,cc,rr)) continue;
+          var d = Math.abs(cc-c) + Math.abs(rr-r);
+          if(d < bd){ bd=d; best={c:cc,r:rr}; }
+        }
+      }
+      if(best) return best;
+    }
+    return null;
+  }
+  function gfHeapPush(h, idx, f){
+    h.push({ i:idx, f:f });
+    var n = h.length - 1;
+    while(n > 0){
+      var p = Math.floor((n-1)/2);
+      if(h[p].f <= h[n].f) break;
+      var tmp = h[p]; h[p] = h[n]; h[n] = tmp;
+      n = p;
+    }
+  }
+  function gfHeapPop(h){
+    if(!h.length) return null;
+    var top = h[0], last = h.pop();
+    if(h.length){
+      h[0] = last;
+      var n = 0;
+      while(true){
+        var l = n*2+1, r = l+1, sm = n;
+        if(l < h.length && h[l].f < h[sm].f) sm = l;
+        if(r < h.length && h[r].f < h[sm].f) sm = r;
+        if(sm === n) break;
+        var tmp = h[n]; h[n] = h[sm]; h[sm] = tmp;
+        n = sm;
+      }
+    }
+    return top;
+  }
+  function gfAStar(sx, sy, tx, ty){
+    var g = gfNavGrid();
+    var st = gfNavCellOf(sx, sy), go = gfNavCellOf(tx, ty);
+    st = gfNavNearestFree(g, st.c, st.r);
+    go = gfNavNearestFree(g, go.c, go.r);
+    if(!st || !go) return [];
+    var si = st.r*g.cols + st.c, gi = go.r*g.cols + go.c;
+    if(si === gi) return [];
+    var total = g.cols*g.rows;
+    var gs = new Float64Array(total); gs.fill(Infinity);
+    var came = new Int32Array(total); came.fill(-1);
+    var closed = new Uint8Array(total);
+    var open = [];
+    gs[si] = 0;
+    gfHeapPush(open, si, 0);
+    var found = false;
+    var dirs = [[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]];
+    while(open.length){
+      var cur = gfHeapPop(open);
+      if(!cur) break;
+      var ci = cur.i;
+      if(closed[ci]) continue;
+      if(ci === gi){ found = true; break; }
+      closed[ci] = 1;
+      var cc = ci % g.cols, cr = Math.floor(ci / g.cols);
+      for(var di=0; di<dirs.length; di++){
+        var dc = dirs[di][0], dr = dirs[di][1], cost = dirs[di][2];
+        var nc = cc + dc, nr = cr + dr;
+        if(gfNavBlocked(g, nc, nr)) continue;
+        if(dc && dr && (gfNavBlocked(g, cc+dc, cr) || gfNavBlocked(g, cc, cr+dr))) continue;
+        var ni = nr*g.cols + nc;
+        if(closed[ni]) continue;
+        var ng = gs[ci] + cost;
+        if(ng < gs[ni]){
+          gs[ni] = ng;
+          came[ni] = ci;
+          var dx = Math.abs(nc - go.c), dy = Math.abs(nr - go.r);
+          var hh = (dx + dy) + (1.414 - 2) * Math.min(dx, dy);
+          gfHeapPush(open, ni, ng + hh);
+        }
+      }
+    }
+    if(!found) return [];
+    var out = [];
+    var node = gi;
+    while(node !== -1 && node !== si){
+      var c = node % g.cols, r = Math.floor(node / g.cols);
+      out.push(gfNavCenter(g, c, r));
+      node = came[node];
+    }
+    out.reverse();
+    return out;
+  }
+  function gfNavPointBlocked(x, y){
+    var a = getArena();
+    if(x < a.x + GF_NAV_INSET || x > a.x + a.w - GF_NAV_INSET || y < a.y + GF_NAV_INSET || y > a.y + a.h - GF_NAV_INSET) return true;
+    var walls = getArenaWalls();
+    for(var i=0;i<walls.length;i++){
+      var w = walls[i];
+      if(x > w.x - GF_NAV_PAD && x < w.x + w.w + GF_NAV_PAD && y > w.y - GF_NAV_PAD && y < w.y + w.h + GF_NAV_PAD) return true;
+    }
+    return false;
+  }
+  function gfNavLineClear(x1, y1, x2, y2){
+    var dx = x2 - x1, dy = y2 - y1;
+    var len = Math.hypot(dx, dy);
+    var steps = Math.max(1, Math.ceil(len / 14));
+    for(var i=0; i<=steps; i++){
+      var t = i / steps;
+      if(gfNavPointBlocked(x1 + dx*t, y1 + dy*t)) return false;
+    }
+    return true;
+  }
+    function gfBotNavStep(sq, tx, ty){
+    var cx = sq.x + 22, cy = sq.y + 22;
+    var key = Math.round(tx/24) + ':' + Math.round(ty/24);
+    if(!sq._navPath || sq._navGoalKey !== key || (sq._navTick || 0) <= 0){
+      sq._navPath = gfAStar(cx, cy, tx, ty);
+      sq._navGoalKey = key;
+      sq._navTick = 16;
+    } else {
+      sq._navTick--;
+    }
+    var path = sq._navPath || [];
+    while(path.length && Math.hypot(path[0].x - cx, path[0].y - cy) < 18) path.shift();
+    if(!path.length) return { x:tx, y:ty };
+    // 路径拉直：下一个点被挡就老实走网格，没挡就尽量跳到更远的航点
+    var wp = path[0];
+    if(gfNavLineClear(cx, cy, wp.x, wp.y)){
+      var far = Math.min(path.length - 1, 4);
+      for(var k=far; k>=0; k--){
+        if(gfNavLineClear(cx, cy, path[k].x, path[k].y)){
+          if(k > 0) path.splice(0, k);
+          wp = path[0];
+          break;
+        }
+      }
+    }
+    return { x:wp.x, y:wp.y };
+  }
+
   function updateGunfightBot(sq){
     if(!G.gunfight || !sq) return;
     var myTeam = sq.team || 'B';
@@ -20956,6 +21239,7 @@ function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
         sq.dead = false; sq.hp = sq.maxHp || 60; sq.respawnT = 0; sq.shootCd = sq.botShootMin || 40;
         sq.x = myTeam === 'A' ? (_ra.x + 200 + (sq.botIndex||0)*20) : (_ra.x + _ra.w - 220);
         sq.y = _ra.y + _ra.h / 2 - 70 + (sq.botIndex || 0) * 70;
+        sq._navPath = null; sq._navGoalKey = ''; sq._navTick = 0; sq._navStuck = 0; sq._navSide = 0;
       }
       return;
     }
@@ -20986,10 +21270,18 @@ function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
       }
     }
     if(!targets.length){
-      // 队友没目标时跟着真人，不挡枪口
+      // 队友没目标时跟着真人，走寻路，不直线撞墙
       if(myTeam === 'A' && G.player && !G.player.dead){
-        var fdx = G.player.x - sq.x, fdy = G.player.y - sq.y, fl = Math.hypot(fdx,fdy)||1;
-        if(fl > 130){ sq.x += (fdx/fl)*1.6; sq.y += (fdy/fl)*1.6; }
+        var fdx = (G.player.x + 22) - (sq.x + 22), fdy = (G.player.y + 22) - (sq.y + 22), fl = Math.hypot(fdx,fdy)||1;
+        if(fl > 120){
+          var fp = gfBotNavStep(sq, G.player.x + 22, G.player.y + 22);
+          var fmx = fp.x - (sq.x + 22), fmy = fp.y - (sq.y + 22), fml = Math.hypot(fmx,fmy)||1;
+          var fs = (sq.botSpeed || 2.1) * (fl > 280 ? 1.25 : 1);
+          var _foX = sq.x, _foY = sq.y;
+          sq.x += (fmx/fml) * fs; sq.y += (fmy/fml) * fs;
+          try{ resolveArenaCollision(sq, _foX, _foY); }catch(e){}
+          if(Math.abs(fmx) > 2) sq.facing = fmx > 0 ? 1 : -1;
+        }
       }
       return;
     }
@@ -20999,27 +21291,90 @@ function isZh(text){ return /[\u4e00-\u9fa5]/.test(text || ''); }
       var dd = Math.hypot((t.o.x || 0) - sq.x, (t.o.y || 0) - sq.y);
       if(dd < bd){ bd = dd; best = t; }
     }
-    var dx = (best.o.x || 0) - sq.x, dy = (best.o.y || 0) - sq.y;
-    var len = Math.hypot(dx, dy) || 1;
-    var _bspd = sq.botSpeed || 2.1;
-    var _sqOldX = sq.x, _sqOldY = sq.y;
-    if(bd > 210){
-      sq.x += (dx/len) * _bspd; sq.y += (dy/len) * _bspd;
-    } else if(bd < 120){
-      sq.x -= (dx/len) * (_bspd * 0.55); sq.y -= (dy/len) * (_bspd * 0.55);
+    var cx = sq.x + 22, cy = sq.y + 22;
+    var px = (best.o.x || 0) + 22, py = (best.o.y || 0) + 22;
+    var realBd = Math.hypot(px - cx, py - cy);
+    var los = !gunfightLineBlocked(cx, cy, px, py);
+    if(!sq._navSide) sq._navSide = ((sq.botIndex || 0) % 2) ? 1 : -1;
+    var side = sq._navSide;
+    var gx = px, gy = py;
+    if(realBd > 560){
+      // 远距离直接压上去；有墙由 A* 绕
+      gx = px; gy = py;
+    } else if(!los && realBd > 150){
+      // 视线被掩体挡住：选一侧包抄，不再原地抖
+      var ea = Math.atan2(py - cy, px - cx);
+      var flank = ea + side * Math.PI / 2;
+      gx = px + Math.cos(flank) * 185;
+      gy = py + Math.sin(flank) * 185;
+      if(gfNavPointBlocked(gx, gy)){
+        flank = ea - side * Math.PI / 2;
+        gx = px + Math.cos(flank) * 185;
+        gy = py + Math.sin(flank) * 185;
+      }
+      if(gfNavPointBlocked(gx, gy)){ gx = px; gy = py; }
+    } else if(realBd > 230){
+      gx = px; gy = py;
+    } else if(realBd < 125){
+      var away = Math.atan2(cy - py, cx - px);
+      gx = cx + Math.cos(away) * 135;
+      gy = cy + Math.sin(away) * 135;
     } else {
-      sq.x += (dy/len) * (_bspd * 0.48); sq.y -= (dx/len) * (_bspd * 0.48);
+      var strafe = Math.atan2(py - cy, px - cx) + Math.PI / 2 * side;
+      gx = cx + Math.cos(strafe) * 95;
+      gy = cy + Math.sin(strafe) * 95;
+    }
+    if(gfNavPointBlocked(gx, gy)){ gx = px; gy = py; }
+    var _sqOldX = sq.x, _sqOldY = sq.y;
+    var nav = gfBotNavStep(sq, gx, gy);
+    var mvx = nav.x - (sq.x + 22), mvy = nav.y - (sq.y + 22);
+    var ml = Math.hypot(mvx, mvy) || 1;
+    var speed = (sq.botSpeed || 2.1) * (realBd > 240 ? 1.18 : 1);
+    sq.x += (mvx / ml) * speed;
+    sq.y += (mvy / ml) * speed;
+    // 同队机器人互相让位，别叠成一坨；不抢真人枪线
+    if(G.botSquad){
+      for(var si=0; si<G.botSquad.length; si++){
+        var mate = G.botSquad[si];
+        if(!mate || mate === sq || mate.dead) continue;
+        if((mate.team || 'B') !== myTeam) continue;
+        var sx = (mate.x + 22) - (sq.x + 22), sy = (mate.y + 22) - (sq.y + 22);
+        var sd = Math.hypot(sx, sy);
+        if(sd > 0 && sd < 56){
+          sq.x -= (sx / sd) * 0.55;
+          sq.y -= (sy / sd) * 0.55;
+        }
+      }
     }
     var _ar2 = getArena();
     sq.x = Math.max(_ar2.x + 40, Math.min(_ar2.x + _ar2.w - 40, sq.x));
     sq.y = Math.max(_ar2.y + 40, Math.min(_ar2.y + _ar2.h - 40, sq.y));
     // 机器人也不能穿集装箱走位
-    try{ resolveArenaCollision(sq, _sqOldX, _sqOldY); }catch(e){}
-    if(Math.abs(dx) > 2) sq.facing = dx > 0 ? 1 : -1;
+    var _hitWall = false;
+    try{ _hitWall = resolveArenaCollision(sq, _sqOldX, _sqOldY); }catch(e){}
+    // 卡住自救：清路径、换包抄侧、给一个横向脱困推力
+    var _moved = Math.hypot(sq.x - _sqOldX, sq.y - _sqOldY);
+    if((_hitWall || _moved < 0.35) && realBd > 120) sq._navStuck = (sq._navStuck || 0) + 1;
+    else sq._navStuck = 0;
+    if(sq._navStuck > 16){
+      sq._navStuck = 0;
+      sq._navPath = null;
+      sq._navGoalKey = '';
+      sq._navTick = 0;
+      sq._navSide = -(sq._navSide || 1);
+      var turn = Math.atan2(py - cy, px - cx) + Math.PI / 2 * sq._navSide;
+      sq.x += Math.cos(turn) * 3.2;
+      sq.y += Math.sin(turn) * 3.2;
+      sq.x = Math.max(_ar2.x + 40, Math.min(_ar2.x + _ar2.w - 40, sq.x));
+      sq.y = Math.max(_ar2.y + 40, Math.min(_ar2.y + _ar2.h - 40, sq.y));
+      try{ resolveArenaCollision(sq, _sqOldX, _sqOldY); }catch(e){}
+    }
+    var faceDx = (best.o.x || 0) - sq.x;
+    if(Math.abs(faceDx) > 2) sq.facing = faceDx > 0 ? 1 : -1;
     sq.shootCd = (sq.shootCd || 0) - 1;
     // 机器人原本是 hitscan 扣血，必须单独做视线判定，否则掩体只挡玩家子弹、挡不住机器人
-    if(bd < 640 && sq.shootCd <= 0 && gunfightLineBlocked(sq.x + 22, sq.y + 22, best.o.x + 22, best.o.y + 22)){ sq.shootCd = 15; }
-    if(bd < 640 && sq.shootCd <= 0 && !gunfightLineBlocked(sq.x + 22, sq.y + 22, best.o.x + 22, best.o.y + 22)){
+    if(realBd < 640 && sq.shootCd <= 0 && gunfightLineBlocked(sq.x + 22, sq.y + 22, best.o.x + 22, best.o.y + 22)){ sq.shootCd = 15; }
+    if(realBd < 640 && sq.shootCd <= 0 && !gunfightLineBlocked(sq.x + 22, sq.y + 22, best.o.x + 22, best.o.y + 22)){
       var _bd = sq.botDmg || 3;
       var _bmin = sq.botShootMin || 78, _bmax = sq.botShootMax || 106;
       sq.shootCd = _bmin + Math.floor(Math.random()*((_bmax - _bmin) + 1));
