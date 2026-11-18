@@ -1102,8 +1102,8 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.9.0';
-var GAME_DATE = '2026-11-17';
+var GAME_VERSION = 'v4.9.1';
+var GAME_DATE = '2026-11-18';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
 function getSelectedFace(){
@@ -9156,6 +9156,18 @@ function drawSniperScope(){
   ctx.restore();
 }
 
+function meleeHitBoxFor(p, w, range){
+  // 拳/刀都是近战；刀改成按 360° 方向生成命中盒，视觉朝哪边就打哪边
+  if(w !== 'knife'){
+    return {x:p.x + (p.facing > 0 ? p.w : -range), y:p.y - 5, w:range, h:p.h + 10};
+  }
+  var a = playerKnifeAngle(p);
+  var cx = p.x + p.w/2 + Math.cos(a) * range * 0.45;
+  var cy = p.y + p.h/2 + Math.sin(a) * range * 0.45;
+  var r = range * 0.62;
+  return {x:cx - r, y:cy - r, w:r * 2, h:r * 2};
+}
+
 function playerAttack(){
   const p = G.player;
   if(G.atkCooldown>0||p.stunTimer>0) return;
@@ -9192,17 +9204,15 @@ function playerAttack(){
   p.attackAnim = 12;
 
   if(w==='fist'||w==='knife'){
-    // 近战范围攻击
+    // 近战范围攻击：刀按当前瞄准/移动方向判定，不再固定左右
     const range = w==='knife'?70:55;
     const dmg = calcPlayerDmg(w==='knife'?4:2);
-    const ax = p.x + (p.facing>0? p.w : -range);
-    const ay = p.y - 5;
-    const hitBox = {x:ax, y:ay, w:range, h:p.h+10};
+    const hitBox = meleeHitBoxFor(p, w, range);
     hitAllMobs(hitBox, dmg);
     if(G.gunfight) hitGunfightMeleeTargets(hitBox, dmg, p);
     // PvP：通知对方本次近战攻击范围（由对方本地判定是否命中）
     if(G.p2pMode === 'pvp' && S.connected){
-      try{ sendMsgTo({ t:'atk', kind:'melee', mode:(S.mode || 'coop'), bx:ax, by:ay, bw:range, bh:p.h+10, dmg:dmg, from:p2pSelfId() }); }catch(e){}
+      try{ sendMsgTo({ t:'atk', kind:'melee', mode:(S.mode || 'coop'), bx:hitBox.x, by:hitBox.y, bw:hitBox.w, bh:hitBox.h, dmg:dmg, from:p2pSelfId() }); }catch(e){}
     }
     G.atkCooldown = w==='knife'?32:25;
   }
@@ -9313,9 +9323,7 @@ function player2Attack(){
   if(w==='fist'||w==='knife'){
     const range = w==='knife'?70:55;
     const dmg = calcPlayerDmg(w==='knife'?4:2);
-    const ax = p.x + (p.facing>0? p.w : -range);
-    const ay = p.y - 5;
-    const hitBox = {x:ax, y:ay, w:range, h:p.h+10};
+    const hitBox = meleeHitBoxFor(p, w, range);
     hitAllMobs(hitBox, dmg);
     G.atkCooldown2 = w==='knife'?20:25;
   }
@@ -13463,6 +13471,21 @@ function drawGunfightBotWeapon(e){
   if(!G.gunfight || !e) return;
   var kind = e.botWeapon || 'rifle';
   var dir = (e.facing || 1) > 0 ? 1 : -1;
+  // 机器人刀也回 Emoji 形式，并按当前目标方向旋转
+  if(kind === 'knife'){
+    var ka = (typeof e.botAimAngle === 'number') ? e.botAimAngle : (dir > 0 ? 0 : Math.PI);
+    ctx.save();
+    ctx.translate(e.x + (e.w || 44)/2 + Math.cos(ka) * (e.w || 44) * 0.95, e.y + (e.h || 44)/2 + Math.sin(ka) * (e.h || 44) * 0.82);
+    ctx.rotate(ka - Math.PI / 4);
+    ctx.shadowColor = 'rgba(255,215,70,0.95)';
+    ctx.shadowBlur = 9;
+    ctx.font = ((e.w || 44) * 0.82) + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🔪', 0, 0);
+    ctx.restore();
+    return;
+  }
   var cx = e.x + (e.w || 44)/2 + dir * 26;
   var cy = e.y + (e.h || 44)/2 + 10;
   ctx.save();
@@ -13471,13 +13494,7 @@ function drawGunfightBotWeapon(e){
   // 深色场地里，机器人武器必须发光描边，否则和集装箱/地面糊成一团
   ctx.shadowColor = 'rgba(255,215,70,0.95)';
   ctx.shadowBlur = 9;
-  if(kind === 'knife'){
-    // 机器人刀：刀身 + 刀柄，切刀后必须能看出来
-    ctx.fillStyle = '#e8e8e8';
-    ctx.beginPath(); ctx.moveTo(2, -2); ctx.lineTo(25, -2); ctx.lineTo(31, 1); ctx.lineTo(25, 3); ctx.lineTo(2, 3); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffd700'; ctx.fillRect(-3, -3, 7, 6);
-    ctx.fillStyle = '#5a3a1a'; ctx.fillRect(-8, -2, 5, 4);
-  } else if(kind === 'sniper'){
+  if(kind === 'sniper'){
     ctx.fillStyle = '#e6e6e6'; ctx.fillRect(-2, -3, 26, 6);
     ctx.fillStyle = '#5a5a5a'; ctx.fillRect(8, -2, 20, 3);
     ctx.fillStyle = '#111'; ctx.fillRect(22, -2, 18, 3);
@@ -13809,33 +13826,56 @@ function drawRifleModel(p){
   ctx.restore();
 }
 
+function playerKnifeAngle(p){
+  if(!p) return 0;
+  var dx = 0, dy = 0;
+  if(p === G.player2 && typeof inputState2 !== 'undefined'){
+    if(inputState2.left) dx -= 1;
+    if(inputState2.right) dx += 1;
+    if(inputState2.up) dy -= 1;
+    if(inputState2.down) dy += 1;
+    if(dx === 0 && dy === 0 && typeof joy2 !== 'undefined' && joy2.active){
+      dx = isNaN(joy2.dx) ? 0 : joy2.dx;
+      dy = isNaN(joy2.dy) ? 0 : joy2.dy;
+    }
+  } else {
+    if(inputState.left) dx -= 1;
+    if(inputState.right) dx += 1;
+    if(inputState.up) dy -= 1;
+    if(inputState.down) dy += 1;
+    if(dx === 0 && dy === 0 && typeof joy !== 'undefined' && joy.active){
+      dx = isNaN(joy.dx) ? 0 : joy.dx;
+      dy = isNaN(joy.dy) ? 0 : joy.dy;
+    }
+  }
+  if(dx !== 0 || dy !== 0) return Math.atan2(dy, dx);
+  if(typeof p.aimX === 'number' && typeof p.aimY === 'number' && Math.abs(p.aimX) + Math.abs(p.aimY) > 0.02){
+    return Math.atan2(p.aimY, p.aimX);
+  }
+  return (p.facing || 1) < 0 ? Math.PI : 0;
+}
+
 function drawKnifeModel(p){
   if(!p) return;
-  const aimX = (p.aimX === undefined || p.aimX === 0) ? (p.facing || 1) : p.aimX;
-  const aimY = p.aimY || 0;
-  const angle = Math.atan2(aimY, aimX);
-  const w = p.w, h = p.h;
+  // 用户要求：刀回到 Emoji 形式；能按瞄准/移动方向 360° 转，不再用固定朝向的自绘刀身
+  var angle = playerKnifeAngle(p);
+  var w = p.w, h = p.h;
   ctx.save();
   ctx.globalAlpha = 1;
-  ctx.translate(w*0.20, h*0.18);
-  ctx.rotate(angle);
-  if(p.attackAnim > 0) ctx.translate(w*0.20, 0);
-  ctx.fillStyle = '#4e342e'; ctx.fillRect(-w*0.12, -h*0.07, w*0.27, h*0.14);
-  ctx.strokeStyle = '#1b0f0b'; ctx.lineWidth = 1.5; ctx.strokeRect(-w*0.12, -h*0.07, w*0.27, h*0.14);
-  ctx.fillStyle = '#9e9e9e'; ctx.fillRect(w*0.13, -h*0.12, w*0.05, h*0.24);
-  ctx.strokeStyle = '#263238'; ctx.strokeRect(w*0.13, -h*0.12, w*0.05, h*0.24);
-  ctx.fillStyle = '#cfd8dc'; ctx.strokeStyle = '#37474f';
-  ctx.beginPath();
-  ctx.moveTo(w*0.17, -h*0.075); ctx.lineTo(w*0.68, -h*0.095);
-  ctx.lineTo(w*0.88, 0); ctx.lineTo(w*0.68, h*0.075);
-  ctx.lineTo(w*0.17, h*0.055); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(w*0.22, -h*0.06); ctx.lineTo(w*0.67, -h*0.075); ctx.lineTo(w*0.82, -h*0.01);
-  ctx.stroke();
+  ctx.translate(Math.cos(angle) * w * 0.95, Math.sin(angle) * h * 0.82);
+  ctx.rotate(angle - Math.PI / 4);
+  ctx.font = (w * 0.82) + 'px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(255,255,255,.9)';
+  ctx.shadowBlur = 5;
+  ctx.fillText('🔪', 0, 0);
   if(p.attackAnim > 0){
-    ctx.strokeStyle = 'rgba(230,245,255,.9)'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(w*0.02, 0, w*0.82, -0.55, 0.55); ctx.stroke();
+    ctx.strokeStyle = 'rgba(230,245,255,.9)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.82, -0.55, 0.55);
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -15596,7 +15636,7 @@ function updateAimJoystick(){
   // 1P瞄准轮盘：枪/火焰弹/蓄力火焰弹/光线/散射光线时显示
   const aim = document.getElementById('aimJoystick');
   if(aim){
-    if(G.player && (G.player.weapon === 'gun' || G.player.weapon === 'rifle' || G.player.weapon === 'sniper' || G.player.weapon === 'fire' || G.player.weapon === 'chargeFire' || G.player.weapon === 'laser' || G.player.weapon === 'spreadLaser')){
+    if(G.player && (G.player.weapon === 'gun' || G.player.weapon === 'rifle' || G.player.weapon === 'sniper' || G.player.weapon === 'fire' || G.player.weapon === 'chargeFire' || G.player.weapon === 'laser' || G.player.weapon === 'spreadLaser' || G.player.weapon === 'knife')){
       aim.style.setProperty('display', 'block', 'important');
       aim.style.setProperty('z-index', '60', 'important');
     } else {
@@ -15607,7 +15647,7 @@ function updateAimJoystick(){
   const aim2 = document.getElementById('aimJoystick2');
   if(aim2 && G.isCoop && G.player2){
     const w2 = G.player2.weapon;
-    if(w2 === 'gun' || w2 === 'rifle' || w2 === 'sniper' || w2 === 'fire' || w2 === 'chargeFire' || w2 === 'laser' || w2 === 'spreadLaser'){
+    if(w2 === 'gun' || w2 === 'rifle' || w2 === 'sniper' || w2 === 'fire' || w2 === 'chargeFire' || w2 === 'laser' || w2 === 'spreadLaser' || w2 === 'knife'){
       aim2.style.setProperty('display', 'block', 'important');
       aim2.style.setProperty('z-index', '60', 'important');
     } else {
@@ -18409,7 +18449,7 @@ function applyNpcSnap(d){
         G.remotePlayers[bk].lastSeen = Date.now();
         G.remotePlayers[bk].dead = false;
         if(d.p2.dead){ G.remotePlayers[bk].dead = true; }
-        if(d.p2.isBot){ G.remotePlayers[bk].isBot = true; G.remotePlayers[bk].botIndex = d.p2.botIndex; G.remotePlayers[bk].team = d.p2.team || 'B'; G.remotePlayers[bk].botWeapon = d.p2.botWeapon || 'rifle'; G.remotePlayers[bk].gunReload = d.p2.gunReload || 0; G.remotePlayers[bk].facing = d.p2.facing || 1; G.remotePlayers[bk].w = d.p2.w || 44; G.remotePlayers[bk].h = d.p2.h || 44; }
+        if(d.p2.isBot){ G.remotePlayers[bk].isBot = true; G.remotePlayers[bk].botIndex = d.p2.botIndex; G.remotePlayers[bk].team = d.p2.team || 'B'; G.remotePlayers[bk].botWeapon = d.p2.botWeapon || 'rifle'; G.remotePlayers[bk].botAimAngle = (typeof d.p2.botAimAngle === 'number') ? d.p2.botAimAngle : ((d.p2.facing || 1) > 0 ? 0 : Math.PI); G.remotePlayers[bk].gunReload = d.p2.gunReload || 0; G.remotePlayers[bk].facing = d.p2.facing || 1; G.remotePlayers[bk].w = d.p2.w || 44; G.remotePlayers[bk].h = d.p2.h || 44; }
       }
       if(d.p3){
         var bk3 = from + '::bot2';
@@ -19120,7 +19160,7 @@ function applyNpcSnap(d){
           for(var qiG=0; qiG<G.botSquad.length && qiG<3; qiG++){
             var sqG = G.botSquad[qiG];
             if(!sqG) continue;
-            msg['p' + (qiG + 2)] = { x:sqG.x, y:sqG.y, facing:(sqG.facing||1), face:sqG.face, nick:sqG.name||'机器人', map:(G.currentMap || 'grassland'), isBot:true, botIndex:qiG, team:(sqG.team || 'B'), w:44, h:44, botWeapon:(sqG.botWeapon || 'rifle'), gunReload:(sqG.gunReload || 0), dead:!!sqG.dead, hp:sqG.hp };
+            msg['p' + (qiG + 2)] = { x:sqG.x, y:sqG.y, facing:(sqG.facing||1), face:sqG.face, nick:sqG.name||'机器人', map:(G.currentMap || 'grassland'), isBot:true, botIndex:qiG, team:(sqG.team || 'B'), w:44, h:44, botWeapon:(sqG.botWeapon || 'rifle'), botAimAngle:(typeof sqG.botAimAngle === 'number' ? sqG.botAimAngle : ((sqG.facing || 1) > 0 ? 0 : Math.PI)), gunReload:(sqG.gunReload || 0), dead:!!sqG.dead, hp:sqG.hp };
           }
         } else {
           if(G.player2 && !G.player2.dead){
@@ -21316,6 +21356,7 @@ var BOT = (function(){
     var cx = sq.x + 22, cy = sq.y + 22;
     var px = (best.o.x || 0) + 22, py = (best.o.y || 0) + 22;
     var realBd = Math.hypot(px - cx, py - cy);
+    sq.botAimAngle = Math.atan2(py - cy, px - cx);
     var los = !gunfightLineBlocked(cx, cy, px, py);
     // 机器人切枪：远距离步枪，贴身切刀；空仓/换弹时若敌人逼近也切刀保命
     if((sq.gunAmmo.rifle || 0) <= 0 && sq.gunReload <= 0) sq.gunReload = GUNFIGHT_RELOAD.rifle;
