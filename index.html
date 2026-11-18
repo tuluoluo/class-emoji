@@ -13828,6 +13828,15 @@ function drawRifleModel(p){
 
 function playerKnifeAngle(p){
   if(!p) return 0;
+  // 正在拖瞄准轮盘时，瞄准方向优先；否则移动方向优先
+  var aimActive = false;
+  try{
+    if(p === G.player2){ aimActive = (typeof aimJoy2 !== 'undefined' && aimJoy2.active); }
+    else { aimActive = (typeof aimJoy !== 'undefined' && aimJoy.active); }
+  }catch(e){}
+  if(aimActive && typeof p.aimX === 'number' && typeof p.aimY === 'number' && Math.abs(p.aimX) + Math.abs(p.aimY) > 0.02){
+    return Math.atan2(p.aimY, p.aimX);
+  }
   var dx = 0, dy = 0;
   if(p === G.player2 && typeof inputState2 !== 'undefined'){
     if(inputState2.left) dx -= 1;
