@@ -1102,8 +1102,8 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.9.1';
-var GAME_DATE = '2026-11-18';
+var GAME_VERSION = 'v4.9.2';
+var GAME_DATE = '2026-11-21';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
 function getSelectedFace(){
@@ -12681,6 +12681,15 @@ ctx.globalAlpha = 1;
         ctx.fillStyle = G.player.dead ? '#ff8a8a' : '#ffd700';
         ctx.font = 'bold 13px monospace';
         ctx.fillText(_gLine, W/2, 59);
+        // 换弹进度条：加长换弹时间后必须有可见进度，不然像没换
+        if(!G.player.dead && G.player.gunReload > 0){
+          var _rt = G.player.gunReloadTotal || GUNFIGHT_RELOAD[G.player.weapon] || 1;
+          var _rp = Math.max(0, Math.min(1, 1 - G.player.gunReload / _rt));
+          ctx.fillStyle = 'rgba(255,255,255,0.18)';
+          ctx.fillRect(W/2-78, 73, 156, 4);
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(W/2-78, 73, 156 * _rp, 4);
+        }
       }
     }
     ctx.restore();
@@ -15409,7 +15418,7 @@ function gunfightWeaponSpeedMult(w){
 
 // ==================== 枪战弹匣 / 散布 / 掩体 ====================
 var GUNFIGHT_MAG = { gun:12, rifle:24, sniper:4 };
-var GUNFIGHT_RELOAD = { gun:45, rifle:60, sniper:75 };
+var GUNFIGHT_RELOAD = { gun:105, rifle:150, sniper:190 }; // 1.75s / 2.5s / 3.17s（60fps）；旧值 0.75/1.0/1.25 秒太快
 
 function gunfightAmmoMax(w){ return GUNFIGHT_MAG[w] || 1; }
 
@@ -21305,7 +21314,7 @@ var BOT = (function(){
       }
       return;
     }
-    // 机器人也有弹匣和换弹：同一把步枪，24 发，60 帧换弹；空仓自动换弹
+    // 机器人也有弹匣和换弹：同一把步枪，24 发，按步枪换弹时长走；空仓自动换弹
     if(!sq.weapon) sq.weapon = 'rifle';
     if(!sq.gunAmmo || typeof sq.gunAmmo !== 'object') sq.gunAmmo = { rifle:GUNFIGHT_MAG.rifle };
     if(typeof sq.gunReload !== 'number') sq.gunReload = 0;
