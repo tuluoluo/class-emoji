@@ -568,6 +568,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </style>
 </head>
 <body>
+<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.1</div>
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
   <h2>请横屏游玩</h2>
@@ -843,7 +844,7 @@ input:checked + .slider:before{transform:translateX(24px)}
       </div>
       <div id="clearBadge" style="display:none"></div>
       <div class="menu-hint">📱 移动端：左下摇杆移动 · 右下攻击/挖掘<br>💻 电脑端：WASD/方向键移动 · J攻击 · K挖掘 · L手雷 · Q切武器 · Enter开始</div>
-      <div id="versionTag" style="text-align:center;color:#777;font-size:11px;margin-top:8px"></div>
+      <div id="versionTag" style="display:inline-block;text-align:center;color:#ffd700;font-size:13px;font-weight:bold;margin:8px auto 0;padding:4px 10px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,215,0,0.45);border-radius:8px"></div>
     </div>
   </div>
 
@@ -1102,8 +1103,8 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.9.2';
-var GAME_DATE = '2026-11-21';
+var GAME_VERSION = 'v4.10.1';
+var GAME_DATE = '2026-11-23';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
 function getSelectedFace(){
@@ -9025,7 +9026,7 @@ function fireSniperScoped(p, isP2){
         try{ spawnParticles(_sbb.x+22, _sbb.y+22, '#ff6666', 10); }catch(e){}
         if(_sbb.hp <= 0){
           _sbb.hp = 0; _sbb.dead = true;
-          G.gunfightAddScore(G.gunfightTeam || 'A');
+          G.gunfightAddScore(G.gunfightTeam || 'A', {killer:(G.player.name || '你'), victim:(_sbb.name || '机器人'), weapon:'🔪'});
         }
         break;
       }
@@ -9702,6 +9703,7 @@ function respawnGunfightPlayer(){
   p.slipTimer = 0;
   p.bleeding = false; p.bleedTimer = 0; p.hotTimer = 0;
   p.lastHitBy = '';
+  p.lastHitWeapon = '';
   G.inBuilding = null;
   G.scopeActive = false;
   G.projectiles = [];
@@ -9731,7 +9733,7 @@ function handlePlayerDeath(player, isP2){
     if(G.p2p && G.p2p.role === 'host' && player.lastHitBy){
       var _killTeam = G.gunfightTeamOfId ? G.gunfightTeamOfId(player.lastHitBy) : '';
       if(_killTeam){
-        G.gunfightAddScore(_killTeam);
+        G.gunfightAddScore(_killTeam, {killer:'机器人', victim:(G.player.name || '你'), weapon:(G.player.lastHitWeapon === 'knife' ? '🔪' : (G.player.lastHitWeapon === 'sniper' ? '🎯' : '🔫'))});
         if(G.state !== 'playing') return;
       }
     }
@@ -9827,6 +9829,12 @@ function update(){
     G.gunfightFrame = (G.gunfightFrame || 0) + 1;
     G.gunfightWaveClock = ((G.gunfightWaveClock || 0) + 1) % (G.gunfightWaveInterval || 180);
     if(!p.dead) updateGunfightWeaponState(p);
+    if(G.gunfightFeed){
+      for(var _gfi2=G.gunfightFeed.length-1; _gfi2>=0; _gfi2--){
+        G.gunfightFeed[_gfi2].t--;
+        if(G.gunfightFeed[_gfi2].t <= 0) G.gunfightFeed.splice(_gfi2,1);
+      }
+    }
   }
   if(G.gunfight && p.dead){
     if(G.gunfightRespawn > 0){
@@ -10504,7 +10512,7 @@ function update(){
   }
 
   // 检查玩家死亡
-  if(p.hp<=0 && !cheatOn('infHp') && !G.coopP1Dead){
+  if(p.hp<=0 && !p.dead && !cheatOn('infHp') && !G.coopP1Dead){
     handlePlayerDeath(p, false);
   }
   // 检查2P死亡
@@ -11838,7 +11846,7 @@ function updateProjectiles(){
             try{ spawnParticles(_bhb.x+22, _bhb.y+22, '#ff6666', 8); }catch(e){}
             if(_bhb.hp <= 0){
               _bhb.hp = 0; _bhb.dead = true;
-              G.gunfightAddScore(G.gunfightTeam || 'A');
+              G.gunfightAddScore(G.gunfightTeam || 'A', {killer:(G.player.name || '你'), victim:(_bhb.name || '机器人'), weapon:(G.player.weapon === 'sniper' ? '🎯' : '🔫')});
             }
             break;
           }
@@ -12670,6 +12678,11 @@ ctx.globalAlpha = 1;
     ctx.font = 'bold 14px monospace';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(t('gfHud').replace('{a}',((G.gunfightScores||{}).A||0)).replace('{b}',((G.gunfightScores||{}).B||0)).replace('{d}',(G.gunfightDeaths||0)).replace('{team}',(G.gunfightTeam === 'B' ? t('gfTeamB') : t('gfTeamA'))), W/2, 24);
+    ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = 'rgba(255,215,0,0.65)';
+    ctx.fillText(GAME_VERSION, W/2, 38);
+    ctx.font = 'bold 14px monospace';
+    ctx.fillStyle = '#fff';
     if(G.player){
       const _gLine = G.player.dead ? ('⏳ ' + Math.max(0, G.gunfightRespawn / 60).toFixed(1) + 's') : gunfightWeaponAmmoText(G.player);
       if(_gLine){
@@ -12691,6 +12704,24 @@ ctx.globalAlpha = 1;
           ctx.fillRect(W/2-78, 73, 156 * _rp, 4);
         }
       }
+    }
+    // 击杀播报：右上角，最多 5 条，真人/机器人都显示谁杀了谁
+    if(G.gunfightFeed && G.gunfightFeed.length){
+      ctx.save();
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 12px monospace';
+      for(var _kfi=0; _kfi<G.gunfightFeed.length; _kfi++){
+        var _kf = G.gunfightFeed[_kfi];
+        var _kText = _kf.weapon + ' ' + _kf.killer + '  →  ' + _kf.victim;
+        var _kTw = ctx.measureText(_kText).width;
+        var _kY = 92 + _kfi * 21;
+        ctx.fillStyle = 'rgba(0,0,0,0.58)';
+        ctx.fillRect(15, _kY - 10, _kTw + 10, 19);
+        ctx.fillStyle = (_kfi === 0) ? '#ffd700' : 'rgba(255,255,255,0.78)';
+        ctx.fillText(_kText, 20, _kY);
+      }
+      ctx.restore();
     }
     ctx.restore();
   }
@@ -13478,48 +13509,68 @@ function drawEntity(e, showHp){
 
 function drawGunfightBotWeapon(e){
   if(!G.gunfight || !e) return;
-  var kind = e.botWeapon || 'rifle';
-  var dir = (e.facing || 1) > 0 ? 1 : -1;
-  // 机器人刀也回 Emoji 形式，并按当前目标方向旋转
-  if(kind === 'knife'){
-    var ka = (typeof e.botAimAngle === 'number') ? e.botAimAngle : (dir > 0 ? 0 : Math.PI);
+  // 切枪提示：机器人换武器时头顶闪金色边框 + 🔄，让玩家看得见它在切
+  if(e._switchFx > 0){
+    var _sfw = e.w || 44, _sfh = e.h || 44;
     ctx.save();
-    ctx.translate(e.x + (e.w || 44)/2 + Math.cos(ka) * (e.w || 44) * 0.95, e.y + (e.h || 44)/2 + Math.sin(ka) * (e.h || 44) * 0.82);
-    ctx.rotate(ka - Math.PI / 4);
+    ctx.globalAlpha = Math.min(1, e._switchFx / 12);
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(e.x - 4, e.y - 4, _sfw + 8, _sfh + 8);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🔄', e.x + _sfw / 2, e.y - 12);
+    ctx.restore();
+  }
+  var kind = e.botWeapon || e.weapon || 'rifle';
+  var w = e.w || 44, h = e.h || 44;
+  var aim = (typeof e.botAimAngle === 'number') ? e.botAimAngle : ((e.facing || 1) > 0 ? 0 : Math.PI);
+  ctx.save();
+  ctx.translate((e.x || 0) + w / 2, (e.y || 0) + h / 2);
+  // 刀：和玩家完全同款 Emoji，按瞄准方向转；不再给机器人另画一把固定刀
+  if(kind === 'knife'){
+    ctx.save();
+    ctx.translate(Math.cos(aim) * w * 0.95, Math.sin(aim) * h * 0.82);
+    ctx.rotate(aim - Math.PI / 4);
     ctx.shadowColor = 'rgba(255,215,70,0.95)';
     ctx.shadowBlur = 9;
-    ctx.font = ((e.w || 44) * 0.82) + 'px serif';
+    ctx.font = (w * 0.82) + 'px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('🔪', 0, 0);
     ctx.restore();
+    ctx.restore();
     return;
   }
-  var cx = e.x + (e.w || 44)/2 + dir * 26;
-  var cy = e.y + (e.h || 44)/2 + 10;
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.scale(dir, 1);
-  // 深色场地里，机器人武器必须发光描边，否则和集装箱/地面糊成一团
-  ctx.shadowColor = 'rgba(255,215,70,0.95)';
-  ctx.shadowBlur = 9;
-  if(kind === 'sniper'){
-    ctx.fillStyle = '#e6e6e6'; ctx.fillRect(-2, -3, 26, 6);
-    ctx.fillStyle = '#5a5a5a'; ctx.fillRect(8, -2, 20, 3);
-    ctx.fillStyle = '#111'; ctx.fillRect(22, -2, 18, 3);
-    ctx.fillStyle = '#ffd700'; ctx.fillRect(11, -6, 7, 2);
-    ctx.fillStyle = '#00e5ff'; ctx.fillRect(17, -5, 2, 2);
-  } else if(kind === 'gun'){
-    ctx.fillStyle = '#dcdcdc'; ctx.fillRect(-1, -3, 13, 6);
-    ctx.fillStyle = '#6b6b6b'; ctx.fillRect(10, -2, 11, 3);
-    ctx.fillStyle = '#111'; ctx.fillRect(19, -2, 8, 3);
-    ctx.fillStyle = '#ffd700'; ctx.fillRect(7, -6, 4, 2);
+  // 步枪/狙击直接复用玩家模型；手枪同样用玩家的 🔫 Emoji + 枪口校准角
+  if(kind === 'sniper' || kind === 'rifle'){
+    var proxy = {
+      w:w, h:h,
+      facing: (Math.cos(aim) >= 0 ? 1 : -1),
+      aimX: Math.cos(aim), aimY: Math.sin(aim),
+      attackAnim: e.attackAnim || 0
+    };
+    if(kind === 'sniper') drawSniperModel(proxy);
+    else drawRifleModel(proxy);
   } else {
-    ctx.fillStyle = '#e6e6e6'; ctx.fillRect(-2, -3, 24, 6);
-    ctx.fillStyle = '#6b6b6b'; ctx.fillRect(8, -2, 13, 3);
-    ctx.fillStyle = '#111'; ctx.fillRect(20, -2, 12, 3);
-    ctx.fillStyle = '#ffd700'; ctx.fillRect(11, -6, 5, 2);
-    ctx.fillStyle = '#ff8c00'; ctx.fillRect(30, -2, 3, 3);
+    var ax = Math.cos(aim), ay = Math.sin(aim);
+    var base = G.gunBaseAngle;
+    ctx.save();
+    if(ax < 0){
+      var mirrored = base > 0 ? Math.PI - base : -Math.PI - base;
+      ctx.scale(-1, 1);
+      ctx.rotate(aim - mirrored);
+    } else {
+      ctx.rotate(aim - base);
+    }
+    if(G.gunFlip) ctx.scale(1, -1);
+    ctx.font = (w * 0.7) + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🔫', w * 0.55, 0);
+    ctx.restore();
   }
   ctx.restore();
 }
@@ -14512,6 +14563,10 @@ var TaskSys = (function(){
 // ==================== UI更新 ====================
 function updateUI(){
   const p = G.player;
+  try{
+    var _bb = document.getElementById('buildBadge');
+    if(_bb){ _bb.textContent = '🔨 ' + GAME_VERSION; _bb.style.display = (G.state === 'playing') ? 'none' : 'block'; }
+  }catch(e){}
   if(G.gunfight && p && p.weapon === 'fist'){ p.weapon = 'knife'; p.currentWeapon = 'knife'; }
   document.getElementById('hpBar').style.width = Math.max(0,p.hp/p.maxHp*100)+'%';
   document.getElementById('hpText').textContent = t('hp')+' '+Math.max(0,p.hp)+'/'+p.maxHp;
@@ -15419,6 +15474,9 @@ function gunfightWeaponSpeedMult(w){
 // ==================== 枪战弹匣 / 散布 / 掩体 ====================
 var GUNFIGHT_MAG = { gun:12, rifle:24, sniper:4 };
 var GUNFIGHT_RELOAD = { gun:105, rifle:150, sniper:190 }; // 1.75s / 2.5s / 3.17s（60fps）；旧值 0.75/1.0/1.25 秒太快
+// 枪战武器统一数值：玩家和机器人共用同一套伤害/射速，机器人不再拿“特供枪”
+var GUNFIGHT_WEAPON_DMG = { gun:5, rifle:4, sniper:12, knife:4 };
+var GUNFIGHT_WEAPON_CD = { gun:12, rifle:9, sniper:32, knife:32 };
 
 function gunfightAmmoMax(w){ return GUNFIGHT_MAG[w] || 1; }
 
@@ -15577,7 +15635,7 @@ function hitGunfightMeleeTargets(hitBox, dmg, p){
           try{ sendMsgTo({ t:'hurtBot', botIndex:b.botIndex, dmg:dmg, from:p2pSelfId() }); }catch(e){}
         } else {
           b.hp -= dmg; b.hurtFlash = 8;
-          if(b.hp <= 0){ b.hp = 0; b.dead = true; G.gunfightAddScore(myTeam); }
+          if(b.hp <= 0){ b.hp = 0; b.dead = true; G.gunfightAddScore(myTeam, {killer:((p&&p.name)||'你'), victim:(b.name||'机器人'), weapon:'🔪'}); }
         }
         break;
       }
@@ -17307,7 +17365,8 @@ function startGame(){
               var _gMateN = 0, _gEnemyN = 0;
               // 枪战机器人统一配置：全部同一把步枪、同一伤害、同一射速、同一弹匣，不再按难度分成不同武器
               var _gDiff = _Sp.botDiff || 'normal';
-              var _gTune = { hp:50, dmg:1, cdMin:45, cdMax:45, spd:2.0, miss:0.35 };
+              // 机器人和玩家同血、同武器池；难度只影响精度/反应，不再给机器人特供伤害
+              var _gTune = { hp:15, spd:2.0, miss:0.35 };
               for(var _gbi=0; _gbi<_Sp.bots.length && _gbi<3; _gbi++){
                 var _gbid = _Sp.bots[_gbi];
                 var _gSide = (_gSides[_gbi] || 'B') === 'A' ? 'A' : 'B';
@@ -17330,11 +17389,9 @@ function startGame(){
                   name:(typeof BOT.nameOf === 'function' ? BOT.nameOf(_gbid) : '机器人'),
                   style:'gunfight', isSquad:true, isEnemyBot:(_gSide === 'B'), team:_gSide,
                   isGunfightMate:(_gSide === 'A'),
-                  weapon:'rifle', weapons:['rifle','knife'], botWeapon:'rifle',
-                  gunAmmo:{ rifle:GUNFIGHT_MAG.rifle }, gunReload:0,
-                  botMiss:_gTune.miss, botDmg:_gTune.dmg,
-                  botShootMin:_gTune.cdMin, botShootMax:_gTune.cdMax,
-                  botSpeed:_gTune.spd, shootCd:_gTune.cdMin, botMeleeCd:0, respawnT:0
+                  weapon:'gun', weapons:gunfightLoadout(), botWeapon:'gun',
+                  gunAmmo:{ gun:GUNFIGHT_MAG.gun, rifle:GUNFIGHT_MAG.rifle, sniper:GUNFIGHT_MAG.sniper }, gunReload:0, gunReloadWeapon:'gun',
+                  botMiss:_gTune.miss, botSpeed:_gTune.spd, shootCd:8, botMeleeCd:0, respawnT:0
                 });
               }
               showToast('🔫 机器人已编入：队友 ' + _gMateN + ' 个 / 对手 ' + _gEnemyN + ' 个', 3000);
@@ -17442,6 +17499,7 @@ function startGame(){
     G.mobs = []; G.bosses = []; G.projectiles = [];
     G.gunfightDeaths = 0; G.gunfightKills = 0; G.gunfightRespawn = 0;
     G.gunfightScores = { A:0, B:0 };
+    G.gunfightFeed = [];
     G.gunfightWaveClock = 0;
     G.gunfightWaveInterval = 180;
     G.gunfightFrame = 0;
@@ -18378,7 +18436,7 @@ function applyNpcSnap(d){
       }
       if(typeof d.gk === 'number') G.gunfightKills = d.gk;
       if(typeof d.gd === 'number') G.gunfightDeaths = d.gd;
-      if(typeof d.gsa === 'number' || typeof d.gsb === 'number') G.gunfightScores = { A:(d.gsa||0), B:(d.gsb||0) };
+      if(typeof d.gsa === 'number' || typeof d.gsb === 'number') G.gunfightScores = { A:(d.gsa||0), B:(d.gsb||0) }; if(Array.isArray(d.gfeed)) G.gunfightFeed = d.gfeed;
       // PvP：近战攻击事件（受击方本地判定是否命中）
       if(d.t === 'atk'){
         if(G.p2pMode === 'pvp' && d.kind === 'melee' && G.player && !G.player.dead){
@@ -19172,7 +19230,7 @@ function applyNpcSnap(d){
       if(!G.player) return;
       var msg = { x:G.player.x, y:G.player.y, facing:G.player.facing||1, face:'😡', nick:(G.accountName ? G.accountName() : '玩家'), avatar:(G.accountAvatar ? (G.accountAvatar() || '') : ''), map:(G.currentMap || 'grassland'), mode:(S.mode || G.p2pMode || 'coop'), from: p2pSelfId() };
       if(G.gunfightTeams) msg.teams = G.gunfightTeams;
-      if(G.gunfight){ msg.gk = G.gunfightKills || 0; msg.gd = G.gunfightDeaths || 0; msg.gsa = (G.gunfightScores||{}).A || 0; msg.gsb = (G.gunfightScores||{}).B || 0; }
+      if(G.gunfight){ msg.gk = G.gunfightKills || 0; msg.gd = G.gunfightDeaths || 0; msg.gsa = (G.gunfightScores||{}).A || 0; msg.gsb = (G.gunfightScores||{}).B || 0; if(Array.isArray(G.gunfightFeed)) msg.gfeed = G.gunfightFeed.slice(0,5); }
       if(S.role === 'host' && S.bots && S.bots.length){
         if(G.gunfight && G.botSquad){
           for(var qiG=0; qiG<G.botSquad.length && qiG<3; qiG++){
@@ -21090,11 +21148,22 @@ var BOT = (function(){
     }
     return '';
   }
-  function gunfightAddScore(team){
+  function gunfightAddScore(team, info){
     if(!G.gunfight || !team) return;
     if(!G.gunfightScores) G.gunfightScores = { A:0, B:0 };
     G.gunfightScores[team] = (G.gunfightScores[team] || 0) + 1;
     G.gunfightKills = G.gunfightScores[G.gunfightTeam || 'A'] || 0;
+    // 击杀播报：真人打机器人、机器人打真人、机器人互杀都能看到谁杀了谁
+    if(info && (info.killer || info.victim)){
+      if(!G.gunfightFeed) G.gunfightFeed = [];
+      G.gunfightFeed.push({
+        killer: String(info.killer || '?').slice(0, 12),
+        victim: String(info.victim || '?').slice(0, 12),
+        weapon: info.weapon || '🔫',
+        t: 190
+      });
+      if(G.gunfightFeed.length > 5) G.gunfightFeed.shift();
+    }
     // 击杀回血：自己队伍得分时，存活本地玩家回 2 HP（队友击杀也算团队收益）
     try{
       if(team === (G.gunfightTeam || 'A') && G.player && !G.player.dead && G.player.hp < G.player.maxHp){
@@ -21282,7 +21351,11 @@ var BOT = (function(){
     }
     var path = sq._navPath || [];
     while(path.length && Math.hypot(path[0].x - cx, path[0].y - cy) < 18) path.shift();
-    if(!path.length) return { x:tx, y:ty };
+    if(!path.length){
+      // 没有路就原地等一次，别把“直线冲墙”当寻路；卡住自救会换边/清路径
+      if(!gfNavPointBlocked(tx, ty) && gfNavLineClear(cx, cy, tx, ty)) return { x:tx, y:ty };
+      return { x:cx, y:cy };
+    }
     // 路径拉直：下一个点被挡就老实走网格，没挡就尽量跳到更远的航点
     var wp = path[0];
     if(gfNavLineClear(cx, cy, wp.x, wp.y)){
@@ -21298,29 +21371,93 @@ var BOT = (function(){
     return { x:wp.x, y:wp.y };
   }
 
+  function gfBotAmmo(sq, w){
+    if(!sq || !sq.gunAmmo) return 0;
+    return sq.gunAmmo[w] || 0;
+  }
+  // 机器人按距离/视线选枪：远狙、中步枪、近手枪、贴脸刀；换弹中的枪先跳过
+  function gfBotChooseWeapon(sq, dist, los){
+    if(!sq) return 'rifle';
+    if(dist < 96) return 'knife';
+    // 突击位近身会主动切刀压脸，不再是只在贴脸 70px 才切
+    if(dist < 125 && ((sq._role || ((sq.botIndex || 0) % 3)) === 0)) return 'knife';
+    var order;
+    if(dist < 112) order = ['gun','rifle','sniper'];
+    else if(dist < 220) order = ['rifle','gun','sniper'];
+    else if(dist < 470) order = ['rifle','sniper','gun'];
+    else order = ['sniper','rifle','gun'];
+    if(!los && dist < 190 && sq.weapon === 'knife') return 'knife';
+    for(var i=0;i<order.length;i++){
+      var w = order[i];
+      if(sq.gunReload > 0 && sq.gunReloadWeapon === w) continue;
+      if(gfBotAmmo(sq,w) > 0) return w;
+    }
+    return (sq.weapon && sq.weapon !== 'knife') ? sq.weapon : 'rifle';
+  }
+  // 找附近可站立点：给被掩体挡住的目标点一个替代，避免机器人一头撞墙
+  function gfBotFreeNear(x, y, limit){
+    if(!gfNavPointBlocked(x, y)) return { x:x, y:y };
+    for(var r=24; r<=(limit||120); r+=24){
+      for(var i=0;i<8;i++){
+        var a = i * Math.PI / 4;
+        var nx = x + Math.cos(a) * r, ny = y + Math.sin(a) * r;
+        if(!gfNavPointBlocked(nx, ny)) return { x:nx, y:ny };
+      }
+    }
+    return null;
+  }
+  // 贴着竞技场边缘绕：正面被集装箱堵死时，从边线拉出去再压
+  function gfBotEdgePoint(sq, px, py){
+    var a = getArena();
+    var cand = [
+      {x:a.x+58, y:a.y+58}, {x:a.x+a.w-58, y:a.y+58},
+      {x:a.x+58, y:a.y+a.h-58}, {x:a.x+a.w-58, y:a.y+a.h-58},
+      {x:a.x+58, y:a.y+a.h/2}, {x:a.x+a.w-58, y:a.y+a.h/2},
+      {x:a.x+a.w/2, y:a.y+58}, {x:a.x+a.w/2, y:a.y+a.h-58}
+    ];
+    var best=null, bd=1e9;
+    for(var i=0;i<cand.length;i++){
+      if(gfNavPointBlocked(cand[i].x, cand[i].y)) continue;
+      var d = Math.hypot(cand[i].x - (sq.x+22), cand[i].y - (sq.y+22));
+      // 优先选靠近目标的边线点：从边线绕过去，不是往自己出生点方向缩
+      var td = Math.hypot(cand[i].x - px, cand[i].y - py);
+      var score = td * 0.82 + d * 0.18;
+      if(score < bd){ bd=score; best=cand[i]; }
+    }
+    return best;
+  }
+
   function updateGunfightBot(sq){
     if(!G.gunfight || !sq) return;
     var myTeam = sq.team || 'B';
+    if(sq._switchFx > 0) sq._switchFx--;
     if(sq.dead){
       sq.respawnT = (sq.respawnT || 0) + 1;
       if(sq.respawnT > 180){
         var _ra = getArena();
-        sq.dead = false; sq.hp = sq.maxHp || 50; sq.respawnT = 0;
-        sq.weapon = 'rifle'; sq.botWeapon = 'rifle'; sq.gunAmmo = { rifle:GUNFIGHT_MAG.rifle }; sq.gunReload = 0; sq.botMeleeCd = 0;
-        sq.shootCd = sq.botShootMin || 45;
+        sq.dead = false; sq.hp = sq.maxHp || 15; sq.respawnT = 0;
+        sq.weapon = 'gun'; sq.botWeapon = 'gun'; sq.gunAmmo = { gun:GUNFIGHT_MAG.gun, rifle:GUNFIGHT_MAG.rifle, sniper:GUNFIGHT_MAG.sniper }; sq.gunReload = 0; sq.gunReloadTotal = 0; sq.gunReloadWeapon = ''; sq.botMeleeCd = 0;
+        sq.shootCd = 8; sq._switchCd = 0;
         sq.x = myTeam === 'A' ? (_ra.x + 200 + (sq.botIndex||0)*20) : (_ra.x + _ra.w - 220);
         sq.y = _ra.y + _ra.h / 2 - 70 + (sq.botIndex || 0) * 70;
-        sq._navPath = null; sq._navGoalKey = ''; sq._navTick = 0; sq._navStuck = 0; sq._navSide = 0;
+        sq._navPath = null; sq._navGoalKey = ''; sq._navTick = 0; sq._navStuck = 0; sq._navSide = 0; sq._switchFx = 0;
       }
       return;
     }
-    // 机器人也有弹匣和换弹：同一把步枪，24 发，按步枪换弹时长走；空仓自动换弹
-    if(!sq.weapon) sq.weapon = 'rifle';
-    if(!sq.gunAmmo || typeof sq.gunAmmo !== 'object') sq.gunAmmo = { rifle:GUNFIGHT_MAG.rifle };
+    // 机器人也有完整弹匣/换弹：手枪、步枪、狙击各自独立弹匣，和玩家同一套时长
+    if(!sq.weapon || gunfightLoadout().indexOf(sq.weapon) < 0) sq.weapon = 'gun';
+    if(!sq.gunAmmo || typeof sq.gunAmmo !== 'object') sq.gunAmmo = { gun:GUNFIGHT_MAG.gun, rifle:GUNFIGHT_MAG.rifle, sniper:GUNFIGHT_MAG.sniper };
+    try{ gunfightEnsureAmmo(sq); }catch(e){}
     if(typeof sq.gunReload !== 'number') sq.gunReload = 0;
     if(sq.gunReload > 0){
       sq.gunReload--;
-      if(sq.gunReload <= 0){ sq.gunReload = 0; sq.gunAmmo.rifle = GUNFIGHT_MAG.rifle; }
+      if(sq.gunReload <= 0){
+        sq.gunReload = 0;
+        sq.gunReloadTotal = 0;
+        var _rw = sq.gunReloadWeapon || sq.weapon;
+        if(_rw !== 'knife') sq.gunAmmo[_rw] = gunfightAmmoMax(_rw);
+        sq.gunReloadWeapon = '';
+      }
     }
     if(typeof sq.botMeleeCd !== 'number') sq.botMeleeCd = 0;
     function teamOfId(id){
@@ -21376,53 +21513,101 @@ var BOT = (function(){
     var realBd = Math.hypot(px - cx, py - cy);
     sq.botAimAngle = Math.atan2(py - cy, px - cx);
     var los = !gunfightLineBlocked(cx, cy, px, py);
-    // 机器人切枪：远距离步枪，贴身切刀；空仓/换弹时若敌人逼近也切刀保命
-    if((sq.gunAmmo.rifle || 0) <= 0 && sq.gunReload <= 0) sq.gunReload = GUNFIGHT_RELOAD.rifle;
-    var _wantW = 'rifle';
-    if(realBd < 70) _wantW = 'knife';
-    else if(realBd < 110 && sq.weapon === 'knife') _wantW = 'knife';
-    if(sq.gunReload > 0 && realBd < 140) _wantW = 'knife';
-    if(_wantW !== sq.weapon){
+    // 机器人切枪：按距离在 手枪/步枪/狙击/刀 之间切换；换弹枪先跳过，贴身刀不换
+    if(typeof sq._switchCd !== 'number') sq._switchCd = 0;
+    if(sq._switchCd > 0) sq._switchCd--;
+    var _wantW = gfBotChooseWeapon(sq, realBd, los);
+    // 当前枪弹匣打空且没有其他枪可用时，切刀并开始换弹
+    if(_wantW !== 'knife' && gfBotAmmo(sq,_wantW) <= 0 && sq.gunReload <= 0){
+      if(realBd < 190){ _wantW = 'knife'; }
+      else {
+        sq.gunReload = GUNFIGHT_RELOAD[_wantW] || GUNFIGHT_RELOAD.rifle;
+        sq.gunReloadTotal = sq.gunReload;
+        sq.gunReloadWeapon = _wantW;
+      }
+    }
+    if(_wantW !== sq.weapon && sq._switchCd <= 0){
       sq.weapon = _wantW;
       sq.botWeapon = _wantW;
-      sq.shootCd = Math.min(sq.shootCd || 0, 15);
-      sq.attackAnim = 8;
+      sq.shootCd = Math.min(sq.shootCd || 0, 8);
+      sq.attackAnim = 4;
+      sq._switchCd = 18;
+      sq._switchFx = 22;
     }
     if(!sq._navSide) sq._navSide = ((sq.botIndex || 0) % 2) ? 1 : -1;
+    if(typeof sq._role !== 'number') sq._role = (sq.botIndex || 0) % 3; // 0压 1包 2架
+    if(typeof sq._blindClock !== 'number') sq._blindClock = 0;
     var side = sq._navSide;
     var gx = px, gy = py;
-    if(realBd > 560){
-      // 远距离直接压上去；有墙由 A* 绕
-      gx = px; gy = py;
-    } else if(!los && realBd > 150){
-      // 视线被掩体挡住：选一侧包抄，不再原地抖
-      var ea = Math.atan2(py - cy, px - cx);
-      var flank = ea + side * Math.PI / 2;
-      gx = px + Math.cos(flank) * 185;
-      gy = py + Math.sin(flank) * 185;
-      if(gfNavPointBlocked(gx, gy)){
-        flank = ea - side * Math.PI / 2;
-        gx = px + Math.cos(flank) * 185;
-        gy = py + Math.sin(flank) * 185;
+    // 被掩体挡住：先往两侧拉，拉不出去就贴竞技场边缘绕，最后强制压
+    if(!los && realBd > 130){
+      sq._blindClock++;
+      if(sq._blindClock > 150){
+        sq._blindClock = 0;
+        sq._navSide = -side;
+        sq._navPath = null; sq._navGoalKey = '';
       }
-      if(gfNavPointBlocked(gx, gy)){ gx = px; gy = py; }
-    } else if(realBd > 230){
+      var ea = Math.atan2(py - cy, px - cx);
+      var found = false;
+      var radii = [210, 300, 390];
+      for(var _ri=0; _ri<radii.length && !found; _ri++){
+        for(var _si=0; _si<2 && !found; _si++){
+          var _sd = _si === 0 ? side : -side;
+          var _fx = px + Math.cos(ea + _sd * Math.PI / 2) * radii[_ri];
+          var _fy = py + Math.sin(ea + _sd * Math.PI / 2) * radii[_ri];
+          if(!gfNavPointBlocked(_fx, _fy) && gfNavLineClear(cx, cy, _fx, _fy)){
+            gx = _fx; gy = _fy; found = true;
+          }
+        }
+      }
+      if(!found){
+        var _ep = gfBotEdgePoint(sq, px, py);
+        if(_ep){ gx = _ep.x; gy = _ep.y; }
+      }
+      // 架枪型也会在 1.5 秒后换边，不当永久掩体挂件
+      if(sq._role === 2 && sq._blindClock > 90 && found){
+        gx = px; gy = py;
+      }
+      // 盲区太久：直接往目标压，A* 自己绕；不再原地左右抖
+      if(sq._blindClock > 120){ gx = px; gy = py; }
+    } else if(realBd > 230 || sq._role === 0){
+      // 突击位：中距离直接压；远距离也压，别缩在出生点
       gx = px; gy = py;
+      if(sq._role === 1 && realBd > 300){
+        var _ep2 = gfBotEdgePoint(sq, px, py);
+        if(_ep2){ gx = _ep2.x; gy = _ep2.y; }
+      }
     } else if(realBd < 125){
       if(sq.weapon === 'knife'){
         // 切刀后不再后退，直接贴身砍
         gx = px; gy = py;
+      } else if(sq._role === 0){
+        // 突击位贴脸也不怂，继续压；只有残血才后撤
+        if((sq.hp || 15) <= 5){
+          var away0 = Math.atan2(cy - py, cx - px);
+          gx = cx + Math.cos(away0) * 135; gy = cy + Math.sin(away0) * 135;
+        }
       } else {
         var away = Math.atan2(cy - py, cx - px);
         gx = cx + Math.cos(away) * 135;
         gy = cy + Math.sin(away) * 135;
       }
     } else {
+      // 中距离：侧身探头/拉枪线；架枪位幅度小一点，但会动
       var strafe = Math.atan2(py - cy, px - cx) + Math.PI / 2 * side;
-      gx = cx + Math.cos(strafe) * 95;
-      gy = cy + Math.sin(strafe) * 95;
+      var _amp = sq._role === 2 ? 70 : 112;
+      gx = cx + Math.cos(strafe) * _amp;
+      gy = cy + Math.sin(strafe) * _amp;
     }
-    if(gfNavPointBlocked(gx, gy)){ gx = px; gy = py; }
+    if(gfNavPointBlocked(gx, gy)){
+      var _free = gfBotFreeNear(gx, gy, 140);
+      if(_free){ gx = _free.x; gy = _free.y; }
+      else {
+        var _ep3 = gfBotEdgePoint(sq, px, py);
+        if(_ep3){ gx = _ep3.x; gy = _ep3.y; }
+        else { gx = cx; gy = cy; }
+      }
+    }
     var _sqOldX = sq.x, _sqOldY = sq.y;
     var nav = gfBotNavStep(sq, gx, gy);
     var mvx = nav.x - (sq.x + 22), mvy = nav.y - (sq.y + 22);
@@ -21473,38 +21658,48 @@ var BOT = (function(){
       // 近战：和玩家刀一样有攻击间隔；所有机器人伤害、间隔完全一致
       sq.botMeleeCd = (sq.botMeleeCd || 0) - 1;
       if(realBd < 78 && los && sq.botMeleeCd <= 0){
-        // 所有机器人无论步枪还是刀，攻击间隔统一 45 帧
-        sq.botMeleeCd = 45;
+        // 刀攻击间隔和玩家一致：32 帧
+        sq.botMeleeCd = GUNFIGHT_WEAPON_CD.knife || 32;
         sq.attackAnim = 10;
-        var _kd = sq.botDmg || 1;
+        var _kd = GUNFIGHT_WEAPON_DMG.knife || 4;
         var _kfrom = myTeam === 'A' ? ('bot' + (sq.botIndex || 0)) : 'gunfightBot';
         if(best.local){
           try{
             if(best.kind === 'human'){
-              if(G.player) G.player.lastHitBy = _kfrom;
+              if(G.player){ G.player.lastHitBy = _kfrom; G.player.lastHitWeapon = sq.weapon; }
               damagePlayer(_kd);
               if(G.player && G.player.hp <= 0 && !G.player.dead) handlePlayerDeath(G.player, false);
             } else {
               var _kb = best.o;
               _kb.hp -= _kd; _kb.hurtFlash = 8;
-              if(_kb.hp <= 0){ _kb.hp = 0; _kb.dead = true; G.gunfightAddScore(myTeam); }
+              if(_kb.hp <= 0){ _kb.hp = 0; _kb.dead = true; G.gunfightAddScore(myTeam, {killer:(sq.name||'机器人'), victim:(_kb.name||'机器人'), weapon:'🔪'}); }
             }
           }catch(e){}
         }
       }
     } else {
       sq.shootCd = (sq.shootCd || 0) - 1;
-      // 机器人统一步枪：掩体贴脸时不能隔墙打；空仓/换弹不能射击
+      // 机器人使用和玩家同一把枪：同伤害、同射速、同弹匣、同换弹；掩体后不能隔墙打
       if(realBd < 640 && sq.shootCd <= 0 && gunfightLineBlocked(sq.x + 22, sq.y + 22, best.o.x + 22, best.o.y + 22)){ sq.shootCd = 15; }
       if(realBd < 640 && sq.shootCd <= 0 && !gunfightLineBlocked(sq.x + 22, sq.y + 22, best.o.x + 22, best.o.y + 22)){
-        if(sq.gunReload > 0 || (sq.gunAmmo.rifle || 0) <= 0){
-          if(sq.gunReload <= 0) sq.gunReload = GUNFIGHT_RELOAD.rifle;
+        var _bw = sq.weapon === 'knife' ? 'rifle' : sq.weapon;
+        if((sq.gunReload > 0 && sq.gunReloadWeapon === _bw) || (sq.gunAmmo[_bw] || 0) <= 0){
+          if(sq.gunReload <= 0){
+            sq.gunReload = GUNFIGHT_RELOAD[_bw] || GUNFIGHT_RELOAD.rifle;
+            sq.gunReloadTotal = sq.gunReload;
+            sq.gunReloadWeapon = _bw;
+          }
           sq.shootCd = 12;
         } else {
-          sq.gunAmmo.rifle--;
-          if(sq.gunAmmo.rifle <= 0) sq.gunReload = GUNFIGHT_RELOAD.rifle;
-          var _bd = sq.botDmg || 1;
-          sq.shootCd = sq.botShootMin || 45;
+          sq.gunAmmo[_bw]--;
+          if(sq.gunAmmo[_bw] <= 0){
+            sq.gunReload = GUNFIGHT_RELOAD[_bw] || GUNFIGHT_RELOAD.rifle;
+            sq.gunReloadTotal = sq.gunReload;
+            sq.gunReloadWeapon = _bw;
+          }
+          var _bd = GUNFIGHT_WEAPON_DMG[_bw] || 4;
+          sq.shootCd = GUNFIGHT_WEAPON_CD[_bw] || 9;
+          sq.attackAnim = 4;
           var _hit = Math.random() >= (typeof sq.botMiss === 'number' ? sq.botMiss : 0.35);
           var _tx = (best.o.x || 0) + 22, _ty = (best.o.y || 0) + 22;
           if(!_hit){ _tx += (Math.random() - 0.5) * 110; _ty += (Math.random() - 0.5) * 80; }
@@ -21514,13 +21709,13 @@ var BOT = (function(){
           if(_hit && best.local){
             try{
               if(best.kind === 'human'){
-                if(G.player) G.player.lastHitBy = fromId;
+                if(G.player){ G.player.lastHitBy = fromId; G.player.lastHitWeapon = sq.weapon; }
                 damagePlayer(_bd);
                 if(G.player && G.player.hp <= 0 && !G.player.dead) handlePlayerDeath(G.player, false);
               } else {
                 var _lb = best.o;
                 _lb.hp -= _bd; _lb.hurtFlash = 8;
-                if(_lb.hp <= 0){ _lb.hp = 0; _lb.dead = true; G.gunfightAddScore(myTeam); }
+                if(_lb.hp <= 0){ _lb.hp = 0; _lb.dead = true; G.gunfightAddScore(myTeam, {killer:(sq.name||'机器人'), victim:(_lb.name||'机器人'), weapon:(_bw === 'sniper' ? '🎯' : '🔫')}); }
               }
             }catch(e){}
           } else if(_hit){
