@@ -222,6 +222,8 @@ input:checked + .slider:before{transform:translateX(24px)}
 #rotateOverlay p{font-size:16px;color:#aaa;margin:5px 0}
 #forceLandscapeBtn{margin-top:20px;padding:12px 30px;background:#e74c3c;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(231,76,60,.4)}
 #forceLandscapeBtn:active{transform:scale(.95)}
+#authorFromRotateBtn{margin-top:12px;padding:11px 26px;background:#6b3fa0;color:#fff;border:1px solid #9b7bd0;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(107,63,160,.35)}
+#authorFromRotateBtn:active{transform:scale(.95)}
 @keyframes rotatePhone{0%,100%{transform:rotate(0deg)}50%{transform:rotate(90deg)}}
 /* 强制横屏模式：CSS旋转整个游戏容器 */
 .forced-landscape{
@@ -568,14 +570,15 @@ input:checked + .slider:before{transform:translateX(24px)}
 </style>
 </head>
 <body>
-<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.7</div>
+<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.8</div>
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
   <h2>请横屏游玩</h2>
   <p>将手机横过来获得最佳体验</p>
   <p id="landscapeHint">横屏后自动继续游戏</p>
   <button id="forceLandscapeBtn">🔄 强制横屏模式</button>
-  <p style="font-size:12px;margin-top:10px;color:#888">手机锁不了横屏？点这个用旋转模式玩</p>
+  <button id="authorFromRotateBtn" type="button" onclick="if(window.__authorOpen) window.__authorOpen()">🛡️ 作者审核台</button>
+  <p style="font-size:12px;margin-top:10px;color:#888">手机锁不了横屏？点上面按钮用旋转模式玩；作者可直接进审核台</p>
 </div>
 <div id="wrap">
   <canvas id="cv"></canvas>
@@ -950,7 +953,7 @@ input:checked + .slider:before{transform:translateX(24px)}
   </div>
 
   <!-- 作者审核台 -->
-  <div id="authorReviewPanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:320;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;width:100%;height:100%;border:none;border-radius:0;box-shadow:none">
+  <div id="authorReviewPanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:100000;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;width:100%;height:100%;border:none;border-radius:0;box-shadow:none">
     <div style="width:min(96%,720px);max-height:92vh;overflow-y:auto;background:#141419;border:2px solid #6b3fa0;border-radius:14px;padding:16px;box-shadow:0 0 40px rgba(107,63,160,.35);box-sizing:border-box;color:#eee">
       <h3 id="authorReviewTitle" style="margin:0 0 4px;text-align:center;color:#d9c2ff">🛡️ 作者审核台</h3>
       <div id="authorSub" style="font-size:11px;color:#888;text-align:center;margin-bottom:12px">申诉汇总来自 GitHub Issues；登录需要仓库 Issues 读写权限的 Token</div>
@@ -976,7 +979,7 @@ input:checked + .slider:before{transform:translateX(24px)}
         </div>
         <div id="authorList" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
-      <button id="authorCloseBtn" type="button" onclick="var p=document.getElementById('authorReviewPanel');if(p)p.style.display='none'" style="width:100%;padding:10px;margin-top:12px;border:none;border-radius:8px;background:#444;color:#fff;font-size:13px;cursor:pointer">关闭</button>
+      <button id="authorCloseBtn" type="button" onclick="var p=document.getElementById('authorReviewPanel');if(p)p.style.display='none';if(typeof checkOrientation==='function')setTimeout(checkOrientation,0)" style="width:100%;padding:10px;margin-top:12px;border:none;border-radius:8px;background:#444;color:#fff;font-size:13px;cursor:pointer">关闭</button>
     </div>
   </div>
 
@@ -1135,7 +1138,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.10.7';
+var GAME_VERSION = 'v4.10.8';
 var GAME_DATE = '2026-11-25';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -5475,6 +5478,8 @@ function applyLanguage(){
   // 横屏提示
   const landscapeHint = document.getElementById('landscapeHint');
   if(landscapeHint) landscapeHint.textContent = t('landscapeHint');
+  const rotateAuthorBtn = document.getElementById('authorFromRotateBtn');
+  if(rotateAuthorBtn) rotateAuthorBtn.textContent = t('authorTitle');
   // 主菜单
   const startBtn = document.getElementById('startBtn');
   if(startBtn) startBtn.textContent = t('start');
@@ -5738,6 +5743,13 @@ function unlockAudio(){
 let isPortrait = false;
 let forcedLandscape = false;
 function checkOrientation(){
+  // 作者审核台打开时不拦截，竖屏也要能处理申诉
+  const authorPanel = document.getElementById('authorReviewPanel');
+  if(authorPanel && authorPanel.style.display === 'flex'){
+    isPortrait = false;
+    document.getElementById('rotateOverlay').style.display = 'none';
+    return;
+  }
   // 已经开启强制横屏模式，不再检测
   if(forcedLandscape){
     isPortrait = false;
@@ -20313,6 +20325,11 @@ function applyNpcSnap(d){
   function authorOpen(){
     var p = document.getElementById('authorReviewPanel');
     if(!p) return;
+    // 作者审核台优先于横屏拦截层；竖屏也能直接登录处理申诉
+    var rotate = document.getElementById('rotateOverlay');
+    if(rotate) rotate.style.display = 'none';
+    var accPanel = document.getElementById('accountPanel');
+    if(accPanel) accPanel.style.display = 'none';
     if(typeof applyAuthorLang === 'function') applyAuthorLang();
     p.style.display = 'flex';
     var saved = '';
@@ -20336,7 +20353,7 @@ function applyNpcSnap(d){
     }catch(e){}
     if(autoAuthor){ setTimeout(function(){ authorOpen(); }, 0); }
     var close = document.getElementById('authorCloseBtn');
-    if(close) close.addEventListener('click', function(){ var p = document.getElementById('authorReviewPanel'); if(p) p.style.display = 'none'; });
+    if(close) close.addEventListener('click', function(){ var p = document.getElementById('authorReviewPanel'); if(p) p.style.display = 'none'; if(typeof checkOrientation === 'function') setTimeout(checkOrientation, 0); });
     var help = document.getElementById('authorTokenHelpBtn');
     if(help) help.addEventListener('click', function(){ var h = document.getElementById('authorTokenHelp'); if(h) h.style.display = h.style.display === 'none' ? 'block' : 'none'; });
     var refresh = document.getElementById('authorRefreshBtn');
