@@ -568,7 +568,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </style>
 </head>
 <body>
-<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.5</div>
+<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.6</div>
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
   <h2>请横屏游玩</h2>
@@ -944,20 +944,20 @@ input:checked + .slider:before{transform:translateX(24px)}
         <input id="accountImportInput" maxlength="4000" style="width:100%;padding:8px;margin-bottom:6px;border:1px solid #666;border-radius:6px;background:#222;color:#fff;font-size:12px;box-sizing:border-box" placeholder="">
         <button id="accountImportBtn" style="width:100%;padding:8px;background:#2980b9;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">📥 </button>
       </div>
-      <button id="accountAuthorBtn" type="button" style="width:100%;padding:9px;margin-top:10px;background:#6b3fa0;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">🛡️ 作者审核台</button>
+      <button id="accountAuthorBtn" type="button" onclick="if(window.__authorOpen) window.__authorOpen()" style="width:100%;padding:9px;margin-top:10px;background:#6b3fa0;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">🛡️ 作者审核台</button>
       <button id="accountCloseBtn" style="width:100%;padding:9px;margin-top:10px;background:#555;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">✖ </button>
     </div>
   </div>
 
   <!-- 作者审核台 -->
-  <div id="authorPanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:320;align-items:center;justify-content:center;padding:16px;box-sizing:border-box">
+  <div id="authorReviewPanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:320;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;width:100%;height:100%;border:none;border-radius:0;box-shadow:none">
     <div style="width:min(96%,720px);max-height:92vh;overflow-y:auto;background:#141419;border:2px solid #6b3fa0;border-radius:14px;padding:16px;box-shadow:0 0 40px rgba(107,63,160,.35);box-sizing:border-box;color:#eee">
-      <h3 style="margin:0 0 4px;text-align:center;color:#d9c2ff">🛡️ 作者审核台</h3>
-      <div style="font-size:11px;color:#888;text-align:center;margin-bottom:12px">申诉汇总来自 GitHub Issues；登录需要仓库 Issues 读写权限的 Token</div>
+      <h3 id="authorReviewTitle" style="margin:0 0 4px;text-align:center;color:#d9c2ff">🛡️ 作者审核台</h3>
+      <div id="authorSub" style="font-size:11px;color:#888;text-align:center;margin-bottom:12px">申诉汇总来自 GitHub Issues；登录需要仓库 Issues 读写权限的 Token</div>
       <div id="authorAuthBox">
         <input id="authorTokenInput" type="password" autocomplete="off" placeholder="GitHub fine-grained Token（建议只勾选本仓库 Issues 读写）" style="width:100%;padding:10px;border-radius:8px;border:1px solid #3a3a46;background:#0c0c11;color:#eee;font-size:12px;box-sizing:border-box;outline:none">
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <button id="authorLoginBtn" type="button" style="flex:1;min-width:140px;padding:10px;border:none;border-radius:8px;background:#6b3fa0;color:#fff;font-weight:700;font-size:13px;cursor:pointer">登录作者账号</button>
+          <button id="authorLoginBtn" type="button" onclick="if(window.__authorLogin) window.__authorLogin()" style="flex:1;min-width:140px;padding:10px;border:none;border-radius:8px;background:#6b3fa0;color:#fff;font-weight:700;font-size:13px;cursor:pointer">登录作者账号</button>
           <button id="authorTokenHelpBtn" type="button" style="padding:10px 12px;border:1px solid #3a3a46;border-radius:8px;background:#1a1a22;color:#bbb;font-size:12px;cursor:pointer">怎么创建 Token</button>
         </div>
         <div id="authorLoginMsg" style="font-size:11px;color:#e6b450;min-height:16px;margin-top:8px;line-height:1.6"></div>
@@ -976,7 +976,7 @@ input:checked + .slider:before{transform:translateX(24px)}
         </div>
         <div id="authorList" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
-      <button id="authorCloseBtn" type="button" style="width:100%;padding:10px;margin-top:12px;border:none;border-radius:8px;background:#444;color:#fff;font-size:13px;cursor:pointer">关闭</button>
+      <button id="authorCloseBtn" type="button" onclick="var p=document.getElementById('authorReviewPanel');if(p)p.style.display='none'" style="width:100%;padding:10px;margin-top:12px;border:none;border-radius:8px;background:#444;color:#fff;font-size:13px;cursor:pointer">关闭</button>
     </div>
   </div>
 
@@ -1135,7 +1135,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.10.5';
+var GAME_VERSION = 'v4.10.6';
 var GAME_DATE = '2026-11-25';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -5053,7 +5053,319 @@ MODE_LANGS.zh.gfMatchOk = '✅ {n} 人 → 平均 2 队，每队 {h} 人';
 MODE_LANGS.hant.gfMatchOk = '✅ {n} 人 → 平均 2 隊，每隊 {h} 人';
 MODE_LANGS.chinglish.gfMatchOk = '✅ {n} players → 2 teams, {h} each 啦';
 
+var AUTHOR_LANGS = {
+  zh: {
+    authorTitle:'🛡️ 作者审核台',
+    authorSub:'申诉汇总来自 GitHub Issues；登录需要仓库 Issues 读写权限的 Token',
+    authorTokenPh:'GitHub fine-grained Token（建议只勾选本仓库 Issues 读写）',
+    authorLogin:'登录作者账号',
+    authorHelpBtn:'怎么创建 Token',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens。<br>2. 选择仓库 <b>tuluoluo/class-emoji</b>。<br>3. 权限只勾选 <b>Issues: Read and write</b>，其它能不给就不给。<br>4. 生成后只粘贴一次；Token 只存在本机浏览器，不会写进游戏源码。',
+    authorRefresh:'🔄 刷新申诉',
+    authorLogout:'退出作者账号',
+    authorClose:'关闭',
+    authorNoAppeals:'当前没有新的封禁申诉。',
+    authorLoading:'正在读取申诉…',
+    authorNeedToken:'请先登录作者账号。',
+    authorOpenIssue:'打开 Issue',
+    authorCode:'生成解除码',
+    authorReply:'回复到 Issue',
+    authorCodePrefix:'解除码：',
+    authorLoginEmpty:'先粘贴 GitHub Token。',
+    authorLoginChecking:'正在验证…',
+    authorLoginSuccess:'登录成功。',
+    authorLoginFail:'登录失败：{e}。Token 需要 tuluoluo/class-emoji 的 Issues 读取权限。',
+    authorReplyConfirm:'确定回复 Issue #{n}？\n解除码：{c}',
+    authorReplyDone:'已回复 Issue #{n}，解除码 {c}',
+    authorReplyFail:'回复失败：{e}（Token 需要 Issues 读写权限）',
+    authorLogoutDone:'已退出作者账号。',
+    authorNoBid:'这条申诉里没解析到设备标识。',
+    authorReadFail:'读取失败：{e}<br>检查 Token 是否有本仓库 Issues 读取权限，或稍后重试。'
+  },
+  hant: {
+    authorTitle:'🛡️ 作者審核臺',
+    authorSub:'申訴彙總來自 GitHub Issues；登入需要倉庫 Issues 讀寫權限的 Token',
+    authorTokenPh:'GitHub fine-grained Token（建議只勾選本倉庫 Issues 讀寫）',
+    authorLogin:'登入作者帳號',
+    authorHelpBtn:'如何建立 Token',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens。<br>2. 選擇倉庫 <b>tuluoluo/class-emoji</b>。<br>3. 權限只勾選 <b>Issues: Read and write</b>，其它能不给就不给。<br>4. 產生後只貼一次；Token 只存在本機瀏覽器，不會寫進遊戲原始碼。',
+    authorRefresh:'🔄 重新整理申訴',
+    authorLogout:'登出作者帳號',
+    authorClose:'關閉',
+    authorNoAppeals:'目前沒有新的封禁申訴。',
+    authorLoading:'正在讀取申訴…',
+    authorNeedToken:'請先登入作者帳號。',
+    authorOpenIssue:'開啟 Issue',
+    authorCode:'產生解除碼',
+    authorReply:'回覆到 Issue',
+    authorCodePrefix:'解除碼：',
+    authorLoginEmpty:'先貼上 GitHub Token。',
+    authorLoginChecking:'正在驗證…',
+    authorLoginSuccess:'登入成功。',
+    authorLoginFail:'登入失敗：{e}。Token 需要 tuluoluo/class-emoji 的 Issues 讀取權限。',
+    authorReplyConfirm:'確定回覆 Issue #{n}？\n解除碼：{c}',
+    authorReplyDone:'已回覆 Issue #{n}，解除碼 {c}',
+    authorReplyFail:'回覆失敗：{e}（Token 需要 Issues 讀寫權限）',
+    authorLogoutDone:'已登出作者帳號。',
+    authorNoBid:'這條申訴裡沒解析到裝置標識。',
+    authorReadFail:'讀取失敗：{e}<br>檢查 Token 是否有本倉庫 Issues 讀取權限，或稍後重試。'
+  },
+  en: {
+    authorTitle:'🛡️ Author Review',
+    authorSub:'Appeals come from GitHub Issues. Login needs a token with Issues read/write for this repo.',
+    authorTokenPh:'GitHub fine-grained token (only this repo Issues read/write)',
+    authorLogin:'Log in as author',
+    authorHelpBtn:'How to create a token',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.<br>2. Select repo <b>tuluoluo/class-emoji</b>.<br>3. Enable only <b>Issues: Read and write</b>.<br>4. Paste once. The token stays in this browser only.',
+    authorRefresh:'🔄 Refresh appeals',
+    authorLogout:'Log out',
+    authorClose:'Close',
+    authorNoAppeals:'No new ban appeals.',
+    authorLoading:'Loading appeals…',
+    authorNeedToken:'Log in as author first.',
+    authorOpenIssue:'Open Issue',
+    authorCode:'Generate unlock code',
+    authorReply:'Reply to Issue',
+    authorCodePrefix:'Unlock code: ',
+    authorLoginEmpty:'Paste a GitHub token first.',
+    authorLoginChecking:'Verifying…',
+    authorLoginSuccess:'Logged in.',
+    authorLoginFail:'Login failed: {e}. The token needs Issues read access to tuluoluo/class-emoji.',
+    authorReplyConfirm:'Reply to Issue #{n}?\nUnlock code: {c}',
+    authorReplyDone:'Replied to Issue #{n}, unlock code {c}',
+    authorReplyFail:'Reply failed: {e} (the token needs Issues write access)',
+    authorLogoutDone:'Logged out.',
+    authorNoBid:'No device ID found in this appeal.',
+    authorReadFail:'Load failed: {e}<br>Check the token has Issues read access to this repo, or retry later.'
+  },
+  ja: {
+    authorTitle:'🛡️ 作者レビュー台',
+    authorSub:'異議申し立ては GitHub Issues から取得します。ログインにはこのリポジトリの Issues 読み書き権限が必要です。',
+    authorTokenPh:'GitHub fine-grained Token（このリポジトリの Issues 読み書きのみ推奨）',
+    authorLogin:'作者としてログイン',
+    authorHelpBtn:'Token の作り方',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens。<br>2. リポジトリ <b>tuluoluo/class-emoji</b> を選択。<br>3. 権限は <b>Issues: Read and write</b> だけを有効に。<br>4. 一度だけ貼り付け。Token はこのブラウザにのみ保存されます。',
+    authorRefresh:'🔄 申し立てを更新',
+    authorLogout:'ログアウト',
+    authorClose:'閉じる',
+    authorNoAppeals:'新しい封禁申し立てはありません。',
+    authorLoading:'申し立てを読み込み中…',
+    authorNeedToken:'先に作者としてログインしてください。',
+    authorOpenIssue:'Issue を開く',
+    authorCode:'解除コードを生成',
+    authorReply:'Issue に返信',
+    authorCodePrefix:'解除コード：',
+    authorLoginEmpty:'先に GitHub Token を貼り付けてください。',
+    authorLoginChecking:'確認中…',
+    authorLoginSuccess:'ログインしました。',
+    authorLoginFail:'ログイン失敗：{e}。Token に tuluoluo/class-emoji の Issues 読み取り権限が必要です。',
+    authorReplyConfirm:'Issue #{n} に返信しますか？\n解除コード：{c}',
+    authorReplyDone:'Issue #{n} に返信しました。解除コード {c}',
+    authorReplyFail:'返信失敗：{e}（Token に Issues 書き込み権限が必要）',
+    authorLogoutDone:'ログアウトしました。',
+    authorNoBid:'この申し立てから端末 ID を取得できません。',
+    authorReadFail:'読み込み失敗：{e}<br>Token の Issues 読み取り権限を確認するか、後で再試行してください。'
+  },
+  ko: {
+    authorTitle:'🛡️ 작성자 검토대',
+    authorSub:'이의 제기는 GitHub Issues에서 가져옵니다. 로그인하려면 이 저장소의 Issues 읽기/쓰기 권한이 있는 토큰이 필요합니다.',
+    authorTokenPh:'GitHub fine-grained Token(이 저장소 Issues 읽기/쓰기만 권장)',
+    authorLogin:'작성자로 로그인',
+    authorHelpBtn:'토큰 만드는 법',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.<br>2. 저장소 <b>tuluoluo/class-emoji</b> 선택.<br>3. 권한은 <b>Issues: Read and write</b>만 켜기.<br>4. 한 번만 붙여넣기. 토큰은 이 브라우저에만 저장됩니다.',
+    authorRefresh:'🔄 이의 제기 새로고침',
+    authorLogout:'로그아웃',
+    authorClose:'닫기',
+    authorNoAppeals:'새로운 차단 이의 제기가 없습니다.',
+    authorLoading:'이의 제기를 불러오는 중…',
+    authorNeedToken:'먼저 작성자로 로그인하세요.',
+    authorOpenIssue:'Issue 열기',
+    authorCode:'해제 코드 생성',
+    authorReply:'Issue에 답변',
+    authorCodePrefix:'해제 코드: ',
+    authorLoginEmpty:'먼저 GitHub Token을 붙여넣으세요.',
+    authorLoginChecking:'확인 중…',
+    authorLoginSuccess:'로그인했습니다.',
+    authorLoginFail:'로그인 실패: {e}. 토큰에 tuluoluo/class-emoji Issues 읽기 권한이 필요합니다.',
+    authorReplyConfirm:'Issue #{n}에 답변할까요?\n해제 코드: {c}',
+    authorReplyDone:'Issue #{n}에 답변했습니다. 해제 코드 {c}',
+    authorReplyFail:'답변 실패: {e} (토큰에 Issues 쓰기 권한 필요)',
+    authorLogoutDone:'로그아웃했습니다.',
+    authorNoBid:'이 이의 제기에서 기기 ID를 찾지 못했습니다.',
+    authorReadFail:'불러오기 실패: {e}<br>토큰의 Issues 읽기 권한을 확인하거나 나중에 다시 시도하세요.'
+  },
+  fr: {
+    authorTitle:'🛡️ Revue auteur',
+    authorSub:'Les appels proviennent des Issues GitHub. La connexion exige un jeton avec lecture/écriture des Issues de ce dépôt.',
+    authorTokenPh:'Jeton GitHub fine-grained (Issues lecture/écriture de ce dépôt uniquement)',
+    authorLogin:'Se connecter en tant qu’auteur',
+    authorHelpBtn:'Créer un jeton',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.<br>2. Sélectionnez le dépôt <b>tuluoluo/class-emoji</b>.<br>3. Activez uniquement <b>Issues: Read and write</b>.<br>4. Collez-le une fois. Le jeton reste dans ce navigateur.',
+    authorRefresh:'🔄 Actualiser les appels',
+    authorLogout:'Se déconnecter',
+    authorClose:'Fermer',
+    authorNoAppeals:'Aucun nouvel appel de bannissement.',
+    authorLoading:'Chargement des appels…',
+    authorNeedToken:'Connectez-vous d’abord en tant qu’auteur.',
+    authorOpenIssue:'Ouvrir l’Issue',
+    authorCode:'Générer le code de déblocage',
+    authorReply:'Répondre à l’Issue',
+    authorCodePrefix:'Code de déblocage : ',
+    authorLoginEmpty:'Collez d’abord un jeton GitHub.',
+    authorLoginChecking:'Vérification…',
+    authorLoginSuccess:'Connecté.',
+    authorLoginFail:'Échec de connexion : {e}. Le jeton doit avoir accès en lecture aux Issues de tuluoluo/class-emoji.',
+    authorReplyConfirm:'Répondre à l’Issue #{n} ?\nCode de déblocage : {c}',
+    authorReplyDone:'Réponse envoyée à l’Issue #{n}, code {c}',
+    authorReplyFail:'Échec de la réponse : {e} (le jeton doit avoir l’écriture des Issues)',
+    authorLogoutDone:'Déconnecté.',
+    authorNoBid:'Aucun identifiant d’appareil trouvé dans cet appel.',
+    authorReadFail:'Échec du chargement : {e}<br>Vérifiez l’accès en lecture aux Issues, ou réessayez plus tard.'
+  },
+  de: {
+    authorTitle:'🛡️ Autorenprüfung',
+    authorSub:'Einsprüche kommen aus GitHub Issues. Die Anmeldung braucht ein Token mit Issues-Lese-/Schreibrechten für dieses Repo.',
+    authorTokenPh:'GitHub Fine-grained Token (nur Issues Lesen/Schreiben für dieses Repo)',
+    authorLogin:'Als Autor anmelden',
+    authorHelpBtn:'Token erstellen',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.<br>2. Repo <b>tuluoluo/class-emoji</b> auswählen.<br>3. Nur <b>Issues: Read and write</b> aktivieren.<br>4. Einmal einfügen. Das Token bleibt nur in diesem Browser.',
+    authorRefresh:'🔄 Einsprüche aktualisieren',
+    authorLogout:'Abmelden',
+    authorClose:'Schließen',
+    authorNoAppeals:'Keine neuen Bann-Einsprüche.',
+    authorLoading:'Einsprüche werden geladen…',
+    authorNeedToken:'Bitte zuerst als Autor anmelden.',
+    authorOpenIssue:'Issue öffnen',
+    authorCode:'Entsperrcode erzeugen',
+    authorReply:'Auf Issue antworten',
+    authorCodePrefix:'Entsperrcode: ',
+    authorLoginEmpty:'Zuerst ein GitHub Token einfügen.',
+    authorLoginChecking:'Prüfe…',
+    authorLoginSuccess:'Angemeldet.',
+    authorLoginFail:'Anmeldung fehlgeschlagen: {e}. Das Token braucht Issues-Leserecht für tuluoluo/class-emoji.',
+    authorReplyConfirm:'Auf Issue #{n} antworten?\nEntsperrcode: {c}',
+    authorReplyDone:'Antwort an Issue #{n} gesendet, Code {c}',
+    authorReplyFail:'Antwort fehlgeschlagen: {e} (Token braucht Issues-Schreibrecht)',
+    authorLogoutDone:'Abgemeldet.',
+    authorNoBid:'In diesem Einspruch wurde keine Geräte-ID gefunden.',
+    authorReadFail:'Laden fehlgeschlagen: {e}<br>Prüfe das Issues-Leserecht des Tokens oder versuche es später erneut.'
+  },
+  es: {
+    authorTitle:'🛡️ Revisión del autor',
+    authorSub:'Las apelaciones vienen de GitHub Issues. El inicio de sesión necesita un token con lectura/escritura de Issues para este repo.',
+    authorTokenPh:'Token GitHub fine-grained (solo Issues lectura/escritura de este repo)',
+    authorLogin:'Iniciar sesión como autor',
+    authorHelpBtn:'Cómo crear un token',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.<br>2. Selecciona el repo <b>tuluoluo/class-emoji</b>.<br>3. Activa solo <b>Issues: Read and write</b>.<br>4. Pega una vez. El token queda solo en este navegador.',
+    authorRefresh:'🔄 Actualizar apelaciones',
+    authorLogout:'Cerrar sesión',
+    authorClose:'Cerrar',
+    authorNoAppeals:'No hay nuevas apelaciones de bloqueo.',
+    authorLoading:'Cargando apelaciones…',
+    authorNeedToken:'Primero inicia sesión como autor.',
+    authorOpenIssue:'Abrir Issue',
+    authorCode:'Generar código de desbloqueo',
+    authorReply:'Responder en Issue',
+    authorCodePrefix:'Código de desbloqueo: ',
+    authorLoginEmpty:'Primero pega un token de GitHub.',
+    authorLoginChecking:'Verificando…',
+    authorLoginSuccess:'Sesión iniciada.',
+    authorLoginFail:'Error de inicio de sesión: {e}. El token necesita lectura de Issues de tuluoluo/class-emoji.',
+    authorReplyConfirm:'¿Responder al Issue #{n}?\nCódigo: {c}',
+    authorReplyDone:'Respondido al Issue #{n}, código {c}',
+    authorReplyFail:'Error al responder: {e} (el token necesita escritura de Issues)',
+    authorLogoutDone:'Sesión cerrada.',
+    authorNoBid:'No se encontró ID de dispositivo en esta apelación.',
+    authorReadFail:'Error de carga: {e}<br>Comprueba el acceso de lectura a Issues o reintenta más tarde.'
+  },
+  ru: {
+    authorTitle:'🛡️ Панель автора',
+    authorSub:'Апелляции берутся из GitHub Issues. Для входа нужен токен с правами чтения/записи Issues этого репозитория.',
+    authorTokenPh:'GitHub fine-grained Token (только Issues чтение/запись этого репо)',
+    authorLogin:'Войти как автор',
+    authorHelpBtn:'Как создать токен',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.<br>2. Выберите репозиторий <b>tuluoluo/class-emoji</b>.<br>3. Включите только <b>Issues: Read and write</b>.<br>4. Вставьте один раз. Токен хранится только в этом браузере.',
+    authorRefresh:'🔄 Обновить апелляции',
+    authorLogout:'Выйти',
+    authorClose:'Закрыть',
+    authorNoAppeals:'Новых апелляций на бан нет.',
+    authorLoading:'Загрузка апелляций…',
+    authorNeedToken:'Сначала войдите как автор.',
+    authorOpenIssue:'Открыть Issue',
+    authorCode:'Создать код разблокировки',
+    authorReply:'Ответить в Issue',
+    authorCodePrefix:'Код разблокировки: ',
+    authorLoginEmpty:'Сначала вставьте GitHub Token.',
+    authorLoginChecking:'Проверка…',
+    authorLoginSuccess:'Вы вошли.',
+    authorLoginFail:'Ошибка входа: {e}. Токену нужно право чтения Issues tuluoluo/class-emoji.',
+    authorReplyConfirm:'Ответить в Issue #{n}?\nКод: {c}',
+    authorReplyDone:'Ответ отправлен в Issue #{n}, код {c}',
+    authorReplyFail:'Ошибка ответа: {e} (токену нужно право записи Issues)',
+    authorLogoutDone:'Вы вышли.',
+    authorNoBid:'В этой апелляции не найден ID устройства.',
+    authorReadFail:'Ошибка загрузки: {e}<br>Проверьте право чтения Issues или повторите позже.'
+  },
+  chinglish: {
+    authorTitle:'🛡️ Author Check Table',
+    authorSub:'Appeal all come from GitHub Issues. Login need token with this repo Issues read/write.',
+    authorTokenPh:'GitHub fine-grained Token (only this repo Issues read/write)',
+    authorLogin:'Login as author la',
+    authorHelpBtn:'How make Token',
+    authorHelpBody:'1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.<br>2. Choose repo <b>tuluoluo/class-emoji</b>.<br>3. Only tick <b>Issues: Read and write</b>.<br>4. Paste one time. Token stay in this browser only.',
+    authorRefresh:'🔄 Refresh appeal',
+    authorLogout:'Logout author',
+    authorClose:'Close la',
+    authorNoAppeals:'No new ban appeal now.',
+    authorLoading:'Reading appeal…',
+    authorNeedToken:'Login author first la.',
+    authorOpenIssue:'Open Issue',
+    authorCode:'Make unlock code',
+    authorReply:'Reply to Issue',
+    authorCodePrefix:'Unlock code: ',
+    authorLoginEmpty:'Paste GitHub Token first.',
+    authorLoginChecking:'Checking…',
+    authorLoginSuccess:'Login OK.',
+    authorLoginFail:'Login fail: {e}. Token need Issues read for tuluoluo/class-emoji.',
+    authorReplyConfirm:'Reply Issue #{n}?\nUnlock code: {c}',
+    authorReplyDone:'Reply Issue #{n} done, code {c}',
+    authorReplyFail:'Reply fail: {e} (token need Issues write)',
+    authorLogoutDone:'Logout done.',
+    authorNoBid:'No device ID in this appeal.',
+    authorReadFail:'Read fail: {e}<br>Check token Issues read or try later.'
+  },
+  wenyan: {
+    authorTitle:'🛡️ 作者審閱臺',
+    authorSub:'申訴皆自 GitHub Issues 來；登入需本倉 Issues 讀寫之符。',
+    authorTokenPh:'GitHub fine-grained Token（僅勾本倉 Issues 讀寫）',
+    authorLogin:'登入作者之號',
+    authorHelpBtn:'如何造符',
+    authorHelpBody:'一、GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens。<br>二、擇倉 <b>tuluoluo/class-emoji</b>。<br>三、權限唯勾 <b>Issues: Read and write</b>，餘者勿與。<br>四、成後一貼；符存本機，不入源碼。',
+    authorRefresh:'🔄 復查申訴',
+    authorLogout:'出作者之號',
+    authorClose:'閉',
+    authorNoAppeals:'今無新封禁之訴。',
+    authorLoading:'正閱申訴…',
+    authorNeedToken:'請先登作者之號。',
+    authorOpenIssue:'開 Issue',
+    authorCode:'生解除碼',
+    authorReply:'覆於 Issue',
+    authorCodePrefix:'解除碼：',
+    authorLoginEmpty:'先貼 GitHub Token。',
+    authorLoginChecking:'正驗…',
+    authorLoginSuccess:'登入成矣。',
+    authorLoginFail:'登入敗：{e}。符需 tuluoluo/class-emoji 之 Issues 讀權。',
+    authorReplyConfirm:'定覆 Issue #{n} 乎？\n解除碼：{c}',
+    authorReplyDone:'已覆 Issue #{n}，解除碼 {c}',
+    authorReplyFail:'覆敗：{e}（符需 Issues 寫權）',
+    authorLogoutDone:'已出作者之號。',
+    authorNoBid:'此訴未見設備之識。',
+    authorReadFail:'閱敗：{e}<br>請驗符之 Issues 讀權，或稍後再試。'
+  }
+};
 function t(key){
+  const ax = AUTHOR_LANGS[G.language];
+  if(ax && ax[key] !== undefined) return ax[key];
   const m = MODE_LANGS[G.language];
   if(m && m[key] !== undefined) return m[key];
   if(MODE_LANGS.en[key] !== undefined) return MODE_LANGS.en[key];
@@ -5308,6 +5620,7 @@ function applyLanguage(){
   if(authorHealBtn) authorHealBtn.textContent = t('authorBtnHeal');
   const authorMobBtn = document.getElementById('authorMobBtn');
   if(authorMobBtn) authorMobBtn.textContent = t('authorBtnMob');
+  if(window.__authorApplyLang) window.__authorApplyLang();
   // 切换武器
   const weaponSwitch = document.getElementById('weaponSwitch');
   if(weaponSwitch) weaponSwitch.textContent = t('switchWeaponBtn');
@@ -19894,14 +20207,36 @@ function applyNpcSnap(d){
     if(a) a.style.display = on ? 'none' : 'block';
     if(m) m.style.display = on ? 'block' : 'none';
   }
+  function applyAuthorLang(){
+    var ab = document.getElementById('accountAuthorBtn');
+    if(ab) ab.textContent = t('authorTitle');
+    var at = document.getElementById('authorReviewTitle');
+    if(at) at.textContent = t('authorTitle');
+    var asub = document.getElementById('authorSub');
+    if(asub) asub.textContent = t('authorSub');
+    var aip = document.getElementById('authorTokenInput');
+    if(aip) aip.placeholder = t('authorTokenPh');
+    var alb = document.getElementById('authorLoginBtn');
+    if(alb) alb.textContent = t('authorLogin');
+    var ahb = document.getElementById('authorTokenHelpBtn');
+    if(ahb) ahb.textContent = t('authorHelpBtn');
+    var ah = document.getElementById('authorTokenHelp');
+    if(ah) ah.innerHTML = t('authorHelpBody');
+    var arb = document.getElementById('authorRefreshBtn');
+    if(arb) arb.textContent = t('authorRefresh');
+    var aob = document.getElementById('authorLogoutBtn');
+    if(aob) aob.textContent = t('authorLogout');
+    var acb = document.getElementById('authorCloseBtn');
+    if(acb) acb.textContent = t('authorClose');
+  }
   function _authorHeaders(){
     return { 'Authorization':'Bearer ' + AUTHOR_TOKEN, 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
   }
   function authorLoad(){
     var list = document.getElementById('authorList');
     if(!list) return;
-    if(!AUTHOR_TOKEN){ list.innerHTML = '<div style="color:#e6b450;font-size:12px">请先登录作者账号。</div>'; return; }
-    list.innerHTML = '<div style="color:#8f8f9a;font-size:12px">正在读取申诉…</div>';
+    if(!AUTHOR_TOKEN){ list.innerHTML = '<div style="color:#e6b450;font-size:12px">' + _authorEsc(t('authorNeedToken')) + '</div>'; return; }
+    list.innerHTML = '<div style="color:#8f8f9a;font-size:12px">' + _authorEsc(t('authorLoading')) + '</div>';
     fetch(AUTHOR_ISSUES_API, { headers:_authorHeaders() }).then(function(r){
       if(!r.ok) throw new Error('http_' + r.status);
       return r.json();
@@ -19909,7 +20244,7 @@ function applyNpcSnap(d){
       var issues = (data || []).filter(function(it){
         return it && !it.pull_request && /\[封禁申诉\]/.test(String(it.title || ''));
       });
-      if(!issues.length){ list.innerHTML = '<div style="color:#8f8f9a;font-size:12px;padding:12px;border:1px dashed #333;border-radius:8px">当前没有新的封禁申诉。</div>'; return; }
+      if(!issues.length){ list.innerHTML = '<div style="color:#8f8f9a;font-size:12px;padding:12px;border:1px dashed #333;border-radius:8px">' + _authorEsc(t('authorNoAppeals')) + '</div>'; return; }
       var html = '';
       for(var i = 0; i < issues.length; i++){
         var it = issues[i];
@@ -19922,27 +20257,27 @@ function applyNpcSnap(d){
           + '<div style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">'
           + '<div style="min-width:0;flex:1"><b style="color:#d9c2ff;font-size:13px">#' + num + ' ' + _authorEsc(it.title || '') + '</b>'
           + '<div style="font-size:10px;color:#777;margin-top:3px">' + _authorEsc(time) + '</div></div>'
-          + '<a href="' + _authorEsc(url) + '" target="_blank" rel="noopener" style="font-size:11px;color:#7fb3ff;text-decoration:none">打开 Issue</a>'
+          + '<a href="' + _authorEsc(url) + '" target="_blank" rel="noopener" style="font-size:11px;color:#7fb3ff;text-decoration:none">' + _authorEsc(t('authorOpenIssue')) + '</a>'
           + '</div>'
           + '<div style="font-size:11px;color:#bbb;line-height:1.75;white-space:pre-wrap;margin-top:8px;max-height:160px;overflow:auto;background:#08080c;border-radius:6px;padding:8px">' + _authorEsc(body) + '</div>'
           + _authorIssueImages(body)
           + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
-          + '<button type="button" data-author-act="code" style="padding:7px 10px;border:none;border-radius:7px;background:#2a2312;color:#f0c96a;font-size:11px;font-weight:700;cursor:pointer">生成解除码</button>'
-          + '<button type="button" data-author-act="reply" style="padding:7px 10px;border:none;border-radius:7px;background:#238636;color:#fff;font-size:11px;font-weight:700;cursor:pointer">回复到 Issue</button>'
+          + '<button type="button" data-author-act="code" style="padding:7px 10px;border:none;border-radius:7px;background:#2a2312;color:#f0c96a;font-size:11px;font-weight:700;cursor:pointer">' + _authorEsc(t('authorCode')) + '</button>'
+          + '<button type="button" data-author-act="reply" style="padding:7px 10px;border:none;border-radius:7px;background:#238636;color:#fff;font-size:11px;font-weight:700;cursor:pointer">' + _authorEsc(t('authorReply')) + '</button>'
           + '</div>'
           + '<div class="author-code" style="font-size:11px;color:#8f8f9a;min-height:16px;margin-top:6px;word-break:break-all"></div>'
           + '</div>';
       }
       list.innerHTML = html;
     }).catch(function(e){
-      list.innerHTML = '<div style="color:#ff8a8a;font-size:12px;line-height:1.7">读取失败：' + _authorEsc(e && e.message || '未知错误') + '<br>检查 Token 是否有本仓库 Issues 读取权限，或稍后重试。</div>';
+      list.innerHTML = '<div style="color:#ff8a8a;font-size:12px;line-height:1.7">' + t('authorReadFail').replace('{e}', _authorEsc(e && e.message || '未知错误')) + '</div>';
     });
   }
   function authorReply(num, bid){
     if(!AUTHOR_TOKEN || !num || !bid){ return; }
     var code = pcbReviewCode(bid);
     var body = '[解除码] ' + code + '\n设备标识：' + bid + '\n复核结果：申诉通过，已解除封禁。';
-    if(!confirm('确定回复 Issue #' + num + '？\n解除码：' + code)) return;
+    if(!confirm(t('authorReplyConfirm').replace('{n}', String(num)).replace('{c}', code))) return;
     fetch('https://api.github.com/repos/tuluoluo/class-emoji/issues/' + num + '/comments', {
       method:'POST',
       headers: Object.assign({ 'Content-Type':'application/json' }, _authorHeaders()),
@@ -19951,33 +20286,34 @@ function applyNpcSnap(d){
       if(!r.ok) throw new Error('http_' + r.status);
       return r.json();
     }).then(function(){
-      _authorMsg('已回复 Issue #' + num + '，解除码 ' + code, '#7ee787');
+      _authorMsg(t('authorReplyDone').replace('{n}', String(num)).replace('{c}', code), '#7ee787');
       authorLoad();
     }).catch(function(e){
-      _authorMsg('回复失败：' + (e && e.message || '未知错误') + '（Token 需要 Issues 读写权限）', '#ff8a8a');
+      _authorMsg(t('authorReplyFail').replace('{e}', e && e.message || '未知错误'), '#ff8a8a');
     });
   }
   function authorLogin(){
     var inp = document.getElementById('authorTokenInput');
     var token = inp ? String(inp.value || '').trim() : '';
-    if(!token){ _authorMsg('先粘贴 GitHub Token。', '#ff8a8a'); return; }
-    _authorMsg('正在验证…', '#e6b450');
+    if(!token){ _authorMsg(t('authorLoginEmpty'), '#ff8a8a'); return; }
+    _authorMsg(t('authorLoginChecking'), '#e6b450');
     fetch('https://api.github.com/repos/tuluoluo/class-emoji/issues?state=open&per_page=1', { headers:{ 'Authorization':'Bearer ' + token, 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' } }).then(function(r){
       if(!r.ok) throw new Error('http_' + r.status);
       return r.json();
     }).then(function(){
       AUTHOR_TOKEN = token;
       try{ localStorage.setItem(AUTHOR_TOKEN_KEY, token); }catch(e){}
-      _authorMsg('登录成功。', '#7ee787');
+      _authorMsg(t('authorLoginSuccess'), '#7ee787');
       _authorSetMain(true);
       authorLoad();
     }).catch(function(e){
-      _authorMsg('登录失败：' + (e && e.message || '未知错误') + '。Token 需要 tuluoluo/class-emoji 的 Issues 读取权限。', '#ff8a8a');
+      _authorMsg(t('authorLoginFail').replace('{e}', e && e.message || '未知错误'), '#ff8a8a');
     });
   }
   function authorOpen(){
-    var p = document.getElementById('authorPanel');
+    var p = document.getElementById('authorReviewPanel');
     if(!p) return;
+    if(typeof applyAuthorLang === 'function') applyAuthorLang();
     p.style.display = 'flex';
     var saved = '';
     try{ saved = localStorage.getItem(AUTHOR_TOKEN_KEY) || ''; }catch(e){}
@@ -19993,12 +20329,9 @@ function applyNpcSnap(d){
     }
   }
   function authorInit(){
-    var btn = document.getElementById('accountAuthorBtn');
-    if(btn) btn.addEventListener('click', authorOpen);
+    // 作者审核台入口用按钮内联 onclick，避免旧版缓存/事件未绑定时点了没反应
     var close = document.getElementById('authorCloseBtn');
-    if(close) close.addEventListener('click', function(){ var p = document.getElementById('authorPanel'); if(p) p.style.display = 'none'; });
-    var login = document.getElementById('authorLoginBtn');
-    if(login) login.addEventListener('click', authorLogin);
+    if(close) close.addEventListener('click', function(){ var p = document.getElementById('authorReviewPanel'); if(p) p.style.display = 'none'; });
     var help = document.getElementById('authorTokenHelpBtn');
     if(help) help.addEventListener('click', function(){ var h = document.getElementById('authorTokenHelp'); if(h) h.style.display = h.style.display === 'none' ? 'block' : 'none'; });
     var refresh = document.getElementById('authorRefreshBtn');
@@ -20008,7 +20341,7 @@ function applyNpcSnap(d){
       AUTHOR_TOKEN = '';
       try{ localStorage.removeItem(AUTHOR_TOKEN_KEY); }catch(e){}
       _authorSetMain(false);
-      _authorMsg('已退出作者账号。', '#8f8f9a');
+      _authorMsg(t('authorLogoutDone'), '#8f8f9a');
     });
     var list = document.getElementById('authorList');
     if(list) list.addEventListener('click', function(e){
@@ -20019,10 +20352,10 @@ function applyNpcSnap(d){
       var num = Number(item.getAttribute('data-num')) || 0;
       var bid = item.getAttribute('data-bid') || '';
       var act = b.getAttribute('data-author-act');
-      if(!bid){ _authorMsg('这条申诉里没解析到设备标识。', '#ff8a8a'); return; }
+      if(!bid){ _authorMsg(t('authorNoBid'), '#ff8a8a'); return; }
       if(act === 'code'){
         var box = item.querySelector('.author-code');
-        if(box) box.innerHTML = '解除码：<b style="color:#f0c96a;font-size:13px">' + _authorEsc(pcbReviewCode(bid)) + '</b>';
+        if(box) box.innerHTML = _authorEsc(t('authorCodePrefix')) + '<b style="color:#f0c96a;font-size:13px">' + _authorEsc(pcbReviewCode(bid)) + '</b>';
       } else if(act === 'reply'){
         authorReply(num, bid);
       }
@@ -20031,6 +20364,8 @@ function applyNpcSnap(d){
   if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', authorInit); } else { authorInit(); }
   try{ window.__authorOpen = authorOpen; }catch(e){}
   try{ window.__authorLoad = authorLoad; }catch(e){}
+  try{ window.__authorLogin = authorLogin; }catch(e){}
+  try{ window.__authorApplyLang = applyAuthorLang; }catch(e){}
 
 
   function validatePlayerName(name){
