@@ -19569,13 +19569,17 @@ function applyNpcSnap(d){
     setTimeout(function(){ try{ location.reload(); }catch(e){} }, 80);
   }
   function pcbScanStoredSevere(){
+    var acctNames = [];
     try{
       var raw = localStorage.getItem('classEmoji_accounts_v1');
       var a = raw ? JSON.parse(raw) : null;
       if(a && a.list && a.list.length){
         for(var i = 0; i < a.list.length; i++){
           var ac = a.list[i];
-          if(ac && ac.name){ var sn = severeCheck(ac.name); if(sn) return sn; }
+          if(ac && ac.name){
+            acctNames.push(ac.name);
+            var sn = severeCheck(ac.name); if(sn) return sn;
+          }
         }
       }
     }catch(e){}
@@ -19588,6 +19592,20 @@ function applyNpcSnap(d){
         for(var j = 0; j < arr.length; j++){
           var it = arr[j];
           if(it && it.mine && it.text){ var st = severeCheck(it.text); if(st) return st; }
+        }
+      }
+    }catch(e){}
+    try{
+      for(var k2 = 0; k2 < localStorage.length; k2++){
+        var key2 = localStorage.key(k2);
+        if(!key2 || key2.indexOf('class_emoji_chat_') !== 0) continue;
+        var chat = JSON.parse(localStorage.getItem(key2) || '[]');
+        if(!(chat instanceof Array)) continue;
+        for(var c = 0; c < chat.length; c++){
+          var line = chat[c];
+          if(line && line.from && acctNames.indexOf(line.from) >= 0 && line.text){
+            var sc = severeCheck(line.text); if(sc) return sc;
+          }
         }
       }
     }catch(e){}
@@ -20307,6 +20325,9 @@ function censor(txt){
     var inp = document.getElementById('chatInput');
     var text = inp ? inp.value.trim() : '';
     if(!text || !F.chatPeer) return;
+    var sev = severeCheck(text);
+    if(sev){ pcbBanDevice(sev.label); return; }
+    text = censor(text);
     if(inp) inp.value = '';
     if(!frIsOnline(F.chatPeer)){ showToast(T ? T('frNeedOnline') : '对方离线，无法发送'); }
     var log = frChatLog();
@@ -20321,6 +20342,8 @@ function censor(txt){
   function frRecvChat(d){
     var a = frName(), b = d.rawName || d.from;
     if(!a || !b) return;
+    if(severeCheck(d.text)) return;
+    d.text = censor(d.text || '');
     var key = 'class_emoji_chat_' + [a, b].sort().join('__');
     var log = [];
     try{ var raw = localStorage.getItem(key); log = raw ? JSON.parse(raw) : []; }catch(e){}
