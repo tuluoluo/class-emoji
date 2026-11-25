@@ -1103,8 +1103,8 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.10.1';
-var GAME_DATE = '2026-11-23';
+var GAME_VERSION = 'v4.10.2';
+var GAME_DATE = '2026-11-25';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
 function getSelectedFace(){
@@ -19416,12 +19416,200 @@ function applyNpcSnap(d){
     t = t.replace(/(.)\1{2,}/g, '$1$1');
     return t;
   }
+
+  // ===== 严重违规：美化侵略/否认暴行/美化法西斯/美化恐怖袭击（命中即设备封禁） =====
+  var SEVERE_RULES = [
+    { id:'glorify_invasion', label:'美化侵略', re:/(美化|洗白|歌颂|赞美|吹捧|支持|拥护|赞成|为[^。]{0,12}?翻案)[^。]{0,12}(侵略|入侵|侵占|吞并)/g },
+    { id:'glorify_invasion', label:'美化侵略', re:/(侵略|入侵|侵占|吞并)[^。]{0,12}(有理|无罪|光荣|伟大|正义|正确|有功|是好事|万岁|带来繁荣|带来和平|解放)/g },
+    { id:'glorify_invasion', label:'美化侵略', re:/(大东亚共荣|共荣圈)/g },
+    { id:'deny_atrocity', label:'否认/美化暴行', re:/(南京大屠杀|731部队|慰安妇|种族灭绝|大屠杀|集中营|战争罪|反人类罪)[^。]{0,14}(不存在|假的|编造|否认|没有发生|活该|赞美|洗白|光荣|正确|支持)/g },
+    { id:'glorify_fascism', label:'美化法西斯', re:/(纳粹|法西斯|希特勒|希特拉|东条英机|军国主义|武士道)[^。]{0,10}(伟大|光荣|正确|正义|英雄|万岁|支持|崇拜|洗白|美化|有功)/g },
+    { id:'glorify_terror', label:'美化恐怖袭击', re:/(恐怖袭击|恐怖分子|炸弹袭击|校园枪击|扫射)[^。]{0,12}(英雄|伟大|正确|正义|支持|赞美|干得好|杀得好|活该|多来点)/g },
+    { id:'glorify_massacre', label:'美化屠杀', re:/(屠杀|灭族|种族清洗|种族灭绝)[^。]{0,12}(英雄|伟大|正确|正义|支持|赞美|干得好|杀得好|活该|多来点)/g }
+  ];
+  var SEVERE_TERMS = [
+    { label:'分裂国家', words:['台独','港独','疆独','藏独'] },
+    { label:'儿童色情', words:['儿童色情','未成年裸照','恋童','幼齿','童交'] },
+    { label:'武器/爆炸物教程', words:['制枪教程','炸弹教程','制毒','冰毒配方'] },
+    { label:'诈骗/洗钱教程', words:['诈骗话术','洗钱渠道','刷单返利','裸贷群'] }
+  ];
+  function _severeNorm(txt){
+    var t = String(txt == null ? '' : txt);
+    try{ if(t.normalize) t = t.normalize('NFKC'); }catch(e){}
+    t = t.toLowerCase();
+    t = t.replace(/[\u200B-\u200D\uFEFF\u2060]/g, '');
+    t = t.replace(/[^a-z0-9\u4e00-\u9fa5]/g, '');
+    t = t.replace(/侵(略|列|掠|夺)|亲略|清略/g, '侵略');
+    t = t.replace(/美(华|画)/g, '美化');
+    t = t.replace(/希特拉/g, '希特勒');
+    t = t.replace(/恐怖份子/g, '恐怖分子');
+    return t;
+  }
+  function _severeNeg(t, idx){
+    var pre = t.slice(Math.max(0, idx - 8), idx);
+    return /(反对|抵制|谴责|批判|禁止|严禁|不要|不能|不应|不许|不得|拒绝|打击|揭露|警惕|防止|痛斥|憎恨|仇恨|可耻|罪恶|不是|并非|反)/.test(pre);
+  }
+  function severeCheck(txt){
+    var t = _severeNorm(txt);
+    if(!t) return null;
+    for(var i = 0; i < SEVERE_RULES.length; i++){
+      var rule = SEVERE_RULES[i];
+      rule.re.lastIndex = 0;
+      var m;
+      while((m = rule.re.exec(t)) !== null){
+        if(!_severeNeg(t, m.index)) return { id:rule.id, label:rule.label, match:m[0] };
+        if(rule.re.lastIndex === m.index) rule.re.lastIndex++;
+      }
+    }
+    for(var s = 0; s < SEVERE_TERMS.length; s++){
+      var group = SEVERE_TERMS[s];
+      for(var w = 0; w < group.words.length; w++){
+        var word = _severeNorm(group.words[w]);
+        var at = t.indexOf(word);
+        while(at >= 0){
+          if(!_severeNeg(t, at)) return { id:'severe_term', label:group.label, match:word };
+          at = t.indexOf(word, at + 1);
+        }
+      }
+    }
+    return null;
+  }
+  try{ window.__severeCheck = severeCheck; }catch(e){}
+
+  // ===== 设备级封禁：本地账号名、本人发言命中严重违规即永久封禁 =====
+  var DEVICE_ID_KEY = 'classEmoji_deviceId_v1';
+  var DEVICE_BAN_KEY = 'classEmoji_deviceBan_v1';
+  var DEVICE_BAN_COOKIE = 'classEmoji_deviceBan';
+  function _pcbHash(str){
+    var h = 2166136261;
+    str = String(str || '');
+    for(var i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0).toString(36);
+  }
+  function deviceId(){
+    try{
+      var id = localStorage.getItem(DEVICE_ID_KEY);
+      if(!id){ id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10); localStorage.setItem(DEVICE_ID_KEY, id); }
+      return id;
+    }catch(e){ return 'dev_session'; }
+  }
+  function deviceFingerprint(){
+    try{
+      var sw = screen.width || 0, sh = screen.height || 0;
+      var screenKey = Math.min(sw, sh) + 'x' + Math.max(sw, sh);
+      var tz = '';
+      try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){}
+      return 'fp_' + _pcbHash([navigator.userAgent || '', navigator.language || '', navigator.platform || '', screenKey, screen.colorDepth || 0, navigator.hardwareConcurrency || 0, tz].join('|'));
+    }catch(e){ return 'fp_unknown'; }
+  }
+  function _pcbCookieGet(){
+    try{
+      var parts = document.cookie ? document.cookie.split(';') : [];
+      for(var i = 0; i < parts.length; i++){
+        var c = parts[i].replace(/^\s+|\s+$/g, '');
+        if(c.indexOf(DEVICE_BAN_COOKIE + '=') === 0){
+          return JSON.parse(decodeURIComponent(c.slice(DEVICE_BAN_COOKIE.length + 1)));
+        }
+      }
+    }catch(e){}
+    return null;
+  }
+  function _pcbCookieSet(obj){
+    try{
+      document.cookie = DEVICE_BAN_COOKIE + '=' + encodeURIComponent(JSON.stringify(obj)) + '; Max-Age=63072000; Path=/; SameSite=Lax';
+    }catch(e){}
+  }
+  function deviceBanGet(){
+    var id = deviceId(), fp = deviceFingerprint();
+    try{
+      var b = JSON.parse(localStorage.getItem(DEVICE_BAN_KEY) || 'null');
+      if(b && (b.id === id || b.fp === fp)) return b;
+    }catch(e){}
+    var c = _pcbCookieGet();
+    if(c && c.fp === fp) return c;
+    return null;
+  }
+  function _pcbBanLock(){
+    if(window.__deviceBanLocked) return;
+    window.__deviceBanLocked = 1;
+    ['keydown','keypress','keyup','pointerdown','mousedown','touchstart','click','contextmenu'].forEach(function(ev){
+      document.addEventListener(ev, function(e){
+        if(window.__deviceBanned){ try{ e.preventDefault(); e.stopPropagation(); }catch(x){} }
+      }, true);
+    });
+  }
+  function pcbBanShow(ban){
+    if(!document.body){
+      setTimeout(function(){ pcbBanShow(ban); }, 0);
+      return;
+    }
+    if(document.getElementById('pcbDeviceBan')) return;
+    var reason = (ban && ban.reason) ? String(ban.reason) : '严重违规';
+    var when = (ban && ban.ts) ? new Date(ban.ts).toLocaleString() : new Date().toLocaleString();
+    var d = document.createElement('div');
+    d.id = 'pcbDeviceBan';
+    d.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:radial-gradient(circle at 50% 20%,#2a0b12 0,#08080c 60%);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;';
+    d.innerHTML = '<div style="width:100%;max-width:520px;border:2px solid #e74c3c;border-radius:16px;background:#0b0b10;box-shadow:0 0 40px rgba(231,76,60,.35);padding:26px 22px;text-align:center;color:#eee;box-sizing:border-box">'
+      + '<div style="font-size:46px;line-height:1;margin-bottom:12px">🚫</div>'
+      + '<div style="font-size:24px;font-weight:900;color:#ff4d4d;letter-spacing:1px">设备已永久封禁</div>'
+      + '<div style="font-size:13px;color:#d8d8d8;line-height:1.9;margin-top:14px">检测到名称或发言含严重违规内容。<br>封禁类别：<b style="color:#ffb3b3">' + reason + '</b><br>该设备无法继续游玩。</div>'
+      + '<div style="font-size:10px;color:#666;margin-top:16px">封禁时间：' + when + '</div>'
+      + '</div>';
+    document.body.appendChild(d);
+    _pcbBanLock();
+  }
+  function pcbBanDevice(reason){
+    var fp = deviceFingerprint();
+    var rec = { id:deviceId(), fp:fp, reason:String(reason || '严重违规'), ts:Date.now() };
+    try{ localStorage.setItem(DEVICE_BAN_KEY, JSON.stringify(rec)); }catch(e){}
+    _pcbCookieSet(rec);
+    window.__deviceBanned = true;
+    try{ if(typeof G !== 'undefined' && G) G.running = false; }catch(e){}
+    pcbBanShow(rec);
+    setTimeout(function(){ try{ location.reload(); }catch(e){} }, 80);
+  }
+  function pcbScanStoredSevere(){
+    try{
+      var raw = localStorage.getItem('classEmoji_accounts_v1');
+      var a = raw ? JSON.parse(raw) : null;
+      if(a && a.list && a.list.length){
+        for(var i = 0; i < a.list.length; i++){
+          var ac = a.list[i];
+          if(ac && ac.name){ var sn = severeCheck(ac.name); if(sn) return sn; }
+        }
+      }
+    }catch(e){}
+    try{
+      for(var k = 0; k < localStorage.length; k++){
+        var key = localStorage.key(k);
+        if(!key || key.indexOf('classEmoji_hallHist_v1_') !== 0) continue;
+        var arr = JSON.parse(localStorage.getItem(key) || '[]');
+        if(!(arr instanceof Array)) continue;
+        for(var j = 0; j < arr.length; j++){
+          var it = arr[j];
+          if(it && it.mine && it.text){ var st = severeCheck(it.text); if(st) return st; }
+        }
+      }
+    }catch(e){}
+    return null;
+  }
+  function pcbBanBootCheck(){
+    var ban = deviceBanGet();
+    if(ban){ window.__deviceBanned = true; pcbBanShow(ban); return; }
+    var hit = pcbScanStoredSevere();
+    if(hit) pcbBanDevice(hit.label);
+  }
+  try{ window.__deviceBanState = deviceBanGet; }catch(e){}
+  try{ window.__pcbBanBootCheck = pcbBanBootCheck; }catch(e){}
+
   function validatePlayerName(name){
     var s = String(name == null ? '' : name).trim();
     if(!s || s.length > 16) return false;
     if(/[\u200B-\u200D\uFEFF\u2060]/.test(s)) return false;
     if(!/[A-Za-z0-9\u4e00-\u9fa5]/.test(s)) return false;
     if(!/[A-Za-z\u4e00-\u9fa5]/.test(s)) return false;
+    var sev = severeCheck(s);
+    if(sev){ pcbBanDevice(sev.label); return false; }
     if(censor(s) !== s) return false;
     return true;
   }
@@ -19431,6 +19619,8 @@ function censor(txt){
     try{
       var s = String(txt == null ? '' : txt);
       if(!s) return s;
+      var sev = severeCheck(s);
+      if(sev) return '[严重违规内容已拦截]';
       var out = s;
       for(var i = 0; i < BAD_WORDS.length; i++){
         var w = String(BAD_WORDS[i] || '');
@@ -19566,6 +19756,7 @@ function censor(txt){
     if(d.type === 'msg'){
       if(d.uid && H.seen[d.uid]) return; // MQTT 回传自己消息，去重
       if(d.uid){ H.seen[d.uid] = 1; if(Object.keys(H.seen).length > 300){ H.seen = {}; } }
+      if(severeCheck(d.text)){ hallLog('⚠️ 已拦截一条严重违规内容'); return; }
       hallMsg(d.name, d.avatar, d.text, false, false, d.uid);
     } else if(d.type === 'join'){
       hallLog('🔹 ' + hallEsc(censor(d.name)) + ' ' + (T ? T('hallJoined') : '进入了大厅'));
@@ -19613,6 +19804,8 @@ function censor(txt){
     c.on('close', function(){ H.connecting = false; });
   }
   function hallSendText(text){
+    var sev = severeCheck(text);
+    if(sev){ pcbBanDevice(sev.label); return; }
     var clean = censor(text);
     if(!H.client || !H.client.connected){
       hallLog('⏳ ' + (T ? T('hallConnecting') : '正在进入大厅…'));
@@ -19629,6 +19822,8 @@ function censor(txt){
     if(!inp) return;
     var text = (inp.value || '').trim();
     if(!text) return;
+    var sev = severeCheck(text);
+    if(sev){ pcbBanDevice(sev.label); return; }
     inp.value = '';
     if(censor(text) !== text) hallLog('🧹 ' + (T ? T('hallCensored') : '已过滤敏感词'));
     hallSendText(text);
@@ -20626,6 +20821,9 @@ function censor(txt){
   if(G.syncP2P){ } // 原 syncP2P 里 nick 直接替换为 G.accountName()
   // v4.3.1: 原 syncP2P→sendPosMsg 已带账号名+头像+模式，此包裹层作废（避免丢 avatar/mode 字段）
 })();
+
+// 启动时检查设备封禁 + 扫描已保存的严重违规账号名/本人发言
+setTimeout(function(){ try{ if(window.__pcbBanBootCheck) window.__pcbBanBootCheck(); }catch(e){} }, 0);
 
 
 
