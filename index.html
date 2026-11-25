@@ -568,7 +568,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </style>
 </head>
 <body>
-<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.6</div>
+<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.7</div>
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
   <h2>请横屏游玩</h2>
@@ -926,6 +926,7 @@ input:checked + .slider:before{transform:translateX(24px)}
     <div style="width:min(92%,380px);max-height:88%;overflow-y:auto;background:#1c1c1e;border:2px solid #555;border-radius:12px;padding:16px;box-shadow:0 0 30px rgba(0,0,0,0.8)">
       <h3 id="accountTitle" style="color:#fff;margin:0 0 10px;text-align:center">👤 账号系统</h3>
       <div id="accountCurrent" style="text-align:center;margin-bottom:10px"></div>
+      <button id="accountAuthorBtn" type="button" onclick="if(window.__authorOpen) window.__authorOpen()" style="width:100%;padding:9px;margin:0 0 12px;background:#6b3fa0;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">🛡️ 作者审核台</button>
       <div style="color:#aaa;font-size:13px;margin-bottom:6px" id="accountCountryTitle">🌐 国籍</div>
       <select id="accountCountrySet" style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #666;border-radius:6px;background:#222;color:#fff;font-size:13px"></select>
       <div id="accountList" style="margin-bottom:10px"></div>
@@ -944,7 +945,6 @@ input:checked + .slider:before{transform:translateX(24px)}
         <input id="accountImportInput" maxlength="4000" style="width:100%;padding:8px;margin-bottom:6px;border:1px solid #666;border-radius:6px;background:#222;color:#fff;font-size:12px;box-sizing:border-box" placeholder="">
         <button id="accountImportBtn" style="width:100%;padding:8px;background:#2980b9;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">📥 </button>
       </div>
-      <button id="accountAuthorBtn" type="button" onclick="if(window.__authorOpen) window.__authorOpen()" style="width:100%;padding:9px;margin-top:10px;background:#6b3fa0;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">🛡️ 作者审核台</button>
       <button id="accountCloseBtn" style="width:100%;padding:9px;margin-top:10px;background:#555;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer">✖ </button>
     </div>
   </div>
@@ -1135,7 +1135,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.10.6';
+var GAME_VERSION = 'v4.10.7';
 var GAME_DATE = '2026-11-25';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -20330,6 +20330,11 @@ function applyNpcSnap(d){
   }
   function authorInit(){
     // 作者审核台入口用按钮内联 onclick，避免旧版缓存/事件未绑定时点了没反应
+    var autoAuthor = false;
+    try{
+      autoAuthor = location.hash === '#author' || /(?:^|[?&])author=1(?:&|$)/.test(location.search || '');
+    }catch(e){}
+    if(autoAuthor){ setTimeout(function(){ authorOpen(); }, 0); }
     var close = document.getElementById('authorCloseBtn');
     if(close) close.addEventListener('click', function(){ var p = document.getElementById('authorReviewPanel'); if(p) p.style.display = 'none'; });
     var help = document.getElementById('authorTokenHelpBtn');
