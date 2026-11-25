@@ -19875,6 +19875,15 @@ function applyNpcSnap(d){
     var b = String(issue && issue.body || '').match(/设备标识[：:]\s*([A-Za-z0-9_-]+)/);
     return b ? b[1] : '';
   }
+  function _authorIssueImages(body){
+    var s = String(body || ''), imgs = '';
+    var re = /!\[[^\]]*\]\((https?:\/\/(?:github\.com|user-images\.githubusercontent\.com|private-user-images\.githubusercontent\.com)\/[^)\s]+)\)/g;
+    var m;
+    while((m = re.exec(s)) !== null && imgs.length < 1200){
+      imgs += '<img src="' + _authorEsc(m[1]) + '" alt="申诉截图" style="max-width:100%;border-radius:8px;margin-top:6px;display:block">';
+    }
+    return imgs ? '<div style="margin-top:6px">' + imgs + '</div>' : '';
+  }
   function _authorMsg(txt, color){
     var el = document.getElementById('authorLoginMsg');
     if(el){ el.textContent = txt || ''; if(color) el.style.color = color; }
@@ -19916,6 +19925,7 @@ function applyNpcSnap(d){
           + '<a href="' + _authorEsc(url) + '" target="_blank" rel="noopener" style="font-size:11px;color:#7fb3ff;text-decoration:none">打开 Issue</a>'
           + '</div>'
           + '<div style="font-size:11px;color:#bbb;line-height:1.75;white-space:pre-wrap;margin-top:8px;max-height:160px;overflow:auto;background:#08080c;border-radius:6px;padding:8px">' + _authorEsc(body) + '</div>'
+          + _authorIssueImages(body)
           + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
           + '<button type="button" data-author-act="code" style="padding:7px 10px;border:none;border-radius:7px;background:#2a2312;color:#f0c96a;font-size:11px;font-weight:700;cursor:pointer">生成解除码</button>'
           + '<button type="button" data-author-act="reply" style="padding:7px 10px;border:none;border-radius:7px;background:#238636;color:#fff;font-size:11px;font-weight:700;cursor:pointer">回复到 Issue</button>'
