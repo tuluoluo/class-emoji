@@ -568,7 +568,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </style>
 </head>
 <body>
-<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.2</div>
+<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.3</div>
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
   <h2>请横屏游玩</h2>
@@ -1103,7 +1103,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.10.2';
+var GAME_VERSION = 'v4.10.3';
 var GAME_DATE = '2026-11-25';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
@@ -18481,7 +18481,7 @@ function applyNpcSnap(d){
               _rp.dieX = (typeof d.x === 'number') ? d.x : _rp.x;
               _rp.dieY = (typeof d.y === 'number') ? d.y : _rp.y;
               if(d.face) _rp.face = d.face;
-              if(d.nick) _rp.nick = d.nick;
+              if(d.nick) _rp.nick = safeNick(d.nick);
               _rp.deathBy = d.by || '';
             }
           }
@@ -18520,7 +18520,7 @@ function applyNpcSnap(d){
         if(!G.remotePlayers[bk]) G.remotePlayers[bk] = { x:d.p2.x, y:d.p2.y, w:44, h:44, face:'😊', facing:1 };
         G.remotePlayers[bk].x = d.p2.x; G.remotePlayers[bk].y = d.p2.y;
         G.remotePlayers[bk].face = d.p2.face || G.remotePlayers[bk].face;
-        G.remotePlayers[bk].nick = d.p2.nick || '机器人';
+        G.remotePlayers[bk].nick = safeNick(d.p2.nick || '机器人');
         G.remotePlayers[bk].map = d.p2.map || (G.currentMap || 'grassland');
         G.remotePlayers[bk].lastSeen = Date.now();
         G.remotePlayers[bk].dead = false;
@@ -18533,7 +18533,7 @@ function applyNpcSnap(d){
         G.remotePlayers[bk3].x = d.p3.x; G.remotePlayers[bk3].y = d.p3.y;
         G.remotePlayers[bk3].face = d.p3.face || G.remotePlayers[bk3].face;
         G.remotePlayers[bk3].aiState = d.p3.aiState || '';
-        G.remotePlayers[bk3].nick = d.p3.nick || '机器人';
+        G.remotePlayers[bk3].nick = safeNick(d.p3.nick || '机器人');
         G.remotePlayers[bk3].map = d.p3.map || (G.currentMap || 'grassland');
         G.remotePlayers[bk3].lastSeen = Date.now();
         G.remotePlayers[bk3].dead = false;
@@ -18546,14 +18546,14 @@ function applyNpcSnap(d){
         G.remotePlayers[bk4].x = d.p4.x; G.remotePlayers[bk4].y = d.p4.y;
         G.remotePlayers[bk4].face = d.p4.face || G.remotePlayers[bk4].face;
         G.remotePlayers[bk4].aiState = d.p4.aiState || '';
-        G.remotePlayers[bk4].nick = d.p4.nick || '机器人';
+        G.remotePlayers[bk4].nick = safeNick(d.p4.nick || '机器人');
         G.remotePlayers[bk4].map = d.p4.map || (G.currentMap || 'grassland');
         G.remotePlayers[bk4].lastSeen = Date.now();
         G.remotePlayers[bk4].dead = false;
         if(d.p4.dead){ G.remotePlayers[bk4].dead = true; }
         if(d.p4.isBot){ G.remotePlayers[bk4].isBot = true; G.remotePlayers[bk4].botIndex = d.p4.botIndex; G.remotePlayers[bk4].team = d.p4.team || 'B'; }
       }
-      if(d.nick) G.remotePlayers[from].nick = d.nick;
+      if(d.nick) G.remotePlayers[from].nick = safeNick(d.nick);
       if(d.avatar && String(d.avatar).indexOf('data:') === 0){
         G.remotePlayers[from].avatar = d.avatar;
         try{ var _im = new Image(); _im.src = d.avatar; G.remotePlayers[from].avatarImg = _im; }catch(e){}
@@ -18853,7 +18853,7 @@ function applyNpcSnap(d){
       if(n === 2){ var bs = document.getElementById('btnLobbyStart'); if(bs) bs.style.display = 'none'; }
     }
     function setSlotConnected(n, meta){
-      var nick = (meta && meta.nick) || lobbyT('lobbyConnected', '已连接');
+      var nick = safeNick((meta && meta.nick) || lobbyT('lobbyConnected', '已连接'));
       var av = (meta && meta.avatar) || null;
       var a = document.getElementById('slot' + n + 'Avatar');
       if(a){ a.style.opacity = '1'; if(av){ if(String(av).indexOf('data:') === 0){ a.innerHTML = '<img src="' + av + '" style="width:100%;height:100%;border-radius:50%">'; } else { a.innerHTML = '<span style="font-size:24px;line-height:44px">' + av + '</span>'; } } else { a.textContent = (n === 3 ? '🤖' : (n === 4 ? '👾' : '😠')); } }
@@ -19419,10 +19419,10 @@ function applyNpcSnap(d){
 
   // ===== 严重违规：美化侵略/否认暴行/美化法西斯/美化恐怖袭击（命中即设备封禁） =====
   var SEVERE_RULES = [
-    { id:'glorify_invasion', label:'美化侵略', re:/(美化|洗白|歌颂|赞美|吹捧|支持|拥护|赞成|为[^。]{0,12}?翻案)[^。]{0,12}(侵略|入侵|侵占|吞并)/g },
-    { id:'glorify_invasion', label:'美化侵略', re:/(侵略|入侵|侵占|吞并)[^。]{0,12}(有理|无罪|光荣|伟大|正义|正确|有功|是好事|万岁|带来繁荣|带来和平|解放)/g },
+    { id:'glorify_invasion', label:'美化侵略', re:/(美化|洗白|歌颂|赞美|吹捧|支持|拥护|赞成|为[^。]{0,12}?翻案)[^。]{0,12}(侵略|入侵|侵占|吞并|侵华)/g },
+    { id:'glorify_invasion', label:'美化侵略', re:/(侵略|入侵|侵占|吞并|侵华)[^。]{0,12}(有理|无罪|光荣|伟大|正义|正确|有功|是好事|万岁|带来繁荣|带来和平|解放)/g },
     { id:'glorify_invasion', label:'美化侵略', re:/(大东亚共荣|共荣圈)/g },
-    { id:'deny_atrocity', label:'否认/美化暴行', re:/(南京大屠杀|731部队|慰安妇|种族灭绝|大屠杀|集中营|战争罪|反人类罪)[^。]{0,14}(不存在|假的|编造|否认|没有发生|活该|赞美|洗白|光荣|正确|支持)/g },
+    { id:'deny_atrocity', label:'否认/美化暴行', re:/(南京大屠杀|731部队|慰安妇|种族灭绝|大屠杀|集中营|战争罪|反人类罪)[^。]{0,14}(不存在|假的|编造|否认|没有发生|活该|赞美|洗白|光荣|正确|支持|不是罪|不是犯罪|不算罪|合法|正当)/g },
     { id:'glorify_fascism', label:'美化法西斯', re:/(纳粹|法西斯|希特勒|希特拉|东条英机|军国主义|武士道)[^。]{0,10}(伟大|光荣|正确|正义|英雄|万岁|支持|崇拜|洗白|美化|有功)/g },
     { id:'glorify_terror', label:'美化恐怖袭击', re:/(恐怖袭击|恐怖分子|炸弹袭击|校园枪击|扫射)[^。]{0,12}(英雄|伟大|正确|正义|支持|赞美|干得好|杀得好|活该|多来点)/g },
     { id:'glorify_massacre', label:'美化屠杀', re:/(屠杀|灭族|种族清洗|种族灭绝)[^。]{0,12}(英雄|伟大|正确|正义|支持|赞美|干得好|杀得好|活该|多来点)/g }
@@ -19433,6 +19433,8 @@ function applyNpcSnap(d){
     { label:'武器/爆炸物教程', words:['制枪教程','炸弹教程','制毒','冰毒配方'] },
     { label:'诈骗/洗钱教程', words:['诈骗话术','洗钱渠道','刷单返利','裸贷群'] }
   ];
+  var SEVERE_TARGET = /(侵略|入侵|侵华|侵占|吞并|占领|殖民|法西斯|纳粹|希特勒|希特拉|东条英机|军国主义|恐怖袭击|恐怖分子|屠杀|灭族|种族清洗|种族灭绝|大屠杀|集中营|战争罪|反人类罪|慰安妇|731部队|南京大屠杀)/;
+  var SEVERE_PRAISE = /(美化|洗白|歌颂|赞美|吹捧|支持|拥护|赞成|正确|正义|伟大|光荣|有功|功劳|英雄|万岁|好事|必要|合理|有理|无罪|解放|拯救|帮助|带来和平|带来繁荣|带来了和平|带来了繁荣|带来了文明|文明|先进|值得|干得好|杀得好|多来点|可取|自由战士|自愿)/;
   function _severeNorm(txt){
     var t = String(txt == null ? '' : txt);
     try{ if(t.normalize) t = t.normalize('NFKC'); }catch(e){}
@@ -19447,7 +19449,22 @@ function applyNpcSnap(d){
   }
   function _severeNeg(t, idx){
     var pre = t.slice(Math.max(0, idx - 8), idx);
-    return /(反对|抵制|谴责|批判|禁止|严禁|不要|不能|不应|不许|不得|拒绝|打击|揭露|警惕|防止|痛斥|憎恨|仇恨|可耻|罪恶|不是|并非|反)/.test(pre);
+    if(/不反对/.test(pre)) return false;
+    if(/(不|非|无)$/.test(pre)) return true;
+    return /(反对|抵制|谴责|批判|禁止|严禁|不要|不能|不应|不许|不得|拒绝|打击|揭露|警惕|防止|痛斥|憎恨|仇恨|可耻|罪恶|不是|并非|没有|没|抗击|抵抗|抵御|反抗|反)/.test(pre);
+  }
+  function _severeSemantic(txt){
+    var clauses = String(txt == null ? '' : txt).split(/[。！？!?；;\n，,、]+/);
+    for(var i = 0; i < clauses.length; i++){
+      var t = _severeNorm(clauses[i]);
+      if(!t) continue;
+      var tm = SEVERE_TARGET.exec(t);
+      var pm = SEVERE_PRAISE.exec(t);
+      if(tm && pm && !_severeNeg(t, tm.index) && !_severeNeg(t, pm.index)){
+        return { id:'semantic_severe', label:'语义严重违规', match:(tm[0] + '…' + pm[0]) };
+      }
+    }
+    return null;
   }
   function severeCheck(txt){
     var t = _severeNorm(txt);
@@ -19457,10 +19474,16 @@ function applyNpcSnap(d){
       rule.re.lastIndex = 0;
       var m;
       while((m = rule.re.exec(t)) !== null){
+        var tm = SEVERE_TARGET.exec(m[0]);
+        var pm = SEVERE_PRAISE.exec(m[0]);
+        if(tm && _severeNeg(t, m.index + tm.index)){ if(rule.re.lastIndex === m.index) rule.re.lastIndex++; continue; }
+        if(pm && _severeNeg(t, m.index + pm.index)){ if(rule.re.lastIndex === m.index) rule.re.lastIndex++; continue; }
         if(!_severeNeg(t, m.index)) return { id:rule.id, label:rule.label, match:m[0] };
         if(rule.re.lastIndex === m.index) rule.re.lastIndex++;
       }
     }
+    var sem = _severeSemantic(txt);
+    if(sem) return sem;
     for(var s = 0; s < SEVERE_TERMS.length; s++){
       var group = SEVERE_TERMS[s];
       for(var w = 0; w < group.words.length; w++){
@@ -19479,6 +19502,7 @@ function applyNpcSnap(d){
   // ===== 设备级封禁：本地账号名、本人发言命中严重违规即永久封禁 =====
   var DEVICE_ID_KEY = 'classEmoji_deviceId_v1';
   var DEVICE_BAN_KEY = 'classEmoji_deviceBan_v1';
+  var DEVICE_REVIEW_KEY = 'classEmoji_reviewPass_v1';
   var DEVICE_BAN_COOKIE = 'classEmoji_deviceBan';
   function _pcbHash(str){
     var h = 2166136261;
@@ -19519,6 +19543,9 @@ function applyNpcSnap(d){
       document.cookie = DEVICE_BAN_COOKIE + '=' + encodeURIComponent(JSON.stringify(obj)) + '; Max-Age=63072000; Path=/; SameSite=Lax';
     }catch(e){}
   }
+  function pcbReviewCode(bid){
+    return _pcbHash('unban|' + String(bid || '') + '|TULUOLUO-REVIEW-2026').slice(0,8).toUpperCase();
+  }
   function deviceBanGet(){
     var id = deviceId(), fp = deviceFingerprint();
     try{
@@ -19529,11 +19556,22 @@ function applyNpcSnap(d){
     if(c && c.fp === fp) return c;
     return null;
   }
+  function deviceReviewGet(){
+    try{
+      var r = JSON.parse(localStorage.getItem(DEVICE_REVIEW_KEY) || 'null');
+      if(r && r.until && r.until > Date.now()) return r;
+    }catch(e){}
+    return null;
+  }
+  function deviceReviewSet(bid){
+    try{ localStorage.setItem(DEVICE_REVIEW_KEY, JSON.stringify({ bid:String(bid || ''), until:Date.now() + 30 * 24 * 3600 * 1000 })); }catch(e){}
+  }
   function _pcbBanLock(){
     if(window.__deviceBanLocked) return;
     window.__deviceBanLocked = 1;
     ['keydown','keypress','keyup','pointerdown','mousedown','touchstart','click','contextmenu'].forEach(function(ev){
       document.addEventListener(ev, function(e){
+        if(e.target && e.target.closest && e.target.closest('#pcbDeviceBan')) return;
         if(window.__deviceBanned){ try{ e.preventDefault(); e.stopPropagation(); }catch(x){} }
       }, true);
     });
@@ -19546,22 +19584,85 @@ function applyNpcSnap(d){
     if(document.getElementById('pcbDeviceBan')) return;
     var reason = (ban && ban.reason) ? String(ban.reason) : '严重违规';
     var when = (ban && ban.ts) ? new Date(ban.ts).toLocaleString() : new Date().toLocaleString();
+    var bid = (ban && ban.bid) ? String(ban.bid) : _pcbHash(String(ban && ban.fp || '') + '|' + String(ban && ban.ts || '') + '|' + reason).slice(0,10).toUpperCase();
+    var issueTitle = '[封禁申诉] ' + bid;
+    var issueBody = '设备封禁申诉\n\n设备标识：' + bid + '\n封禁类别：' + reason + '\n封禁时间：' + when + '\n\n请作者复核是否误报。\n（请勿在公开 issue 中粘贴违规原话；需要证据请私信作者。）';
+    var issueUrl = 'https://github.com/tuluoluo/class-emoji/issues/new?title=' + encodeURIComponent(issueTitle) + '&body=' + encodeURIComponent(issueBody);
     var d = document.createElement('div');
     d.id = 'pcbDeviceBan';
-    d.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:radial-gradient(circle at 50% 20%,#2a0b12 0,#08080c 60%);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;';
-    d.innerHTML = '<div style="width:100%;max-width:520px;border:2px solid #e74c3c;border-radius:16px;background:#0b0b10;box-shadow:0 0 40px rgba(231,76,60,.35);padding:26px 22px;text-align:center;color:#eee;box-sizing:border-box">'
+    d.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:radial-gradient(circle at 50% 20%,#2a0b12 0,#08080c 60%);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow:auto;';
+    d.innerHTML = '<div style="width:100%;max-width:540px;border:2px solid #e74c3c;border-radius:16px;background:#0b0b10;box-shadow:0 0 40px rgba(231,76,60,.35);padding:26px 22px;text-align:center;color:#eee;box-sizing:border-box">'
       + '<div style="font-size:46px;line-height:1;margin-bottom:12px">🚫</div>'
       + '<div style="font-size:24px;font-weight:900;color:#ff4d4d;letter-spacing:1px">设备已永久封禁</div>'
       + '<div style="font-size:13px;color:#d8d8d8;line-height:1.9;margin-top:14px">检测到名称或发言含严重违规内容。<br>封禁类别：<b style="color:#ffb3b3">' + reason + '</b><br>该设备无法继续游玩。</div>'
-      + '<div style="font-size:10px;color:#666;margin-top:16px">封禁时间：' + when + '</div>'
+      + '<div style="font-size:10px;color:#666;margin-top:16px">封禁时间：' + when + '<br>申诉标识：<b style="color:#aaa">' + bid + '</b></div>'
+      + '<div style="border-top:1px solid #26262e;margin-top:18px;padding-top:16px">'
+      + '<div style="font-size:12px;color:#bbb;line-height:1.8;margin-bottom:10px">认为是误报？请带申诉标识联系作者复核；作者确认误报后，会给你解除码。</div>'
+      + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'
+      + '<a id="pcbAppealLink" href="' + issueUrl + '" target="_blank" rel="noopener" style="display:inline-block;padding:9px 14px;border-radius:9px;background:#238636;color:#fff;text-decoration:none;font-size:12px;font-weight:700">📮 联系作者申诉</a>'
+      + '<button id="pcbCopyAppeal" type="button" style="padding:9px 14px;border-radius:9px;border:1px solid #3a3a46;background:#17171e;color:#ddd;font-size:12px;font-weight:700;cursor:pointer">📋 复制申诉信息</button>'
+      + '</div>'
+      + '<div id="pcbAppealMsg" style="font-size:11px;color:#e6b450;min-height:16px;margin-top:8px"></div>'
+      + '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">'
+      + '<input id="pcbUnbanInput" placeholder="输入作者发放的解除码" maxlength="16" style="flex:1;min-width:170px;padding:9px 10px;border-radius:9px;border:1px solid #33333d;background:#111116;color:#eee;font-size:12px;outline:none">'
+      + '<button id="pcbUnbanBtn" type="button" style="padding:9px 14px;border-radius:9px;border:1px solid #8a6d24;background:#2a2312;color:#f0c96a;font-size:12px;font-weight:700;cursor:pointer">验证解除码</button>'
+      + '</div>'
+      + '<div id="pcbUnbanMsg" style="font-size:11px;color:#e6b450;min-height:16px;margin-top:8px"></div>'
+      + '</div>'
       + '</div>';
     document.body.appendChild(d);
+    var copyBtn = document.getElementById('pcbCopyAppeal');
+    var msg = document.getElementById('pcbAppealMsg');
+    if(copyBtn){
+      copyBtn.addEventListener('click', function(){
+        var text = '像素草原战斗 封禁申诉\n设备标识：' + bid + '\n封禁类别：' + reason + '\n封禁时间：' + when + '\n请复核是否误报。';
+        try{
+          navigator.clipboard.writeText(text).then(function(){ msg.textContent = '已复制，可粘贴给作者。'; }).catch(function(){ _pcbFallbackCopy(text, msg); });
+        }catch(e){ _pcbFallbackCopy(text, msg); }
+      });
+    }
+    var unbanBtn = document.getElementById('pcbUnbanBtn');
+    if(unbanBtn){
+      unbanBtn.addEventListener('click', function(){
+        var input = document.getElementById('pcbUnbanInput');
+        var um = document.getElementById('pcbUnbanMsg');
+        var code = input ? String(input.value || '').trim().toUpperCase() : '';
+        var rec = deviceBanGet() || ban || {};
+        var recBid = rec.bid || bid;
+        if(!code){ um.textContent = '先输入作者给的解除码。'; return; }
+        if(code !== pcbReviewCode(recBid)){
+          um.textContent = '解除码无效，请核对后重试。';
+          return;
+        }
+        try{ localStorage.removeItem(DEVICE_BAN_KEY); }catch(e){}
+        try{ localStorage.removeItem(DEVICE_REVIEW_KEY); }catch(e){}
+        try{ document.cookie = DEVICE_BAN_COOKIE + '=; Max-Age=0; Path=/; SameSite=Lax'; }catch(e){}
+        deviceReviewSet(recBid);
+        window.__deviceBanned = false;
+        um.textContent = '已解除，正在刷新…';
+        setTimeout(function(){ try{ location.reload(); }catch(e){} }, 500);
+      });
+    }
     _pcbBanLock();
+  }
+  function _pcbFallbackCopy(text, msgEl){
+    try{
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(msgEl) msgEl.textContent = '已复制，可粘贴给作者。';
+    }catch(e){ if(msgEl) msgEl.textContent = '复制失败，请手动截图申诉标识。'; }
   }
   function pcbBanDevice(reason){
     var fp = deviceFingerprint();
     var rec = { id:deviceId(), fp:fp, reason:String(reason || '严重违规'), ts:Date.now() };
+    rec.bid = _pcbHash(fp + '|' + rec.ts + '|' + rec.reason).slice(0,10).toUpperCase();
     try{ localStorage.setItem(DEVICE_BAN_KEY, JSON.stringify(rec)); }catch(e){}
+    try{ localStorage.removeItem(DEVICE_REVIEW_KEY); }catch(e){}
     _pcbCookieSet(rec);
     window.__deviceBanned = true;
     try{ if(typeof G !== 'undefined' && G) G.running = false; }catch(e){}
@@ -19569,6 +19670,7 @@ function applyNpcSnap(d){
     setTimeout(function(){ try{ location.reload(); }catch(e){} }, 80);
   }
   function pcbScanStoredSevere(){
+    if(deviceReviewGet()) return null;
     var acctNames = [];
     try{
       var raw = localStorage.getItem('classEmoji_accounts_v1');
@@ -19584,6 +19686,16 @@ function applyNpcSnap(d){
       }
     }catch(e){}
     try{
+      var braw = localStorage.getItem('classEmoji_accounts_v1_bak');
+      var ba = braw ? JSON.parse(braw) : null;
+      if(ba && ba.list && ba.list.length){
+        for(var bi = 0; bi < ba.list.length; bi++){
+          var bac = ba.list[bi];
+          if(bac && bac.name){ var bsn = severeCheck(bac.name); if(bsn) return bsn; }
+        }
+      }
+    }catch(e){}
+    try{
       for(var k = 0; k < localStorage.length; k++){
         var key = localStorage.key(k);
         if(!key || key.indexOf('classEmoji_hallHist_v1_') !== 0) continue;
@@ -19591,7 +19703,10 @@ function applyNpcSnap(d){
         if(!(arr instanceof Array)) continue;
         for(var j = 0; j < arr.length; j++){
           var it = arr[j];
-          if(it && it.mine && it.text){ var st = severeCheck(it.text); if(st) return st; }
+          if(it && it.mine){
+            if(it.name){ var snm = severeCheck(it.name); if(snm) return snm; }
+            if(it.text){ var st = severeCheck(it.text); if(st) return st; }
+          }
         }
       }
     }catch(e){}
@@ -19618,6 +19733,7 @@ function applyNpcSnap(d){
     if(hit) pcbBanDevice(hit.label);
   }
   try{ window.__deviceBanState = deviceBanGet; }catch(e){}
+  try{ window.__pcbReviewCode = pcbReviewCode; }catch(e){}
   try{ window.__pcbBanBootCheck = pcbBanBootCheck; }catch(e){}
 
   function validatePlayerName(name){
@@ -19633,7 +19749,10 @@ function applyNpcSnap(d){
   }
   try{ window.__gameValidateName = validatePlayerName; }catch(e){}
 
-function censor(txt){
+function safeNick(name){
+    try{ return severeCheck(name) ? '玩家' : String(name == null ? '' : name); }catch(e){ return '玩家'; }
+  }
+  function censor(txt){
     try{
       var s = String(txt == null ? '' : txt);
       if(!s) return s;
@@ -19754,6 +19873,7 @@ function censor(txt){
   }
   function hallPresence(d){
     if(!d || !d.id) return;
+    if(severeCheck(d.name)){ hallLog('⚠️ 已拦截严重违规昵称'); return; }
     H.peers[d.id] = { name:d.name || '玩家', avatar:d.avatar || '', ts:Date.now() };
     updateHallOnline();
   }
@@ -19771,6 +19891,7 @@ function censor(txt){
   }
   function hallHandleMsg(d){
     if(!d || d.t !== 'hall') return;
+    if(d.name && severeCheck(d.name)){ hallLog('⚠️ 已拦截严重违规昵称'); return; }
     if(d.type === 'msg'){
       if(d.uid && H.seen[d.uid]) return; // MQTT 回传自己消息，去重
       if(d.uid){ H.seen[d.uid] = 1; if(Object.keys(H.seen).length > 300){ H.seen = {}; } }
@@ -20050,7 +20171,7 @@ function censor(txt){
     try{
       if(topic.indexOf(FR_ACCOUNTS) === 0){
         var nm = decodeURIComponent(topic.slice(FR_ACCOUNTS.length));
-        if(nm && d && d.name){ F.registry[nm] = { avatar: d.avatar || '', country: d.country || '', time: d.time || 0 }; frRegistrySave(); }
+        if(nm && d && d.name && !severeCheck(d.name)){ F.registry[nm] = { avatar: d.avatar || '', country: d.country || '', time: d.time || 0 }; frRegistrySave(); }
         return true;
       }
       if(topic.indexOf(FR_PRESENCE) === 0){
@@ -20080,13 +20201,15 @@ function censor(txt){
   }
   function frHandleInbox(d){
     if(!d || !d.t) return;
+    var _sender = d.rawName || d.from || '';
+    if(_sender && severeCheck(_sender)) return;
     if(d.t === 'invite'){
-      if(d.rawName) F.requests[d.rawName] = { avatar: d.avatar || '', country: d.country || '' };
+      if(d.rawName && !severeCheck(d.rawName)) F.requests[d.rawName] = { avatar: d.avatar || '', country: d.country || '' };
       frRenderRequests();
       frShowInvite(d);
     } else if(d.t === 'inviteResp'){
       if(d.accept){
-        if(d.rawName && !frIsFriend(d.rawName)){
+        if(d.rawName && !severeCheck(d.rawName) && !frIsFriend(d.rawName)){
           F.list.push({ name: d.rawName, avatar: d.avatar || '', country: d.country || '', since: Date.now() });
           frSave(); frRenderList();
         }
@@ -20099,7 +20222,7 @@ function censor(txt){
     } else if(d.t === 'roomInvite'){
       frShowRoomInvite(d);
     } else if(d.t === 'findResp'){
-      if(d.name){
+      if(d.name && !severeCheck(d.name)){
         if(!F.registry[d.name]) F.registry[d.name] = { avatar: d.avatar || '', country: d.country || '', time: Date.now() };
         F._searchResult[d.name] = { avatar: d.avatar || '', country: d.country || '' };
         frRegistrySave();
@@ -20342,6 +20465,7 @@ function censor(txt){
   function frRecvChat(d){
     var a = frName(), b = d.rawName || d.from;
     if(!a || !b) return;
+    if(severeCheck(b)) return;
     if(severeCheck(d.text)) return;
     d.text = censor(d.text || '');
     var key = 'class_emoji_chat_' + [a, b].sort().join('__');
