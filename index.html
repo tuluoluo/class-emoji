@@ -570,7 +570,7 @@ input:checked + .slider:before{transform:translateX(24px)}
 </style>
 </head>
 <body>
-<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.8</div>
+<div id="buildBadge" style="position:fixed;top:10px;left:10px;z-index:999;padding:4px 8px;background:rgba(0,0,0,0.78);color:#ffd700;border:1px solid rgba(255,215,0,0.45);border-radius:6px;font:bold 12px monospace;pointer-events:none">v4.10.9</div>
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
   <h2>请横屏游玩</h2>
@@ -1138,8 +1138,8 @@ input:checked + .slider:before{transform:translateX(24px)}
 </script>
 <script>
 // ==================== 版本号 ====================
-var GAME_VERSION = 'v4.10.8';
-var GAME_DATE = '2026-11-25';
+var GAME_VERSION = 'v4.10.9';
+var GAME_DATE = '2026-11-26';
 // ==================== 默认角色选择（单人） ====================
 function faceStoreKey(){ return accKey('playerFace'); }
 function getSelectedFace(){
@@ -5059,6 +5059,9 @@ MODE_LANGS.chinglish.gfMatchOk = '✅ {n} players → 2 teams, {h} each 啦';
 var AUTHOR_LANGS = {
   zh: {
     authorTitle:'🛡️ 作者审核台',
+    authorNeedGameAccount:'请先登录游戏账号，再打开作者审核台。',
+    authorNoPermission:'当前账号没有作者权限，不能打开审核台。',
+    authorBindFirst:'当前账号首次验证 Token 后，会绑定为唯一作者账号；其他账号不能使用审核台。',
     authorSub:'申诉汇总来自 GitHub Issues；登录需要仓库 Issues 读写权限的 Token',
     authorTokenPh:'GitHub fine-grained Token（建议只勾选本仓库 Issues 读写）',
     authorLogin:'登录作者账号',
@@ -5087,6 +5090,9 @@ var AUTHOR_LANGS = {
   },
   hant: {
     authorTitle:'🛡️ 作者審核臺',
+    authorNeedGameAccount:'請先登入遊戲帳號，再開啟作者審核臺。',
+    authorNoPermission:'目前帳號沒有作者權限，不能開啟審核臺。',
+    authorBindFirst:'目前帳號首次驗證 Token 後，會綁定為唯一作者帳號；其他帳號不能使用審核臺。',
     authorSub:'申訴彙總來自 GitHub Issues；登入需要倉庫 Issues 讀寫權限的 Token',
     authorTokenPh:'GitHub fine-grained Token（建議只勾選本倉庫 Issues 讀寫）',
     authorLogin:'登入作者帳號',
@@ -5115,6 +5121,9 @@ var AUTHOR_LANGS = {
   },
   en: {
     authorTitle:'🛡️ Author Review',
+    authorNeedGameAccount:'Log in to a game account before opening Author Review.',
+    authorNoPermission:'This game account has no author permission.',
+    authorBindFirst:'The first Token verification binds the current game account as the only author account; other accounts cannot use this panel.',
     authorSub:'Appeals come from GitHub Issues. Login needs a token with Issues read/write for this repo.',
     authorTokenPh:'GitHub fine-grained token (only this repo Issues read/write)',
     authorLogin:'Log in as author',
@@ -5143,6 +5152,9 @@ var AUTHOR_LANGS = {
   },
   ja: {
     authorTitle:'🛡️ 作者レビュー台',
+    authorNeedGameAccount:'ゲームアカウントにログインしてから作者レビュー台を開いてください。',
+    authorNoPermission:'このゲームアカウントには作者権限がありません。',
+    authorBindFirst:'現在のゲームアカウントで最初に Token を認証すると、唯一の作者アカウントとして固定されます。他のアカウントは使用できません。',
     authorSub:'異議申し立ては GitHub Issues から取得します。ログインにはこのリポジトリの Issues 読み書き権限が必要です。',
     authorTokenPh:'GitHub fine-grained Token（このリポジトリの Issues 読み書きのみ推奨）',
     authorLogin:'作者としてログイン',
@@ -5171,6 +5183,9 @@ var AUTHOR_LANGS = {
   },
   ko: {
     authorTitle:'🛡️ 작성자 검토대',
+    authorNeedGameAccount:'게임 계정에 로그인한 후 작성자 검토대를 여세요.',
+    authorNoPermission:'현재 게임 계정에는 작성자 권한이 없습니다.',
+    authorBindFirst:'현재 게임 계정에서 Token을 처음 인증하면 유일한 작성자 계정으로 고정됩니다. 다른 계정은 사용할 수 없습니다.',
     authorSub:'이의 제기는 GitHub Issues에서 가져옵니다. 로그인하려면 이 저장소의 Issues 읽기/쓰기 권한이 있는 토큰이 필요합니다.',
     authorTokenPh:'GitHub fine-grained Token(이 저장소 Issues 읽기/쓰기만 권장)',
     authorLogin:'작성자로 로그인',
@@ -5199,6 +5214,9 @@ var AUTHOR_LANGS = {
   },
   fr: {
     authorTitle:'🛡️ Revue auteur',
+    authorNeedGameAccount:'Connectez-vous à un compte de jeu avant d’ouvrir la revue auteur.',
+    authorNoPermission:'Ce compte de jeu n’a pas l’autorisation auteur.',
+    authorBindFirst:'La première validation du Token lie le compte de jeu actuel comme unique compte auteur ; les autres comptes ne peuvent pas utiliser ce panneau.',
     authorSub:'Les appels proviennent des Issues GitHub. La connexion exige un jeton avec lecture/écriture des Issues de ce dépôt.',
     authorTokenPh:'Jeton GitHub fine-grained (Issues lecture/écriture de ce dépôt uniquement)',
     authorLogin:'Se connecter en tant qu’auteur',
@@ -5227,6 +5245,9 @@ var AUTHOR_LANGS = {
   },
   de: {
     authorTitle:'🛡️ Autorenprüfung',
+    authorNeedGameAccount:'Melde dich zuerst mit einem Spielkonto an, bevor du die Autorenprüfung öffnest.',
+    authorNoPermission:'Dieses Spielkonto hat keine Autorenberechtigung.',
+    authorBindFirst:'Die erste Token-Prüfung bindet das aktuelle Spielkonto als einziges Autorenkonto; andere Konten können dieses Panel nicht nutzen.',
     authorSub:'Einsprüche kommen aus GitHub Issues. Die Anmeldung braucht ein Token mit Issues-Lese-/Schreibrechten für dieses Repo.',
     authorTokenPh:'GitHub Fine-grained Token (nur Issues Lesen/Schreiben für dieses Repo)',
     authorLogin:'Als Autor anmelden',
@@ -5255,6 +5276,9 @@ var AUTHOR_LANGS = {
   },
   es: {
     authorTitle:'🛡️ Revisión del autor',
+    authorNeedGameAccount:'Inicia sesión con una cuenta de juego antes de abrir la revisión del autor.',
+    authorNoPermission:'Esta cuenta de juego no tiene permiso de autor.',
+    authorBindFirst:'La primera verificación del Token vincula la cuenta de juego actual como única cuenta de autor; las otras cuentas no pueden usar este panel.',
     authorSub:'Las apelaciones vienen de GitHub Issues. El inicio de sesión necesita un token con lectura/escritura de Issues para este repo.',
     authorTokenPh:'Token GitHub fine-grained (solo Issues lectura/escritura de este repo)',
     authorLogin:'Iniciar sesión como autor',
@@ -5283,6 +5307,9 @@ var AUTHOR_LANGS = {
   },
   ru: {
     authorTitle:'🛡️ Панель автора',
+    authorNeedGameAccount:'Сначала войдите в игровой аккаунт, затем открывайте панель автора.',
+    authorNoPermission:'У этого игрового аккаунта нет прав автора.',
+    authorBindFirst:'Первая проверка Token закрепляет текущий игровой аккаунт как единственный аккаунт автора; другие аккаунты не могут использовать эту панель.',
     authorSub:'Апелляции берутся из GitHub Issues. Для входа нужен токен с правами чтения/записи Issues этого репозитория.',
     authorTokenPh:'GitHub fine-grained Token (только Issues чтение/запись этого репо)',
     authorLogin:'Войти как автор',
@@ -5311,6 +5338,9 @@ var AUTHOR_LANGS = {
   },
   chinglish: {
     authorTitle:'🛡️ Author Check Table',
+    authorNeedGameAccount:'First login game account, then open Author Check Table.',
+    authorNoPermission:'This game account no author permission, cannot open.',
+    authorBindFirst:'First time verify Token will bind current game account as only author account; other accounts cannot use.',
     authorSub:'Appeal all come from GitHub Issues. Login need token with this repo Issues read/write.',
     authorTokenPh:'GitHub fine-grained Token (only this repo Issues read/write)',
     authorLogin:'Login as author la',
@@ -5339,6 +5369,9 @@ var AUTHOR_LANGS = {
   },
   wenyan: {
     authorTitle:'🛡️ 作者審閱臺',
+    authorNeedGameAccount:'請先登入遊戲帳號，再啟作者審閱臺。',
+    authorNoPermission:'此帳號無作者之權，不得啟閱。',
+    authorBindFirst:'初驗 Token 即以此帳號為唯一作者，他帳不得用。',
     authorSub:'申訴皆自 GitHub Issues 來；登入需本倉 Issues 讀寫之符。',
     authorTokenPh:'GitHub fine-grained Token（僅勾本倉 Issues 讀寫）',
     authorLogin:'登入作者之號',
@@ -20189,9 +20222,9 @@ function applyNpcSnap(d){
   try{ window.__pcbBanBootCheck = pcbBanBootCheck; }catch(e){}
   // ===== 作者审核台：登录后聚合 GitHub 封禁申诉，查看证据并回发解除码 =====
   var AUTHOR_TOKEN_KEY = 'classEmoji_authorToken_v1';
+  var AUTHOR_OWNER_KEY = 'classEmoji_authorOwner_v1';
   var AUTHOR_ISSUES_API = 'https://api.github.com/repos/tuluoluo/class-emoji/issues?state=open&per_page=50';
-  var AUTHOR_TOKEN = '';
-  function _authorEsc(s){
+  var AUTHOR_TOKEN = '';  function _authorEsc(s){
     return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
   function _authorBid(issue){
@@ -20304,7 +20337,41 @@ function applyNpcSnap(d){
       _authorMsg(t('authorReplyFail').replace('{e}', e && e.message || '未知错误'), '#ff8a8a');
     });
   }
+  function _authorCurrentAccountName(){
+    try{ return String(window.__accCurrentName || '').trim(); }catch(e){ return ''; }
+  }
+  function _authorOwnerGet(){
+    try{ return JSON.parse(localStorage.getItem(AUTHOR_OWNER_KEY) || 'null'); }catch(e){ return null; }
+  }
+  function _authorOwnerSet(name){
+    try{ localStorage.setItem(AUTHOR_OWNER_KEY, JSON.stringify({ name:String(name || '') })); }catch(e){}
+  }
+  function _authorTokenKey(name){
+    var n = String(name || _authorCurrentAccountName() || '').trim();
+    return AUTHOR_TOKEN_KEY + '_' + encodeURIComponent(n);
+  }
+  function _authorTokenGet(){
+    try{ return localStorage.getItem(_authorTokenKey()) || ''; }catch(e){ return ''; }
+  }
+  function _authorTokenSet(token){
+    try{ localStorage.setItem(_authorTokenKey(), String(token || '')); }catch(e){}
+    // 清掉旧版全局 Token，避免同设备其他账号复用
+    try{ localStorage.removeItem(AUTHOR_TOKEN_KEY); }catch(e){}
+  }
+  function _authorTokenClear(){
+    try{ localStorage.removeItem(_authorTokenKey()); }catch(e){}
+    try{ localStorage.removeItem(AUTHOR_TOKEN_KEY); }catch(e){}
+  }
+  function _authorAccess(){
+    var name = _authorCurrentAccountName();
+    if(!name) return { ok:false, msg:t('authorNeedGameAccount') };
+    var owner = _authorOwnerGet();
+    if(owner && String(owner.name || '') !== name) return { ok:false, msg:t('authorNoPermission') };
+    return { ok:true, name:name, owner:owner };
+  }
   function authorLogin(){
+    var gate = _authorAccess();
+    if(!gate.ok){ _authorMsg(gate.msg, '#ff8a8a'); return; }
     var inp = document.getElementById('authorTokenInput');
     var token = inp ? String(inp.value || '').trim() : '';
     if(!token){ _authorMsg(t('authorLoginEmpty'), '#ff8a8a'); return; }
@@ -20314,7 +20381,9 @@ function applyNpcSnap(d){
       return r.json();
     }).then(function(){
       AUTHOR_TOKEN = token;
-      try{ localStorage.setItem(AUTHOR_TOKEN_KEY, token); }catch(e){}
+      _authorTokenSet(token);
+      if(!gate.owner){ _authorOwnerSet(gate.name); }
+      try{ if(window.__accountRefresh) window.__accountRefresh(); }catch(e){}
       _authorMsg(t('authorLoginSuccess'), '#7ee787');
       _authorSetMain(true);
       authorLoad();
@@ -20325,6 +20394,8 @@ function applyNpcSnap(d){
   function authorOpen(){
     var p = document.getElementById('authorReviewPanel');
     if(!p) return;
+    var gate = _authorAccess();
+    if(!gate.ok){ alert(gate.msg); return; }
     // 作者审核台优先于横屏拦截层；竖屏也能直接登录处理申诉
     var rotate = document.getElementById('rotateOverlay');
     if(rotate) rotate.style.display = 'none';
@@ -20332,9 +20403,15 @@ function applyNpcSnap(d){
     if(accPanel) accPanel.style.display = 'none';
     if(typeof applyAuthorLang === 'function') applyAuthorLang();
     p.style.display = 'flex';
-    var saved = '';
-    try{ saved = localStorage.getItem(AUTHOR_TOKEN_KEY) || ''; }catch(e){}
-    if(saved){
+    var saved = _authorTokenGet();
+    // 兼容旧版：全局 Token 只在绑定的作者账号上迁移一次
+    if(!saved && gate.owner){
+      try{
+        var legacy = localStorage.getItem(AUTHOR_TOKEN_KEY) || '';
+        if(legacy){ _authorTokenSet(legacy); saved = legacy; }
+      }catch(e){}
+    }
+    if(saved && gate.owner){
       AUTHOR_TOKEN = saved;
       var input = document.getElementById('authorTokenInput');
       if(input) input.value = '';
@@ -20342,11 +20419,16 @@ function applyNpcSnap(d){
       authorLoad();
     }else{
       AUTHOR_TOKEN = '';
+      var input2 = document.getElementById('authorTokenInput');
+      if(input2) input2.value = '';
       _authorSetMain(false);
+      if(!gate.owner) _authorMsg(t('authorBindFirst'), '#e6b450');
     }
   }
   function authorInit(){
     // 作者审核台入口用按钮内联 onclick，避免旧版缓存/事件未绑定时点了没反应
+    // 还没绑定作者账号时，清掉旧版全局 Token，避免同设备任意账号直接复用
+    try{ if(!_authorOwnerGet()) localStorage.removeItem(AUTHOR_TOKEN_KEY); }catch(e){}
     var autoAuthor = false;
     try{
       autoAuthor = location.hash === '#author' || /(?:^|[?&])author=1(?:&|$)/.test(location.search || '');
@@ -20361,7 +20443,7 @@ function applyNpcSnap(d){
     var logout = document.getElementById('authorLogoutBtn');
     if(logout) logout.addEventListener('click', function(){
       AUTHOR_TOKEN = '';
-      try{ localStorage.removeItem(AUTHOR_TOKEN_KEY); }catch(e){}
+      _authorTokenClear();
       _authorSetMain(false);
       _authorMsg(t('authorLogoutDone'), '#8f8f9a');
     });
@@ -21545,6 +21627,15 @@ function safeNick(name){
     // 主菜单账号条
     var bar = document.getElementById('accountBar');
     var ac = current();
+    // 作者审核台入口只对绑定的作者账号显示；未绑定时先显示，供作者首次验证
+    var authorEntry = document.getElementById('accountAuthorBtn');
+    if(authorEntry){
+      var authorOwner = null;
+      try{ authorOwner = JSON.parse(localStorage.getItem('classEmoji_authorOwner_v1') || 'null'); }catch(e){}
+      var canSeeAuthor = !!(ac && (!authorOwner || String(authorOwner.name || '') === String(ac.name || '')));
+      authorEntry.style.display = canSeeAuthor ? 'block' : 'none';
+      authorEntry.setAttribute('aria-hidden', canSeeAuthor ? 'false' : 'true');
+    }
     try{ window.__accCurrentCountry = ac ? (ac.country || '') : ''; }catch(e){}
     fillCountrySelects();
     if(bar){
